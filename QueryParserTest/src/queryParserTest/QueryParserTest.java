@@ -10,6 +10,7 @@ import QueryParser.QueryParser;
 
 public class QueryParserTest {
 
+	// example usage of QueryParser class
 	public static void main(String [ ] args) 
 	{
 		// input file containing the returned query plan
@@ -18,23 +19,37 @@ public class QueryParserTest {
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	
 		// get the top level node
-		JSONObject topLevelNode = qParser.toplevelNode;
+		JSONObject topLevelNode = qParser.topLevelNode;
 		
-		// get the attributes of topLevelNode, except nested plans
-		System.out.println(qParser.getNodeType(topLevelNode));
+		// get some individual attributes of a node, except nested plans
+		// if some attributes don't exist in the node, the function returns a blank string ""
+		System.out.println("Node Type: " + qParser.getNodeType(topLevelNode));
+		System.out.println("Alias: " +  qParser.getAlias(topLevelNode));
+		System.out.println("Parent Relationship: " + qParser.getParentRelationship(topLevelNode));
+		System.out.println("Hash Condition: " + qParser.getHashCond(topLevelNode));
+		System.out.println("Join Type: " + qParser.getJoinType(topLevelNode));
+		System.out.println("---------end of one node-----------");
 		
 		// get the 2nd level plan from the top level node
 		JSONArray childrenNodes = qParser.getChildrenPlanNodes(topLevelNode);
 		// iterate through all the children plans of the top level node
-		// this can be repeated all the way to get the deepest level
 		Iterator<JSONObject> citerator = childrenNodes.iterator();	
 		while(citerator.hasNext())
 		{
-			JSONObject curChild = citerator.next();
+			JSONObject curChild = citerator.next();	
 			System.out.println(curChild.toJSONString());
+			
+			// print some attributes of this node
+			System.out.println("Node Type: " + qParser.getNodeType(curChild));
+			System.out.println("Alias: " + qParser.getAlias(curChild));
+			System.out.println("Parent Relationship: " + qParser.getParentRelationship(curChild));
+			System.out.println("Hash Condition: " + qParser.getHashCond(curChild));
+			System.out.println("Join Type: " + qParser.getJoinType(curChild));
+			System.out.println("---------end of one node-----------");
 		}
+		// you can keep iterating all the way to the deepest level by repeatedly getting the children plan of curChild
 		
-		// previous code
+		// previous code -- ignore
 		/*BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
 		String line = "", jsonString = "";
 		while ((line = reader.readLine()) != null) {
