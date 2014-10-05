@@ -7,7 +7,10 @@ Query parser:
 
 TO-DO (listed from top-priority):
 1. Try to reconstruct a valid query from the parsed query plan. If we can reconstruct a valid query from the query plan for a simple original query, we can keep working on extending the query parser & reconstruction to support more complex queries.
-2. Postgres EXPLAIN doesn't support JSON object with VERBOSE flag. So if we want the verbose flag (with includes "Output" attribute -- the returned column names of a query plan), we will need to either parse the raw EXPLAIN returned text, or we can still use the JSON object we have now and then parse the raw text to extract "Output" only.
+
+2. It's very likely that there are other attributes in the EXPLAIN output not captured in queryPlanAttrMapping in QueryParser.java. We can add them as we see more.
+
+3. Postgres EXPLAIN doesn't support JSON object with VERBOSE flag. So if we want the verbose flag (with includes "Output" attribute -- the returned column names of a query plan), we will need to either parse the raw EXPLAIN returned text, or we can still use the JSON object we have now and then parse the raw text to extract "Output" only.
 
 
 
