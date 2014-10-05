@@ -68,6 +68,7 @@ public class QueryParser {
 	}
 	
 	// exception class
+	@SuppressWarnings("serial")
 	private class MultipleTopLevelNodeException extends Exception{}
 	
 	// TODO

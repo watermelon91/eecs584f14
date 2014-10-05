@@ -1,10 +1,12 @@
-package QueryParser;
+package queryParserTest;
 
-import java.io.BufferedReader;
+//import java.io.BufferedReader;
 import java.util.Iterator;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
+import QueryParser.QueryParser;
 
 public class QueryParserTest {
 
