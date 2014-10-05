@@ -11,7 +11,7 @@ public class QueryParserTest {
 	public static void main(String [ ] args) 
 	{
 		// input file containing the returned query plan
-		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/QueryPlan1.txt";
+		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1.txt";
 		
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	
@@ -25,7 +25,7 @@ public class QueryParserTest {
 		JSONArray childrenNodes = qParser.getChildrenPlanNodes(topLevelNode);
 		// iterate through all the children plans of the top level node
 		// this can be repeated all the way to get the deepest level
-		Iterator<JSONObject> citerator = childrenNodes.iterator();	// returns the top level "plan"
+		Iterator<JSONObject> citerator = childrenNodes.iterator();	
 		while(citerator.hasNext())
 		{
 			JSONObject curChild = citerator.next();
