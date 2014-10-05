@@ -6,7 +6,8 @@ import java.util.Iterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import QueryParser.QueryParser;
+import queryParser.QueryParser;
+import queryReconstructor.QueryReconstructor;
 
 public class QueryParserTest {
 

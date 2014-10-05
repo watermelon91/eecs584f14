@@ -1,4 +1,4 @@
-package QueryParser;
+package queryParser;
 
 import java.io.FileReader;
 import java.io.IOException;
