@@ -15,12 +15,23 @@ public class QueryParserTest {
 	public static void main(String [ ] args) 
 	{
 		// input file containing the returned query plan
-		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1.txt";
+		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
 		
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	
 		// get the top level node
 		JSONObject topLevelNode = qParser.topLevelNode;
+		
+		// get the output attributes
+		JSONArray outputAttrs = qParser.getOutputAttributes(topLevelNode);
+		Iterator<String> oiterator = outputAttrs.iterator();
+		System.out.print("Output attribtues: ");
+		while(oiterator.hasNext())
+		{
+			String curAttr = oiterator.next();
+			System.out.print(curAttr.toString() + " ");
+		}
+		System.out.print("\n");
 		
 		// get some individual attributes of a node, except nested plans
 		// if some attributes don't exist in the node, the function returns a blank string ""
@@ -29,6 +40,7 @@ public class QueryParserTest {
 		System.out.println("Parent Relationship: " + qParser.getParentRelationship(topLevelNode));
 		System.out.println("Hash Condition: " + qParser.getHashCond(topLevelNode));
 		System.out.println("Join Type: " + qParser.getJoinType(topLevelNode));
+		System.out.println("Schema: " + qParser.getSchema(topLevelNode));
 		System.out.println("---------end of one node-----------");
 		
 		// get the 2nd level plan from the top level node
@@ -38,6 +50,7 @@ public class QueryParserTest {
 		while(citerator.hasNext())
 		{
 			JSONObject curChild = citerator.next();	
+			
 			System.out.println(curChild.toJSONString());
 			
 			// print some attributes of this node
@@ -46,6 +59,7 @@ public class QueryParserTest {
 			System.out.println("Parent Relationship: " + qParser.getParentRelationship(curChild));
 			System.out.println("Hash Condition: " + qParser.getHashCond(curChild));
 			System.out.println("Join Type: " + qParser.getJoinType(curChild));
+			System.out.println("Schema: " + qParser.getSchema(curChild));
 			System.out.println("---------end of one node-----------");
 		}
 		// you can keep iterating all the way to the deepest level by repeatedly getting the children plan of curChild

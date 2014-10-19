@@ -47,7 +47,13 @@ public class QueryParser {
 	public JSONArray getChildrenPlanNodes(JSONObject currentNode)
 	{
 		// returns the Plans in Children level 
+		// returns NULL if no children
 		return (JSONArray)currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.PLANS));
+	}
+	
+	public JSONArray getOutputAttributes(JSONObject currentNode)
+	{
+		return (JSONArray)currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.OUTPUT));
 	}
 	
 	//--------------------------- get functions for different attributes returned by EXPLAIN ---------------------------
@@ -139,6 +145,16 @@ public class QueryParser {
 		return rst.toString();
 	}
 	
+	public String getSchema(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SCHEMA));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
 	public String getStartupCost(JSONObject currentNode)
 	{
 		// return the startup cost of this node
@@ -190,12 +206,14 @@ public class QueryParser {
 		HASH_COND,
 		JOIN_TYPE,
 		NODE_TYPE, 
+		OUTPUT,
 		PARENT_RELATIONSHIP,
 		PLAN,
 		PLANS,
 		PLAN_ROWS,
 		PLAN_WIDTH,
 		RELATION_NAME,
+		SCHEMA,
 		STARTUP_COST,
 		TOTAL_COST
 		};
@@ -208,12 +226,14 @@ public class QueryParser {
 		 map.put(QUERY_PLAN_ATTRS.HASH_COND, "Hash Cond");
 		 map.put(QUERY_PLAN_ATTRS.JOIN_TYPE, "Join Type");
 		 map.put(QUERY_PLAN_ATTRS.NODE_TYPE, "Node Type");
+		 map.put(QUERY_PLAN_ATTRS.OUTPUT, "Output");
 		 map.put(QUERY_PLAN_ATTRS.PARENT_RELATIONSHIP, "Parent Relationship");
 		 map.put(QUERY_PLAN_ATTRS.PLAN, "Plan");
 		 map.put(QUERY_PLAN_ATTRS.PLANS, "Plans");
 		 map.put(QUERY_PLAN_ATTRS.PLAN_ROWS, "Plan Rows");
 		 map.put(QUERY_PLAN_ATTRS.PLAN_WIDTH, "Plan Width");
 		 map.put(QUERY_PLAN_ATTRS.RELATION_NAME, "Relation Name");
+		 map.put(QUERY_PLAN_ATTRS.SCHEMA, "Schema");
 		 map.put(QUERY_PLAN_ATTRS.STARTUP_COST, "Startup Cost");
 		 map.put(QUERY_PLAN_ATTRS.TOTAL_COST, "Total Cost");
 		 return Collections.unmodifiableMap(map);

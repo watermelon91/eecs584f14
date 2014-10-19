@@ -33,3 +33,7 @@ INSERT INTO hrecords (user_id, age, weight) VALUES (8, 12, 145);
 INSERT INTO hrecords (user_id, age, weight) VALUES (9, 43, 106);
 
 explain (FORMAT JSON) select * from hrecords h, users u where h.user_id = u.user_id;
+
+explain VERBOSE select * from hrecords h, users u where h.user_id = u.user_id;
+
+explain (VERBOSE TRUE, FORMAT JSON) select * from hrecords h, users u where h.user_id = u.user_id;
