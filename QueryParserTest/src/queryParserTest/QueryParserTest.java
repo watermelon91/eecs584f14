@@ -15,8 +15,8 @@ public class QueryParserTest {
 	public static void main(String [ ] args) 
 	{
 		// input file containing the returned query plan
-		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
-//		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan1.txt";
+//		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
+		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan1_verbose.txt";
 		
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	
