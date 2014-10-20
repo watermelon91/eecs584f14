@@ -1,8 +1,18 @@
 package queryReconstructor;
 
 import queryParser.QueryParser;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class PlanReducer {
+	
+	// this class will simplify the query plan
+	
+	// for example, it will reduce all hash join, merge join, etc into join nodes
+	// it will eliminate unnecessary seq scan nodes
+	
 	QueryParser qParser;
 	
 	
@@ -18,26 +28,113 @@ public class PlanReducer {
 	public PlanReducer(QueryParser qp)  
 	{
 		qParser = qp;
+	}
+
+	JSONObject ReduceNode(JSONObject curNode) {
+		JSONObject reducedCurNode = new JSONObject();
+		switch (getEnumFromNodeType(qParser.getNodeType(curNode))) 
+		{
+		// joins
+		case HASH_JOIN:
+			break;
+		case MERGE_JOIN:
+			break;
+		case NESTED_LOOP:
+			break;
+			// need other join types as well (left joins, etc)
+			
+		// intermediate type things
+		case HASH:
+			break;
+		case SORT:
+			break;
+		// scans
+		case INDEX_SCAN:
+			break;
+		case SEQ_SCAN:
+			break;
+		case BITMAP_HEAP_SCAN:
+			break;
+		case BITMAP_INDEX_SCAN:
+			break;
+		//misc
+		case LIMIT:
+			break;
+		case UNDEFINED:
+			break;
+		}
 		
-		// switch on node type
-		// then process from there.
-		// first, handle joins and scans
-		// later, worry about aggregation
+		// update reducedParentNode
 		
-		// this class will simplify the query plan
+		// return the new reduced node
+		return reducedCurNode;
+	}
+	
+	JSONObject ReduceHashJoinNode(JSONObject curNode) {
+		JSONObject reducedNode = new JSONObject();
+		JSONArray children = qParser.getChildrenPlanNodes(curNode);
 		
-		// for example, it will reduce all hash join, merge join, etc into join nodes
-		// it will eliminate unnecessary seq scan nodes
+		// NOTE: not sure if casting to JSONObject will work
+		JSONObject reducedFirstChild = ReduceNode((JSONObject) children.get(0));
+		JSONObject reducedSecondChild = ReduceNode((JSONObject) children.get(1));
 		
+		String joinCond = qParser.getHashCond(curNode);
+		
+		reducedNode = makeJoinNode(joinCond, reducedFirstChild, reducedSecondChild);
+		
+		return reducedNode;
+	}
+	
+	JSONObject ReduceMergeJoinNode(JSONObject curNode) {
+		JSONObject reducedNode = new JSONObject();
+		JSONArray children = qParser.getChildrenPlanNodes(curNode);
+		
+		// NOTE: not sure if casting to JSONObject will work
+		JSONObject reducedFirstChild = ReduceNode((JSONObject) children.get(0));
+		JSONObject reducedSecondChild = ReduceNode((JSONObject) children.get(1));
+		
+		// String joinCond = qParser.getMergeCond(curNode);
+		
+		// reducedNode = makeJoinNode(joinCond, reducedFirstChild, reducedSecondChild);
+		
+		return reducedNode;
+	}
+
+	JSONObject ReduceNestedLoopJoinNode(JSONObject curNode) {
+		JSONObject reducedNode = new JSONObject();		
+		JSONArray children = qParser.getChildrenPlanNodes(curNode);	
+		// NOTE: not sure if casting to JSONObject will work
+		JSONObject reducedFirstChild = ReduceNode((JSONObject) children.get(0));
+		JSONObject reducedSecondChild = ReduceNode((JSONObject) children.get(1));
+		
+		// join cond is in second child's index condition
+		// and also possibly joinFilter attribute if multiple conditions 
+		// String joinCond = 
+		
+		// reducedNode = makeJoinNode(joinCond, reducedFirstChild, reducedSecondChild);
+		
+		return reducedNode;
+	}
+
+	
+	JSONObject makeJoinNode(String joinCond, JSONObject reducedFirstChild, JSONObject reducedSecondChild) 
+	{
+		JSONObject reducedJoinNode = new JSONObject();
+		// deal with how to create JSON stuff in here
+		
+		// join node should contain:
+		// array of children
+		// possibly names of child tables (or could be acquired from child nodes)
+		// join condition
+		// anything else?
+		
+		return reducedJoinNode;
+	}
 		
 		// node type: if it's a join type (hash, sort merge, inl, nl), we'll make a join node
 		// we'll look at the join conditions and stick them in the where clause
 		// may be some complications with aliasing/figuring out what relation an attribute comes from
 		// possible solution: keep a set of aliases that came from the children of a node, consult if necessary
-		
-		// merge join - join condition is in merge cond
-		// hash join - join condition is in hash cond
-		
 		
 		// nested loop joins are funny. the first child has a normal condition, but the join condition looks like it's actually in
 		// the index cond of the second child
@@ -67,8 +164,42 @@ public class PlanReducer {
 		
 		// a hash node probably doesn't need any processing - just use the result of its children
 		// same thing for sort
+	
+	private enum NODE_TYPE {
+		// may still need other types of left join
+		// may also need right join and possibly full join? not sure about what types of nodes there are
+		// there may also be materialize nodes?
+		HASH_JOIN,
+		HASH_LEFT_JOIN,
+		MERGE_JOIN,
+		MERGE_LEFT_JOIN,
+		NESTED_LOOP,
+		NESTED_LOOP_LEFT_JOIN,
+		HASH,
+		SORT,
+		INDEX_SCAN,
+		SEQ_SCAN,
+		BITMAP_HEAP_SCAN,
+		BITMAP_INDEX_SCAN,
+		LIMIT,
+		UNDEFINED;
+	};
 		
-
-	}
+		private NODE_TYPE getEnumFromNodeType(String nodeType)
+		{
+			if (nodeType == "Hash Join") { return NODE_TYPE.HASH_JOIN; }
+			if (nodeType == "Hash Left Join") { return NODE_TYPE.HASH_LEFT_JOIN; }
+			if (nodeType == "Merge Join") { return NODE_TYPE.MERGE_JOIN; }
+			if (nodeType == "Merge Left Join") { return NODE_TYPE.MERGE_LEFT_JOIN; }
+			if (nodeType == "Nested Loop") { return NODE_TYPE.NESTED_LOOP; }
+			if (nodeType == "Nested Loop Left Join") { return NODE_TYPE.NESTED_LOOP_LEFT_JOIN; }
+			if (nodeType == "Hash") { return NODE_TYPE.HASH; }
+			if (nodeType == "Sort") { return NODE_TYPE.SORT; }
+			if (nodeType == "Index Scan") { return NODE_TYPE.INDEX_SCAN; }
+			if (nodeType == "Seq Scan") { return NODE_TYPE.SEQ_SCAN; }
+			if (nodeType == "Bitmap Heap Scan") { return NODE_TYPE.BITMAP_HEAP_SCAN; }
+			if (nodeType == "Bitmap Index Scan") { return NODE_TYPE.BITMAP_INDEX_SCAN; }
+			return NODE_TYPE.UNDEFINED;
+		}
 
 }
