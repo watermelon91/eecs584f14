@@ -10,9 +10,6 @@ TO-DO (listed from top-priority):
 
 2. It's very likely that there are other attributes in the EXPLAIN output not captured in queryPlanAttrMapping in QueryParser.java. We can add them as we see more.
 
-3. Postgres EXPLAIN doesn't support JSON object with VERBOSE flag. So if we want the verbose flag (with includes "Output" attribute -- the returned column names of a query plan), we will need to either parse the raw EXPLAIN returned text, or we can still use the JSON object we have now and then parse the raw text to extract "Output" only.
-
-
 
 -------------------------- Folder structure --------------------------
 1. QueryParserTest:

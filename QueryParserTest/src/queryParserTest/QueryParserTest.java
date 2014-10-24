@@ -8,15 +8,39 @@ import org.json.simple.JSONObject;
 
 import queryParser.QueryParser;
 import queryReconstructor.QueryReconstructor;
+import frontEndConnector.FrontEndConnector;
 
 public class QueryParserTest {
 
 	// example usage of QueryParser class
 	public static void main(String [ ] args) 
 	{
+		// example of how UI can call the db
+		FrontEndConnector UIConnector = new FrontEndConnector("eecs484.eecs.umich.edu", "yjtang", "yjtang", "admin484postgres");
+		String rst = UIConnector.initializeSQLConnection();
+		if(rst=="")
+		{
+			System.out.println("Connection to db established...");
+		}
+		else
+		{
+			System.out.println(rst);
+		}
+		
+		UIConnector.closeDBConnection();
+		if(rst=="")
+		{
+			System.out.println("Connection to db closed.");
+		}
+		else
+		{
+			System.out.println(rst);
+		}
+		
+		// example of query parser class
 		// input file containing the returned query plan
-//		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
-		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan1_verbose.txt";
+		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
+//		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan1_verbose.txt";
 		
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	
@@ -56,7 +80,7 @@ public class QueryParserTest {
 			
 			// print some attributes of this node
 			System.out.println("Node Type: " + qParser.getNodeType(curChild));
-			System.out.println("Alias: " + qParser.getAlias(curChild));
+			System.out.println("Alias: " + qParser.getAlias(curChild)); 
 			System.out.println("Parent Relationship: " + qParser.getParentRelationship(curChild));
 			System.out.println("Hash Condition: " + qParser.getHashCond(curChild));
 			System.out.println("Join Type: " + qParser.getJoinType(curChild));
