@@ -44,7 +44,7 @@ public class PostgresDBConnector {
 			return "connection setup failed";
 		}
 		
-		//
+		// check if connection is successful
 		if(connection == null)
 		{
 			return "SQL connection failed";
@@ -53,6 +53,12 @@ public class PostgresDBConnector {
 		{
 			return "";
 		}
+	}
+	
+	public String executeQuery(String query)
+	{
+		// TODO
+		return "";
 	}
 	
 	public String closeConnector()
