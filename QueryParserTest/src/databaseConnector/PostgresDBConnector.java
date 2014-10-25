@@ -2,7 +2,12 @@ package databaseConnector;
 
 import java.sql.DriverManager;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PostgresDBConnector {
 
@@ -55,10 +60,38 @@ public class PostgresDBConnector {
 		}
 	}
 	
-	public String executeQuery(String query)
+	public List<String> executeQuery(String query) throws SQLException
 	{
-		// TODO
-		return "";
+		Statement stmt = null;
+		ResultSet rst = null;
+	
+		stmt = connection.createStatement();
+		rst = stmt.executeQuery(query);
+		ResultSetMetaData metadata = rst.getMetaData();
+		
+		int numCol = metadata.getColumnCount();
+		List<String> queryResult = new ArrayList<String>(); 
+		
+		while(rst.next())
+		{
+			String curRow = "";
+			for(int idx = 1; idx <= numCol; idx++)
+			{
+				curRow = curRow + rst.getString(idx) + "\t";
+			}
+			queryResult.add(curRow);
+		}
+		
+		if (stmt != null)
+		{
+			stmt.close();
+		}
+		if (rst != null)
+		{
+			rst.close();
+		}
+		
+		return queryResult;
 	}
 	
 	public String closeConnector()

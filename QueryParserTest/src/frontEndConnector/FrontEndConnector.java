@@ -1,5 +1,8 @@
 package frontEndConnector;
 
+import java.sql.SQLException;
+import java.util.List;
+
 import org.json.simple.JSONObject;
 
 import databaseConnector.PostgresDBConnector;
@@ -42,26 +45,38 @@ public class FrontEndConnector {
 	}
 	
 	/*
-	 * Input: the table name a user wants to retrieve data from.
-	 *        this table needs to be one of the tables that appears in one 
-	 *        of the nodes returned in JSONObject from debugQuery.
-	 * Output: sample data
+	 * Input: The table name a user wants to retrieve data from.
+	 *        This table needs to be one of the tables that appears in one 
+	 *        of the nodes returned in JSONObject from debugQuery()
+	 * Output: Sample data. See executeTestQuery() for detail.
 	 */
 	public String getSampleData(String tableName)
 	{
-		// TODO
-		return "";
+		return executeTestQuery("SELECT * FROM " + tableName);	
 	}
 	
 	/*
-	 * Input: a query that the user wants to run on the test data 
+	 * Input: A query that the user wants to run on the test data 
 	 * 		  generated using getSampleData()
-	 * Output: query result
+	 * Output: Query result. 
+	 * 		   The query result is stored by row into a List<String> and then 
+	 *		   converted into a string use the toString() method.
+	 *         Use string.split(",") to convert it back to an array. 
+	 *         See QueryParserTest for example. 
 	 */
 	public String executeTestQuery(String query)
 	{
-		// TODO
-		return "";
+		List<String> result = null;
+		try 
+		{
+			result = pdbConnector.executeQuery(query);
+			return result.toString();
+		} 
+		catch (SQLException e) 
+		{
+			e.printStackTrace();
+			return e.getMessage();
+		}
 	}
 	
 	public String closeDBConnection()

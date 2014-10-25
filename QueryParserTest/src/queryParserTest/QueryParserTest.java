@@ -2,6 +2,7 @@ package queryParserTest;
 
 //import java.io.BufferedReader;
 import java.util.Iterator;
+import java.util.List;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -15,7 +16,8 @@ public class QueryParserTest {
 	// example usage of QueryParser class
 	public static void main(String [ ] args) 
 	{
-		// example of how UI can call the db
+		// Example of how UI can call the db
+		// Example1: connecting the db
 		FrontEndConnector UIConnector = new FrontEndConnector("eecs484.eecs.umich.edu", "yjtang", "yjtang", "admin484postgres");
 		String rst = UIConnector.initializeSQLConnection();
 		if(rst=="")
@@ -26,7 +28,27 @@ public class QueryParserTest {
 		{
 			System.out.println(rst);
 		}
+		System.out.println("---------End of example 1---------\n");
 		
+		// Example2: getSampleData()
+		String sampleDataRst = UIConnector.getSampleData("users");
+		String[] sampleDataRstArray = sampleDataRst.split(",");
+		for(int i = 0; i < sampleDataRstArray.length; i++)
+		{
+			System.out.println(sampleDataRstArray[i]);
+		}
+		System.out.println("---------End of example 2---------\n");
+		
+		// Example3: executeTestQuery()
+		String testQueryRst = UIConnector.executeTestQuery("SELECT * FROM users WHERE user_id < 5;");
+		String[] testQueryRstArray = sampleDataRst.split(",");
+		for(int i = 0; i < testQueryRstArray.length; i++)
+		{
+			System.out.println(testQueryRstArray[i]);
+		}
+		System.out.println("---------End of example 3---------\n");
+		
+		// Example4: close the db connection
 		UIConnector.closeDBConnection();
 		if(rst=="")
 		{
@@ -36,8 +58,10 @@ public class QueryParserTest {
 		{
 			System.out.println(rst);
 		}
+		System.out.println("---------End of example 4---------\n");
 		
-		// example of query parser class
+		
+		// Example of query parser class
 		// input file containing the returned query plan
 		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
 //		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan1_verbose.txt";
