@@ -18,7 +18,11 @@ public class QueryParserTest {
 	{
 		// Example of how UI can call the db
 		// Example1: connecting the db
-		FrontEndConnector UIConnector = new FrontEndConnector("eecs484.eecs.umich.edu", "yjtang", "yjtang", "admin484postgres");
+		System.out.println("\n---------Example 1---------");
+
+		//FrontEndConnector UIConnector = new FrontEndConnector("eecs484.eecs.umich.edu", "yjtang", "yjtang", "admin484postgres");
+		FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "pwd");
+		
 		String rst = UIConnector.initializeSQLConnection();
 		if(rst=="")
 		{
@@ -28,27 +32,32 @@ public class QueryParserTest {
 		{
 			System.out.println(rst);
 		}
-		System.out.println("---------End of example 1---------\n");
 		
 		// Example2: getSampleData()
+		System.out.println("\n---------Example 2---------");
 		String sampleDataRst = UIConnector.getSampleData("users");
 		String[] sampleDataRstArray = sampleDataRst.split(",");
 		for(int i = 0; i < sampleDataRstArray.length; i++)
 		{
 			System.out.println(sampleDataRstArray[i]);
 		}
-		System.out.println("---------End of example 2---------\n");
 		
 		// Example3: executeTestQuery()
+		System.out.println("\n---------Example 3---------");
 		String testQueryRst = UIConnector.executeTestQuery("SELECT * FROM users WHERE user_id < 5;");
 		String[] testQueryRstArray = sampleDataRst.split(",");
 		for(int i = 0; i < testQueryRstArray.length; i++)
 		{
 			System.out.println(testQueryRstArray[i]);
 		}
-		System.out.println("---------End of example 3---------\n");
 		
-		// Example4: close the db connection
+		// Example 4: get query plan
+		System.out.println("\n---------Example 4---------");
+		JSONObject queryPlanTopLevelNode = UIConnector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
+		System.out.println(queryPlanTopLevelNode.toString());
+		
+		// Example5: close the db connection
+		System.out.println("\n---------Example 5---------");
 		UIConnector.closeDBConnection();
 		if(rst=="")
 		{
@@ -58,10 +67,9 @@ public class QueryParserTest {
 		{
 			System.out.println(rst);
 		}
-		System.out.println("---------End of example 4---------\n");
-		
-		
+				
 		// Example of query parser class
+		System.out.println("\n---------Example of query parser class---------");
 		// input file containing the returned query plan
 		String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
 //		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan1_verbose.txt";

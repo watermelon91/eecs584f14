@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
+import queryParser.QueryParser;
 import databaseConnector.PostgresDBConnector;
 
 public class FrontEndConnector {
@@ -40,8 +41,14 @@ public class FrontEndConnector {
 	 */
 	public JSONObject debugQuery(String query)
 	{
+		// get the query plan in string
+		String queryPlanStr = executeTestQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
+		QueryParser qParser = new QueryParser(queryPlanStr, false);
+		
 		// TODO
-		return null;
+		// call Dana's QueryReducer to get the JSONObject with reduced plan
+		// return the unreduced node for now
+		return qParser.topLevelNode;
 	}
 	
 	/*
@@ -70,7 +77,10 @@ public class FrontEndConnector {
 		try 
 		{
 			result = pdbConnector.executeQuery(query);
-			return result.toString();
+			String resultStr = result.toString();
+			
+			// use substring to remove the extra pair of [] added by List.toString()
+			return resultStr.substring(1, resultStr.length()-1);
 		} 
 		catch (SQLException e) 
 		{

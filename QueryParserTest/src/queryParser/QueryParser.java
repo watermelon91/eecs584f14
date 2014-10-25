@@ -43,6 +43,24 @@ public class QueryParser {
 		}
 	}
 	
+	// constructor for read-in query plan from string
+	public QueryParser(String queryPlanJsonString, Boolean dummy)
+	{
+		try {
+			JSONParser parser = new JSONParser();
+			Object obj = parser.parse(queryPlanJsonString);
+	 
+			JSONArray topLevelArray = (JSONArray) obj; 	// top level object "{}" enclosed in top level "[]"
+			initializeTopLevelNode(topLevelArray);
+			
+		}catch (ParseException e) {
+			e.printStackTrace();
+		} catch (MultipleTopLevelNodeException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
+	
 	// get functions for all children plan
 	public JSONArray getChildrenPlanNodes(JSONObject currentNode)
 	{
