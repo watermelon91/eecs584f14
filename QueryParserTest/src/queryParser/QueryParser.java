@@ -130,6 +130,26 @@ public class QueryParser {
 		return rst.toString();
 	}
 	
+	public String getJoinFiler(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.JOIN_FILTER));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
+	public String getMergeCond(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.MERGE_COND));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
 	public String getNodeType(JSONObject currentNode)
 	{
 		// return the node type of the current node
@@ -167,6 +187,17 @@ public class QueryParser {
 	{
 		// return the plan width in this node
 		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.PLAN_WIDTH));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
+	public String getRecheckCond(JSONObject currentNode)
+	{
+		// return the plan width in this node
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.RECHECH_COND));
 		if(rst == null)
 		{
 			return EMPTY_STRING;
@@ -258,6 +289,8 @@ public class QueryParser {
 		INDEX_COND,
 		INDEX_NAME,
 		JOIN_TYPE,
+		JOIN_FILTER,
+		MERGE_COND,
 		NODE_TYPE, 
 		OUTPUT,
 		PARENT_RELATIONSHIP,
@@ -265,6 +298,7 @@ public class QueryParser {
 		PLANS,
 		PLAN_ROWS,
 		PLAN_WIDTH,
+		RECHECH_COND,
 		RELATION_NAME,
 		SCHEMA,
 		SCAN_DIRECTION,
@@ -281,6 +315,8 @@ public class QueryParser {
 		 map.put(QUERY_PLAN_ATTRS.INDEX_COND, "Index Cond");
 		 map.put(QUERY_PLAN_ATTRS.INDEX_NAME, "Index Name");
 		 map.put(QUERY_PLAN_ATTRS.JOIN_TYPE, "Join Type");
+		 map.put(QUERY_PLAN_ATTRS.JOIN_FILTER, "Join Filter");
+		 map.put(QUERY_PLAN_ATTRS.MERGE_COND, "Merge Cond");
 		 map.put(QUERY_PLAN_ATTRS.NODE_TYPE, "Node Type");
 		 map.put(QUERY_PLAN_ATTRS.OUTPUT, "Output");
 		 map.put(QUERY_PLAN_ATTRS.PARENT_RELATIONSHIP, "Parent Relationship");
@@ -288,6 +324,7 @@ public class QueryParser {
 		 map.put(QUERY_PLAN_ATTRS.PLANS, "Plans");
 		 map.put(QUERY_PLAN_ATTRS.PLAN_ROWS, "Plan Rows");
 		 map.put(QUERY_PLAN_ATTRS.PLAN_WIDTH, "Plan Width");
+		 map.put(QUERY_PLAN_ATTRS.RECHECH_COND, "Recheck Cond");
 		 map.put(QUERY_PLAN_ATTRS.RELATION_NAME, "Relation Name");
 		 map.put(QUERY_PLAN_ATTRS.SCAN_DIRECTION, "Scan Direction");
 		 map.put(QUERY_PLAN_ATTRS.SCHEMA, "Schema");
