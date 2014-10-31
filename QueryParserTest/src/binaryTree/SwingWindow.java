@@ -58,10 +58,10 @@ public class SwingWindow {
         */
         
         // create a connector to backend
-        FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "1academic");
+        FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "pwd");
         // start SQL connection
 		String rst = UIConnector.initializeSQLConnection();
-		if(rst=="")
+		if(rst.isEmpty())
 		{
 			System.out.println("Connection to db established...");
 		}
@@ -83,6 +83,17 @@ public class SwingWindow {
 	       
 	        frame.getContentPane().add(panel);
 	        frame.pack();
+	        
+	        // close db connection
+			UIConnector.closeDBConnection();
+			if(rst.isEmpty())
+			{
+				System.out.println("Connection to db closed.");
+			}
+			else
+			{
+				System.out.println(rst);
+			}
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
