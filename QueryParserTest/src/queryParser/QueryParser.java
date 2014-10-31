@@ -130,7 +130,7 @@ public class QueryParser {
 		return rst.toString();
 	}
 	
-	public String getJoinFiler(JSONObject currentNode)
+	public String getJoinFilter(JSONObject currentNode)
 	{
 		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.JOIN_FILTER));
 		if(rst == null)
