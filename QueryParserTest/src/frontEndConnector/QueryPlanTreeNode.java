@@ -29,10 +29,11 @@ public class QueryPlanTreeNode {
 	}
 	
 	 @Override public String toString() {
-
-		 String nodeFormattedStr = "Relation: " + nodeToString(relationName) + "\n"
-				 + "Op: " + nodeToString(operator) + "\n" ;
-				// + "Output: " + nodeToString(outputAttrs);
+		 final String SPLITTER = "`";
+		 
+		 String nodeFormattedStr = "Relation: " + nodeToString(relationName) + SPLITTER
+				 + "Op: " + nodeToString(operator) + SPLITTER 
+				 + "Output: " + nodeToString(outputAttrs);
 
 		 return nodeFormattedStr;
 	 }

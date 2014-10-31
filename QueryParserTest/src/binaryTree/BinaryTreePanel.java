@@ -65,6 +65,9 @@ public class BinaryTreePanel extends JPanel {
         tree.traversePostorder(new BinaryTreeNode.Visitor() {
             public void visit(BinaryTreeNode node) {
                 String data = node.getData().toString();
+                String[] dataPieces = data.split("`");
+                int heightOffset = 12;   
+                
                 Point center = (Point)coordinates.get(node);
                 if (node.getParent() != null) {
                     Point parentPoint = (Point)coordinates.get(node.getParent());
@@ -72,7 +75,7 @@ public class BinaryTreePanel extends JPanel {
                     g.drawLine(center.x, center.y, parentPoint.x, parentPoint.y);
                 }
                 FontMetrics fm = g.getFontMetrics();
-                Rectangle r = fm.getStringBounds(data, g).getBounds();
+                Rectangle r = fm.getStringBounds(dataPieces[getMaxLen(dataPieces)], g).getBounds();
                 r.setLocation(center.x - r.width/2, center.y - r.height/2);
                 Color color = getNodeColor(node);
                 Color textColor =
@@ -80,11 +83,33 @@ public class BinaryTreePanel extends JPanel {
                     ? Color.white
                     : Color.black;
                 g.setColor(color);
-                g.fillRect(r.x - 2 , r.y - 2, r.width + 4, r.height + 4);
+                g.fillRect(r.x - 2 , r.y - 2, r.width + 4, r.height + 4 + (dataPieces.length-1) * heightOffset);
                 g.setColor(textColor);
-                g.drawString(data, r.x, r.y + r.height);
+                
+                             
+                for(int i = 0; i < dataPieces.length; i++)
+                {
+                	g.drawString(dataPieces[i], r.x, r.y + r.height + i * heightOffset);
+                }
             }
         });
+    }
+    
+    private int getMaxLen(String[] dataPieces)
+    {
+    	int rst = Integer.MIN_VALUE;
+    	int idx = -1;
+    	
+    	for(int i = 0; i < dataPieces.length; i++)
+    	{
+    		if(dataPieces[i].length() > rst)
+    		{
+    			rst = dataPieces[i].length();
+    			idx = i;
+    		}
+    	}
+    	
+    	return idx;
     }
 
     /**
