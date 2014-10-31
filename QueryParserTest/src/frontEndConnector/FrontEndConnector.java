@@ -5,16 +5,17 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
+import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
 import databaseConnector.PostgresDBConnector;
 
 public class FrontEndConnector {
 	
-	String dbIP = "";
-	String dbName = "";
-	String userName = "";
-	String password = "";
-	PostgresDBConnector pdbConnector = null;
+	private String dbIP = "";
+	private String dbName = "";
+	private String userName = "";
+	private String password = "";
+	private PostgresDBConnector pdbConnector = null;
 	
 	public FrontEndConnector(String _dbIP, String _dbName, String _userName, String _password)
 	{
@@ -39,7 +40,7 @@ public class FrontEndConnector {
 	 * Input: a query the user wants to debug
 	 * Output: a JSONObject representing the execution plan of the query
 	 */
-	public JSONObject debugQuery(String query)
+	public LinkedBinaryTreeNode<QueryPlanTreeNode>  debugQuery(String query) throws Exception
 	{
 		// get the query plan in string
 		String queryPlanStr = executeTestQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
@@ -47,8 +48,12 @@ public class FrontEndConnector {
 		
 		// TODO
 		// call Dana's QueryReducer to get the JSONObject with reduced plan
+		
+		BinaryTreeConverter converter = new BinaryTreeConverter(qParser);
+		LinkedBinaryTreeNode<QueryPlanTreeNode>  treeRoot =  converter.convertToTree();
+		
 		// return the unreduced node for now
-		return qParser.topLevelNode;
+		return treeRoot;
 	}
 	
 	/*

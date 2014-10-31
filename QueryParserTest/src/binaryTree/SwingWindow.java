@@ -5,6 +5,9 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 
+import frontEndConnector.FrontEndConnector;
+import frontEndConnector.QueryPlanTreeNode;
+
 public class SwingWindow {
 
     private JFrame frame;
@@ -46,19 +49,45 @@ public class SwingWindow {
         frame.setMinimumSize(new Dimension(700,800));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
+        /*
         LinkedBinaryTreeNode<Integer> root = new LinkedBinaryTreeNode<Integer>(5);
         root.setLeft(new LinkedBinaryTreeNode<Integer>(10));
         root.setRight(new LinkedBinaryTreeNode<Integer>(20));
         root.getLeft().setLeft(new LinkedBinaryTreeNode<Integer>(30));
         root.getRight().setLeft(new LinkedBinaryTreeNode<Integer>(40));
+        */
         
-        panel = new BinaryTreePanel(root, 100, 100);
-       panel.setLocation(10, 10);
-       panel.setSize(1000, 1000);
-       panel.setOpaque(true);
-       
-       frame.getContentPane().add(panel);
-       frame.pack();
+        // create a connector to backend
+        FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "1academic");
+        // start SQL connection
+		String rst = UIConnector.initializeSQLConnection();
+		if(rst=="")
+		{
+			System.out.println("Connection to db established...");
+		}
+		else
+		{
+			System.out.println(rst);
+		}
+		
+        LinkedBinaryTreeNode<QueryPlanTreeNode> root;
+		try {
+			// get parsed query plan returned in the root of LinkedBinaryTree
+			root = UIConnector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
+			
+			// draw the query plan
+	        panel = new BinaryTreePanel(root, 100, 100);
+	        panel.setLocation(10, 10);
+	        panel.setSize(1000, 1000);
+	        panel.setOpaque(true);
+	       
+	        frame.getContentPane().add(panel);
+	        frame.pack();
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
     }
 

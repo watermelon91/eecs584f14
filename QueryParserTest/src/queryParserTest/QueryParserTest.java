@@ -7,21 +7,23 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
 import queryReconstructor.QueryReconstructor;
 import frontEndConnector.FrontEndConnector;
+import frontEndConnector.QueryPlanTreeNode;
 
 public class QueryParserTest {
 
 	// example usage of QueryParser class
-	public static void main(String [ ] args) 
+	public static void main(String [ ] args) throws Exception 
 	{
 		// Example of how UI can call the db
 		// Example1: connecting the db
 		System.out.println("\n---------Example 1---------");
 
 		//FrontEndConnector UIConnector = new FrontEndConnector("eecs484.eecs.umich.edu", "yjtang", "yjtang", "admin484postgres");
-		FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "pwd");
+		FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "1academic");
 		
 		String rst = UIConnector.initializeSQLConnection();
 		if(rst=="")
@@ -53,8 +55,8 @@ public class QueryParserTest {
 		
 		// Example 4: get query plan
 		System.out.println("\n---------Example 4---------");
-		JSONObject queryPlanTopLevelNode = UIConnector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
-		System.out.println(queryPlanTopLevelNode.toString());
+		LinkedBinaryTreeNode<QueryPlanTreeNode>  queryPlanTopLevelNode = UIConnector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
+		//System.out.println(queryPlanTopLevelNode.toString());
 		
 		// Example5: close the db connection
 		System.out.println("\n---------Example 5---------");
