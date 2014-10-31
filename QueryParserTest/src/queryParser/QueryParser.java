@@ -97,6 +97,28 @@ public class QueryParser {
 		return rst.toString();
 	}
 	
+	public String getIndexCond(JSONObject currentNode)
+	{
+		// return the index condition of this node
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.INDEX_COND));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
+	public String getIndexName(JSONObject currentNode)
+	{
+		// return the index condition of this node
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.INDEX_NAME));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
 	public String getJoinType(JSONObject currentNode)
 	{
 		// return the join type of this node
@@ -163,6 +185,17 @@ public class QueryParser {
 		return rst.toString();
 	}
 	
+	public String getScanDirection(JSONObject currentNode)
+	{
+		// return the relation name of this node
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SCAN_DIRECTION));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
 	public String getSchema(JSONObject currentNode)
 	{
 		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SCHEMA));
@@ -222,6 +255,8 @@ public class QueryParser {
 	private enum QUERY_PLAN_ATTRS {
 		ALIAS,
 		HASH_COND,
+		INDEX_COND,
+		INDEX_NAME,
 		JOIN_TYPE,
 		NODE_TYPE, 
 		OUTPUT,
@@ -232,6 +267,7 @@ public class QueryParser {
 		PLAN_WIDTH,
 		RELATION_NAME,
 		SCHEMA,
+		SCAN_DIRECTION,
 		STARTUP_COST,
 		TOTAL_COST
 		};
@@ -242,6 +278,8 @@ public class QueryParser {
 		 Map<QUERY_PLAN_ATTRS, String> map = new HashMap<QUERY_PLAN_ATTRS, String>();
 		 map.put(QUERY_PLAN_ATTRS.ALIAS, "Alias");
 		 map.put(QUERY_PLAN_ATTRS.HASH_COND, "Hash Cond");
+		 map.put(QUERY_PLAN_ATTRS.INDEX_COND, "Index Cond");
+		 map.put(QUERY_PLAN_ATTRS.INDEX_NAME, "Index Name");
 		 map.put(QUERY_PLAN_ATTRS.JOIN_TYPE, "Join Type");
 		 map.put(QUERY_PLAN_ATTRS.NODE_TYPE, "Node Type");
 		 map.put(QUERY_PLAN_ATTRS.OUTPUT, "Output");
@@ -251,6 +289,7 @@ public class QueryParser {
 		 map.put(QUERY_PLAN_ATTRS.PLAN_ROWS, "Plan Rows");
 		 map.put(QUERY_PLAN_ATTRS.PLAN_WIDTH, "Plan Width");
 		 map.put(QUERY_PLAN_ATTRS.RELATION_NAME, "Relation Name");
+		 map.put(QUERY_PLAN_ATTRS.SCAN_DIRECTION, "Scan Direction");
 		 map.put(QUERY_PLAN_ATTRS.SCHEMA, "Schema");
 		 map.put(QUERY_PLAN_ATTRS.STARTUP_COST, "Startup Cost");
 		 map.put(QUERY_PLAN_ATTRS.TOTAL_COST, "Total Cost");
