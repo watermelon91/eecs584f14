@@ -18,10 +18,13 @@ public class QueryReconstructor {
 	
 	int tempTableNum;
 	QueryParser qParser;
+	PlanReducer pr;
+	
 	public QueryReconstructor(QueryParser qp)  
 	{
 		// TODO later: this should actually take a PlanReducer and operate on a simplified version of the execution plan
 		qParser = qp;
+		pr = new PlanReducer(qParser);
 		// this will take the topLevelNode JSONObject of the queryParser
 		// it will recursively generate queries for each level
 		

@@ -7,11 +7,11 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import binaryTree.LinkedBinaryTreeNode;
+//import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
 import queryReconstructor.QueryReconstructor;
 import frontEndConnector.FrontEndConnector;
-import frontEndConnector.QueryPlanTreeNode;
+//import frontEndConnector.QueryPlanTreeNode;
 
 public class QueryParserTest {
 
