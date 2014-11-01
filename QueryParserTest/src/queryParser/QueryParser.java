@@ -94,7 +94,7 @@ public class QueryParser {
 		{
 			return EMPTY_STRING;
 		}
-		return rst.toString();
+		return removeParenthesis(rst.toString());
 	}
 	
 	public String getHashCond(JSONObject currentNode)
@@ -105,7 +105,8 @@ public class QueryParser {
 		{
 			return EMPTY_STRING;
 		}
-		return rst.toString();
+		
+		return removeParenthesis(rst.toString());
 	}
 	
 	public String getIndexCond(JSONObject currentNode)
@@ -116,7 +117,8 @@ public class QueryParser {
 		{
 			return EMPTY_STRING;
 		}
-		return rst.toString();
+		
+		return removeParenthesis(rst.toString());
 	}
 	
 	public String getIndexName(JSONObject currentNode)
@@ -148,7 +150,7 @@ public class QueryParser {
 		{
 			return EMPTY_STRING;
 		}
-		return rst.toString();
+		return removeParenthesis(rst.toString());
 	}
 	
 	public String getMergeCond(JSONObject currentNode)
@@ -158,7 +160,7 @@ public class QueryParser {
 		{
 			return EMPTY_STRING;
 		}
-		return rst.toString();
+		return removeParenthesis(rst.toString());
 	}
 	
 	public String getNodeType(JSONObject currentNode)
@@ -213,7 +215,7 @@ public class QueryParser {
 		{
 			return EMPTY_STRING;
 		}
-		return rst.toString();
+		return removeParenthesis(rst.toString());
 	}
 	
 	public String getRelationName(JSONObject currentNode)
@@ -290,6 +292,18 @@ public class QueryParser {
 		}
 		
 		return;
+	}
+	
+	private String removeParenthesis(String inStr)
+	{
+		if((inStr.length() >= 2) && inStr.charAt(0) == '(' && inStr.charAt(inStr.length()-1) == ')')
+		{
+			return inStr.substring(1, inStr.length()-1);
+		}
+		else
+		{
+			return inStr;
+		}
 	}
 
 	// ------------------------------------ private class members --------------------------------------------------
