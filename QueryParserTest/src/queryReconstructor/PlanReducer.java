@@ -14,7 +14,7 @@ public class PlanReducer {
 	// it will eliminate unnecessary seq scan nodes
 	
 	QueryParser qParser;
-	
+	static int curTmp = 0;
 	
 	// will return:
 	// a tree of JSONObjects
@@ -49,6 +49,7 @@ public class PlanReducer {
 		case SORT:
 			break;
 		// scans
+			
 		case INDEX_SCAN:
 			break;
 		case SEQ_SCAN:
@@ -93,9 +94,9 @@ public class PlanReducer {
 		JSONObject reducedFirstChild = ReduceNode((JSONObject) children.get(0));
 		JSONObject reducedSecondChild = ReduceNode((JSONObject) children.get(1));
 		
-		// String joinCond = qParser.getMergeCond(curNode);
+		String joinCond = qParser.getMergeCond(curNode);
 		
-		// reducedNode = makeJoinNode(joinCond, reducedFirstChild, reducedSecondChild);
+		reducedNode = makeJoinNode(joinCond, reducedFirstChild, reducedSecondChild);
 		
 		return reducedNode;
 	}
@@ -108,10 +109,15 @@ public class PlanReducer {
 		JSONObject reducedSecondChild = ReduceNode((JSONObject) children.get(1));
 		
 		// join cond is in second child's index condition
-		// and also possibly joinFilter attribute if multiple conditions 
-		// String joinCond = 
+		// and also possibly joinFilter attribute if multiple conditions
+		String joinFilter = qParser.getJoinFilter(curNode);
+		String joinCond = qParser.getIndexCond(reducedSecondChild);
+		String alias = qParser.getAlias(reducedSecondChild);
+		// may need to get alias from index scan node and apply it 
+		// to the index cond 
+		// need
 		
-		// reducedNode = makeJoinNode(joinCond, reducedFirstChild, reducedSecondChild);
+		reducedNode = makeJoinNode(joinCond, reducedFirstChild, reducedSecondChild);
 		
 		return reducedNode;
 	}
@@ -119,18 +125,49 @@ public class PlanReducer {
 	
 	JSONObject makeJoinNode(String joinCond, JSONObject reducedFirstChild, JSONObject reducedSecondChild) 
 	{
+		
+		// things required to make a join tmp table:
+		// input table names
+		// join conditions (all)
+		// output table name
+		// other filters? I think those will typically be applied in scan nodes if they're not join conditions
+		
 		JSONObject reducedJoinNode = new JSONObject();
-		// deal with how to create JSON stuff in here
+		JSONArray children = new JSONArray();
+		children.add(reducedFirstChild);
+		children.add(reducedSecondChild);
+		reducedJoinNode.put("children", children);
+		reducedJoinNode.put("joinCondition", joinCond);
+		reducedJoinNode.put("tableName", "tmp" + curTmp);
 		
 		// join node should contain:
 		// array of children
+		// its tmp tablename
 		// possibly names of child tables (or could be acquired from child nodes)
 		// join condition
 		// anything else?
 		
+		// 
+		
 		return reducedJoinNode;
 	}
 		
+	
+	JSONObject makeScanNode(String filterCond, String inputTable) {
+		// things required to make a scan tmp table
+		// when do we actually want a scan node vs. directly incorporating it into the parent node?
+		// e.g., if it's literally nothing more than a sequential scan, then we don't want to make a node for it
+		// maybe we should have a boolean indicating whether it should be kept as a node
+		
+		// keep the old alias
+		
+		
+		JSONObject reducedScanNode = new JSONObject();
+		
+		// 
+		
+		return reducedScanNode;
+	}
 		// node type: if it's a join type (hash, sort merge, inl, nl), we'll make a join node
 		// we'll look at the join conditions and stick them in the where clause
 		// may be some complications with aliasing/figuring out what relation an attribute comes from
