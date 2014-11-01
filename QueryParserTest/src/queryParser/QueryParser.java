@@ -88,7 +88,7 @@ public class QueryParser {
 	
 	public String getFilter(JSONObject currentNode)
 	{
-		// return the hash condition of this node
+		// return the filter of this node
 		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.FILTER));
 		if(rst == null)
 		{
@@ -207,7 +207,7 @@ public class QueryParser {
 	
 	public String getRecheckCond(JSONObject currentNode)
 	{
-		// return the plan width in this node
+		// return the recheck condition in this node
 		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.RECHECH_COND));
 		if(rst == null)
 		{
@@ -229,7 +229,7 @@ public class QueryParser {
 	
 	public String getScanDirection(JSONObject currentNode)
 	{
-		// return the relation name of this node
+		// return the scan direction of this node
 		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SCAN_DIRECTION));
 		if(rst == null)
 		{
@@ -240,6 +240,7 @@ public class QueryParser {
 	
 	public String getSchema(JSONObject currentNode)
 	{
+		// return the schema of this node
 		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SCHEMA));
 		if(rst == null)
 		{
