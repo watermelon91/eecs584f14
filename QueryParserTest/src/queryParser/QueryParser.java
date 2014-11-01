@@ -86,6 +86,17 @@ public class QueryParser {
 		return rst.toString();
 	}
 	
+	public String getFilter(JSONObject currentNode)
+	{
+		// return the hash condition of this node
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.FILTER));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
 	public String getHashCond(JSONObject currentNode)
 	{
 		// return the hash condition of this node
@@ -285,6 +296,7 @@ public class QueryParser {
 	// enum of all attributes EXPLAIN can return
 	private enum QUERY_PLAN_ATTRS {
 		ALIAS,
+		FILTER,
 		HASH_COND,
 		INDEX_COND,
 		INDEX_NAME,
@@ -311,6 +323,7 @@ public class QueryParser {
 	{
 		 Map<QUERY_PLAN_ATTRS, String> map = new HashMap<QUERY_PLAN_ATTRS, String>();
 		 map.put(QUERY_PLAN_ATTRS.ALIAS, "Alias");
+		 map.put(QUERY_PLAN_ATTRS.FILTER, "Filter");
 		 map.put(QUERY_PLAN_ATTRS.HASH_COND, "Hash Cond");
 		 map.put(QUERY_PLAN_ATTRS.INDEX_COND, "Index Cond");
 		 map.put(QUERY_PLAN_ATTRS.INDEX_NAME, "Index Name");
