@@ -24,7 +24,7 @@ public class QueryParserTest {
 		// Example1: connecting the db
 		System.out.println("\n---------Example 1---------");
 
-		//FrontEndConnector UIConnector = new FrontEndConnector("eecs484.eecs.umich.edu", "yjtang", "yjtang", "pwd");
+		//FrontEndConnector UIConnector = new FrontEndConnector("eecs484.eecs.umich.edu", "uniqname", "uniqname", "pwd");
 		FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "pwd");
 		
 		String rst = UIConnector.initializeSQLConnection();
