@@ -7,11 +7,13 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import binaryTree.LinkedBinaryTreeNode;
 //import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
 import queryReconstructor.QueryReconstructor;
 import frontEndConnector.FrontEndConnector;
 //import frontEndConnector.QueryPlanTreeNode;
+import frontEndConnector.QueryPlanTreeNode;
 
 public class QueryParserTest {
 
@@ -23,7 +25,7 @@ public class QueryParserTest {
 		System.out.println("\n---------Example 1---------");
 
 		//FrontEndConnector UIConnector = new FrontEndConnector("eecs484.eecs.umich.edu", "yjtang", "yjtang", "admin484postgres");
-		FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "1academic");
+		FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "pwd");
 		
 		String rst = UIConnector.initializeSQLConnection();
 		if(rst=="")
