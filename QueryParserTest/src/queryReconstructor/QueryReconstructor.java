@@ -36,12 +36,12 @@ public class QueryReconstructor {
 	void generateTempQuery(JSONObject curNode)
 	{
 		String tmpTableName = pr.getNewTableName(curNode);
-		String query = "create table " + tmpTableName + " as ";
+		String query = "create table " + tmpTableName + " as select ";
 		JSONArray outputAttrs = pr.getOutputAttributes(curNode);
 		String filter = pr.getFilter(curNode);
 		
+		// okay, attributes will always have aliases (if not specified by user, will be added by system)
 		
-		// um, actually we'll want the children of the reduced node 
 		JSONArray childrenNodes = pr.getChildren(curNode);// qParser.getChildrenPlanNodes(curNode);
 		// iterate through all the children plans of the top level node
 		if (childrenNodes == null) 
@@ -53,7 +53,6 @@ public class QueryReconstructor {
 			if (pr.getType(curNode).equals("scan")) {
 				// add output attributes to select statement
 				Iterator<String> it = outputAttrs.iterator();
-				query = query + " select ";
 				while (it.hasNext()) {
 					String attr = it.next();
 					query = query + " " + attr + ",";
@@ -97,7 +96,6 @@ public class QueryReconstructor {
 			// join node also needs select statement, but aliases will have to be matched with child nodes and replaced with child table names
 			// sooo..
 			Iterator<String> it = outputAttrs.iterator();
-			query = query + " select ";
 			while (it.hasNext()) {
 				String attr = it.next();
 				String[] attrParts = attr.split("\\.");
@@ -120,7 +118,13 @@ public class QueryReconstructor {
 			// shit, join condition also needs alias replaced
 			
 			// TODO: what happens when you do a cross product?
-			// TODO: replace aliases with tmp names in joinCond
+			// TODO: replace aliases with tmp names in joinCond and filter
+			// joinCond/filter won't always be as well behaved as the list of attributes
+			// we'll need to watch out for other things, like string literals
+			// we could just search for strings of the form: alias.
+			// but that would cause problems with string literals
+			// can't cause problems with table names or attribute names or number literals (aliases cause syntax errors in Postgres)
+			
 			query = query + " from " + tmpC1 + " inner join " + tmpC2 + " on " + joinCond;
 			
 			// possible where clause
