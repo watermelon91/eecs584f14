@@ -29,7 +29,7 @@ public class QueryPlanTreeNode {
 	}
 	
 	 @Override public String toString() {
-		 final String SPLITTER = "`";
+		 final String SPLITTER = "\n";
 		 
 		 String nodeFormattedStr = "Relation: " + nodeToString(relationName) + SPLITTER
 				 + "Op: " + nodeToString(operator) + SPLITTER 
