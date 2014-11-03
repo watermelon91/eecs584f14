@@ -406,7 +406,6 @@ public class PlanReducer {
 	
 	public String getType(JSONObject currentNode)
 	{
-		
 		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE));
 		if(rst == null)
 		{
@@ -465,14 +464,9 @@ public class PlanReducer {
 		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS));
 	}
 	
-	public String getChildren(JSONObject currentNode)
+	public JSONArray getChildren(JSONObject currentNode)
 	{
-		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN));
-		if(rst == null)
-		{
-			return EMPTY_STRING;
-		}
-		return rst.toString();
+		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN));
 	}
 
 	private static final String EMPTY_STRING = "";
