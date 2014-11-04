@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 
 import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
+import queryReconstructor.PlanReducer;
 import databaseConnector.PostgresDBConnector;
 
 public class FrontEndConnector {
@@ -45,11 +46,12 @@ public class FrontEndConnector {
 		// get the query plan in string
 		String queryPlanStr = executeTestQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
 		QueryParser qParser = new QueryParser(queryPlanStr, false);
+		PlanReducer pReducer = new PlanReducer(qParser);
 		
 		// TODO
 		// call Dana's QueryReducer to get the JSONObject with reduced plan
 		
-		BinaryTreeConverter converter = new BinaryTreeConverter(qParser);
+		BinaryTreeConverter converter = new BinaryTreeConverter(pReducer);
 		LinkedBinaryTreeNode<QueryPlanTreeNode>  treeRoot =  converter.convertToTree();
 		
 		// return the unreduced node for now

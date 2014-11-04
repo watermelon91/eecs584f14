@@ -7,21 +7,32 @@ import org.json.simple.JSONObject;
 
 import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
+import queryReconstructor.PlanReducer;
 
 public class BinaryTreeConverter {
-	private QueryParser qParser;
+	//private QueryParser qParser;
+	private PlanReducer pReducer;
 	private LinkedBinaryTreeNode<QueryPlanTreeNode> root;
 	private static final int MAX_CHILDREN_NUM = 2;
 	
-	public BinaryTreeConverter(QueryParser _qParser)
+	public BinaryTreeConverter(PlanReducer _pReducer)
 	{
-		qParser = _qParser;
+		pReducer = _pReducer;
 	}
 
 	// convert a JSONObject query plan to a tree format
 	public LinkedBinaryTreeNode<QueryPlanTreeNode> convertToTree() throws Exception
 	{
-		return constructTree(qParser.topLevelNode);
+		if( pReducer.topLevelNode == null)
+		{
+			System.out.println("top node null.");
+		}
+		else
+		{
+			System.out.println("topLevelNode: " + pReducer.topLevelNode.toString());
+		}
+		
+		return constructTree(pReducer.topLevelNode);
 	}
 	
 	// recursive construct the tree
@@ -56,9 +67,13 @@ public class BinaryTreeConverter {
 	private LinkedBinaryTreeNode<QueryPlanTreeNode> createBinaryTreeNode(JSONObject currentNode)
 	{
 		QueryPlanTreeNode node = new QueryPlanTreeNode(
-				qParser.getRelationName(currentNode),
-				qParser.getJoinType(currentNode),
-				qParser.getOutputAttributes(currentNode).toString()
+				pReducer.getType(currentNode),
+				pReducer.getAliasSet(currentNode).toString(),
+				pReducer.getFilter(currentNode),
+				pReducer.getInputTable(currentNode),
+				pReducer.getNewTableName(currentNode),
+				pReducer.getJoinCondition(currentNode),
+				pReducer.getOutputAttributes(currentNode).toString()
 				);
 		
 		LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = new LinkedBinaryTreeNode<QueryPlanTreeNode>(node);
@@ -69,7 +84,7 @@ public class BinaryTreeConverter {
 	// get all children of the current node
 	private JSONObject[] getAllChildren(JSONObject currentNode) throws Exception
 	{
-		JSONArray childrenNodes = qParser.getChildrenPlanNodes(currentNode);		
+		JSONArray childrenNodes = pReducer.getChildren(currentNode);		
 		JSONObject[] result = new JSONObject[MAX_CHILDREN_NUM];
 		for(int i = 0; i < MAX_CHILDREN_NUM; i++)
 		{

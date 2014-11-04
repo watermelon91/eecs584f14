@@ -1,26 +1,61 @@
 package frontEndConnector;
 
 public class QueryPlanTreeNode {
-	public String relationName;
-	public String operator;
+	public String type;
+	public String aliasSet;
+	public String filter;
+	public String inputTable;
+	public String newTableName;
+	public String joinCondition;
 	public String outputAttrs;
 	
-	public QueryPlanTreeNode(String _relationName, String _operator, String _outputAttrs)
+	public QueryPlanTreeNode(
+			String _type, 
+			String _aliasSet, 
+			String _filter,
+			String _inputTable,
+			String _newTableName,
+			String _joinCondition,
+			String _outputAttrs
+			)
 	{
-		relationName = _relationName;
-		operator = _operator;
-		//outputAttrs = _outputAttrs;
-		outputAttrs = "";
+		type = _type;
+		aliasSet = _aliasSet;
+		filter = _filter;
+		inputTable = _inputTable;
+		newTableName = _newTableName;
+		joinCondition = _joinCondition;
+		outputAttrs = _outputAttrs;
 	}
 	
-	public String getRelationName()
+	public String getType()
 	{
-		return relationName;
+		return type;
 	}
 	
-	public String getOperator()
+	public String getAliasSet()
 	{
-		return operator;
+		return aliasSet;
+	}
+	
+	public String getFilter()
+	{
+		return filter;
+	}
+	
+	public String getInputTable()
+	{
+		return inputTable;
+	}
+	
+	public String getNewTableName()
+	{
+		return newTableName;
+	}
+	
+	public String getJoinCondition()
+	{
+		return joinCondition;
 	}
 	
 	public String getOutputAttrs()
@@ -29,11 +64,16 @@ public class QueryPlanTreeNode {
 	}
 	
 	 @Override public String toString() {
-		 final String SPLITTER = "\n";
+		 //final String SPLITTER = "\n";
+		 final String SPLITTER = "`";
 		 
-		 String nodeFormattedStr = "Relation: " + nodeToString(relationName) + SPLITTER
-				 + "Op: " + nodeToString(operator) + SPLITTER 
-				 + "Output: " + nodeToString(outputAttrs);
+		 String nodeFormattedStr = "Type: " + nodeToString(type) + SPLITTER
+				 + "Alias: " + nodeToString(aliasSet) + SPLITTER 
+				 + "Filter: " + nodeToString(filter) + SPLITTER
+				 + "InputTable: " + nodeToString(inputTable) + SPLITTER
+				 + "NewTableName: " + nodeToString(newTableName) + SPLITTER
+				 + "JoinCondition: " + nodeToString(joinCondition) + SPLITTER
+				 + "OutputAttrs: " + nodeToString(outputAttrs) + SPLITTER;
 
 		 return nodeFormattedStr;
 	 }
