@@ -445,7 +445,8 @@ public class PlanReducer {
 		NEW_TABLE_NAME,
 		JOIN_CONDITION,
 		OUTPUT_ATTRS,
-		CHILDREN
+		CHILDREN,
+		QUERY
 		};
 		
 	// mapping between enum and the actual returned string for all attributes EXPLAIN can return
@@ -461,12 +462,23 @@ public class PlanReducer {
 		 map.put(REDUCED_PLAN_ATTRS.JOIN_CONDITION, "joinCondition");
 		 map.put(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS, "outputAttrs");
 		 map.put(REDUCED_PLAN_ATTRS.CHILDREN, "children");
+		 map.put(REDUCED_PLAN_ATTRS.QUERY, "query");
 		 return Collections.unmodifiableMap(map);
 	}
 	
 	public String getType(JSONObject currentNode)
 	{
 		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+
+	public String getQuery(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.QUERY));
 		if(rst == null)
 		{
 			return EMPTY_STRING;

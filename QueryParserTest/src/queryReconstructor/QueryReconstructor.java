@@ -137,7 +137,7 @@ public class QueryReconstructor {
 			
 		}
 		System.out.println(query);
-
+		curNode.put("query", query);
 	}
 	
 	public static void main(String [ ] args) throws Exception 
@@ -150,10 +150,9 @@ public class QueryReconstructor {
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	
 		// get the top level node
-		System.out.println("\n---------Parsed query---------");
-		//PlanReducer pr = new PlanReducer(qParser);
 		
 		QueryReconstructor qr = new QueryReconstructor(qParser);
+		System.out.println(qr.pr.getQuery(qr.pr.topLevelNode));
 		// previous code -- ignore
 		/*BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
 		String line = "", jsonString = "";
