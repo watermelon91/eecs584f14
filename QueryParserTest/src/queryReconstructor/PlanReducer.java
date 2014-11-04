@@ -59,6 +59,7 @@ public class PlanReducer {
 			// need other join types as well (left joins, etc)
 			
 		// intermediate type things
+			// TODO: apparently there are ALSO materialize nodes, which should be treated the same way
 		case HASH:
 			reducedCurNode = ReduceSortOrHashNode(curNode);
 			break;
@@ -111,7 +112,8 @@ public class PlanReducer {
 		String filter = qParser.getFilter(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
-		reducedNode = MakeJoinNode(joinCond, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		// TODO: make sure hash joins and merge joins will never have joinFilter. not sure if this is a true assumption
+		reducedNode = MakeJoinNode(joinCond, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
@@ -127,7 +129,7 @@ public class PlanReducer {
 		String filter = qParser.getFilter(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
-		reducedNode = MakeJoinNode(joinCond, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		reducedNode = MakeJoinNode(joinCond, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
@@ -145,15 +147,11 @@ public class PlanReducer {
 		String alias = qParser.getAlias(reducedSecondChild);
 		String filter = qParser.getFilter(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
-		
-		if (joinFilter != "") {
-			joinCond = joinCond + " AND " + joinFilter;
-		}
-		
+				
 		// need to combine joinFilter and joinCond
 		// also all of these should handle filters
 		
-		reducedNode = MakeJoinNode(joinCond, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		reducedNode = MakeJoinNode(joinCond, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
@@ -220,7 +218,7 @@ public class PlanReducer {
 		return reducedNode;
 	}
 	
-	JSONObject MakeJoinNode(String joinCond, String filter, JSONObject reducedFirstChild, JSONObject reducedSecondChild, JSONArray outputAttrs) 
+	JSONObject MakeJoinNode(String joinCond, String joinFilter, String filter, JSONObject reducedFirstChild, JSONObject reducedSecondChild, JSONArray outputAttrs) 
 	{
 		
 		// things required to make a join tmp table:
@@ -229,6 +227,15 @@ public class PlanReducer {
 		// output table name
 		// other filters? I think those will typically be applied in scan nodes if they're not join conditions
 		
+		// NOTE: not all plans will actually have join conditions. should be prepared for that.
+		
+		// TODO: replace aliases with tmp names in joinCond and filter
+		// joinCond/filter won't always be as well behaved as the list of attributes
+		// we'll need to watch out for other things, like string literals
+		// we could just search for strings of the form: <alias.>
+		// but that would cause problems with string literals
+		// can't cause problems with table names or attribute names or number literals (aliases cause syntax errors in Postgres)
+
 		
 		JSONObject reducedJoinNode = new JSONObject();
 		JSONArray children = new JSONArray();
@@ -236,14 +243,50 @@ public class PlanReducer {
 		children.add(reducedSecondChild);
 		// get aliasSets from children.
 		// what happens if we don't alias tables?
+		JSONArray aliasC1 = getAliasSet(reducedFirstChild);
+		String tmpC1 = getNewTableName(reducedFirstChild);
+		JSONArray aliasC2 = getAliasSet(reducedSecondChild);
+		String tmpC2 = getNewTableName(reducedSecondChild);
+		Iterator<String> it = outputAttrs.iterator();
+		
+		JSONArray newOutputAttrs = new JSONArray();
+		
+		while (it.hasNext()) {		
+			String attr = it.next();
+			String[] attrParts = attr.split("\\.");
+			String newAttr = "";
+			// check alias, replace with name of child
+			if (searchJSONArrayForString(aliasC1, attrParts[0])) {
+				newOutputAttrs.add(tmpC1 + "." + attrParts[1]);
+			} else if (searchJSONArrayForString(aliasC2, attrParts[0])) {
+				newOutputAttrs.add(tmpC2 + "." + attrParts[1]);
+			} else {
+				// throw exception
+			}
+		}
+		
+		// handle join cond and join filter
+		String aliasReplacedJoinCond = replaceAliasesWithTableName(replaceAliasesWithTableName(joinCond, aliasC1, tmpC1), aliasC2, tmpC2);
+		String aliasReplacedJoinFilter = replaceAliasesWithTableName(replaceAliasesWithTableName(joinFilter, aliasC1, tmpC1), aliasC2, tmpC2);
+		String aliasReplacedFilter = replaceAliasesWithTableName(replaceAliasesWithTableName(filter, aliasC1, tmpC1), aliasC2, tmpC2);
+		// also handle where clause
+		
+		String aliasReplacedFinalJoinCond = "";
+		if (!aliasReplacedJoinCond.equals("") && !aliasReplacedJoinFilter.equals("")) {
+			aliasReplacedFinalJoinCond = aliasReplacedJoinCond + " and " + aliasReplacedJoinFilter;
+		} else if (!aliasReplacedJoinCond.equals("")) {
+			aliasReplacedFinalJoinCond = aliasReplacedJoinCond;
+		} else {
+			aliasReplacedFinalJoinCond = aliasReplacedJoinFilter;
+		}
 		
 		JSONArray aliasSet = concatArrays(getAliasSet(reducedFirstChild), getAliasSet(reducedSecondChild));
 
 		reducedJoinNode.put("type", "join");
 		reducedJoinNode.put("children", children);
-		reducedJoinNode.put("filter", filter);
-		reducedJoinNode.put("joinCondition", joinCond);
-		reducedJoinNode.put("outputAttrs", outputAttrs);
+		reducedJoinNode.put("filter", aliasReplacedFilter);
+		reducedJoinNode.put("joinCondition", aliasReplacedFinalJoinCond);
+		reducedJoinNode.put("outputAttrs", newOutputAttrs);
 		reducedJoinNode.put("aliasSet", aliasSet);
 		reducedJoinNode.put("newTableName", "tmp" + curTmp);
 		curTmp++;
@@ -320,6 +363,23 @@ public class PlanReducer {
 	
 	
 		// HMMMM explain analyze does cool things (e.g. tells you how many rows were removed by a condition)
+	
+	// TODO
+	// For now, we'll just do a find and replace type thing
+	// this is not a final solution
+	// won't work with string literals, but we'll handle that later.
+	String replaceAliasesWithTableName(String condition, JSONArray aliases, String tablename) {
+		String regex;
+		
+		Iterator<String> it = aliases.iterator();
+		while (it.hasNext()) {
+			// possibly add \b for word boundary
+			regex = it.next() + "\\.";
+			condition = condition.replaceAll(regex, tablename + ".");
+			System.out.println(regex + " " +condition);		
+		}
+		return condition;
+	}
 	
 	JSONArray concatArrays(JSONArray a1, JSONArray a2) {
 		JSONArray newAr = new JSONArray();
@@ -470,7 +530,16 @@ public class PlanReducer {
 	}
 
 	private static final String EMPTY_STRING = "";
-
+	
+	private boolean searchJSONArrayForString(JSONArray ar, String search) {
+		for (int i = 0; i < ar.size(); i++) {
+			if (((String)ar.get(i)).equals(search)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static void main(String [ ] args) throws Exception 
 	{
 	

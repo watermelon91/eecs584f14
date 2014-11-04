@@ -86,17 +86,19 @@ public class QueryReconstructor {
 				
 			}
 			// then, once children have been processed, we can use them
+			/*
 			JSONArray aliasC1 = pr.getAliasSet((JSONObject)childrenNodes.get(0));
-			String tmpC1 = pr.getNewTableName((JSONObject)childrenNodes.get(0));
 			JSONArray aliasC2 = pr.getAliasSet((JSONObject)childrenNodes.get(1));
+			*/
+			String tmpC1 = pr.getNewTableName((JSONObject)childrenNodes.get(0));
 			String tmpC2 = pr.getNewTableName((JSONObject)childrenNodes.get(1));
-			
 			String joinCond = pr.getJoinCondition(curNode);
 			
 			// join node also needs select statement, but aliases will have to be matched with child nodes and replaced with child table names
 			// sooo..
 			Iterator<String> it = outputAttrs.iterator();
 			while (it.hasNext()) {
+				/*
 				String attr = it.next();
 				String[] attrParts = attr.split("\\.");
 				String newAttr = "";
@@ -109,23 +111,22 @@ public class QueryReconstructor {
 					// throw exception
 				}
 				query = query + " " + newAttr + ",";
+				*/
+				query = query + " " + it.next() + ",";
 			}
 			// remove last comma
 			query = query.substring(0, query.length() - 1);
 
 			
 			// from clause will have join statement, use join filters
-			// shit, join condition also needs alias replaced
 			
-			// TODO: what happens when you do a cross product?
-			// TODO: replace aliases with tmp names in joinCond and filter
-			// joinCond/filter won't always be as well behaved as the list of attributes
-			// we'll need to watch out for other things, like string literals
-			// we could just search for strings of the form: alias.
-			// but that would cause problems with string literals
-			// can't cause problems with table names or attribute names or number literals (aliases cause syntax errors in Postgres)
 			
-			query = query + " from " + tmpC1 + " inner join " + tmpC2 + " on " + joinCond;
+			// not guaranteed to have a join condition, take cross product
+			if (joinCond == "") {
+				query = query + " from " + tmpC1 + " , " + tmpC2;
+			} else {
+				query = query + " from " + tmpC1 + " inner join " + tmpC2 + " on " + joinCond;
+			}
 			
 			// possible where clause
 			if (!filter.equals("")) {
@@ -137,15 +138,6 @@ public class QueryReconstructor {
 		}
 		System.out.println(query);
 
-	}
-	
-	private boolean searchJSONArrayForString(JSONArray ar, String search) {
-		for (int i = 0; i < ar.size(); i++) {
-			if (((String)ar.get(i)).equals(search)) {
-				return true;
-			}
-		}
-		return false;
 	}
 	
 	public static void main(String [ ] args) throws Exception 
