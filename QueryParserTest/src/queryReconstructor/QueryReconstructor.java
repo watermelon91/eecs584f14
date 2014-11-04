@@ -19,6 +19,11 @@ public class QueryReconstructor {
 	int tempTableNum;
 	PlanReducer pr;
 	
+	public PlanReducer getPlanReducer()
+	{
+		return pr;
+	}
+	
 	public QueryReconstructor(PlanReducer p)  
 	{
 		// TODO later: this should actually take a PlanReducer and operate on a simplified version of the execution plan
