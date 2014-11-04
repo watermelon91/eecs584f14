@@ -60,6 +60,19 @@ public class PostgresDBConnector {
 		}
 	}
 	
+	public void executeNonSelectQuery(String query) throws SQLException
+	{
+		Statement stmt = null;
+		stmt = connection.createStatement();
+		stmt.executeUpdate(query);
+		
+		if(stmt != null)
+		{
+			stmt.close();
+		}
+	}
+	
+	
 	public List<String> executeQuery(String query) throws SQLException
 	{
 		Statement stmt = null;

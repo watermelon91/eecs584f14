@@ -58,7 +58,7 @@ public class SwingWindow {
         */
         
         // create a connector to backend
-        FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "pwd");
+        FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "1academic");
         // start SQL connection
 		String rst = UIConnector.initializeSQLConnection();
 		if(rst.isEmpty())
@@ -73,6 +73,7 @@ public class SwingWindow {
         LinkedBinaryTreeNode<QueryPlanTreeNode> root;
 		try {
 			// get parsed query plan returned in the root of LinkedBinaryTree
+			System.out.println("\nTEST: generate query plan tree & tmp tables...");
 			root = UIConnector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
 			
 			// draw the query plan
@@ -83,6 +84,25 @@ public class SwingWindow {
 	       
 	        frame.getContentPane().add(panel);
 	        frame.pack();
+	        
+	        // get sample data
+	        System.out.println("\nTEST: get sample data...");
+	        String sampleDataRst = UIConnector.getSampleData("tmp1");
+			String[] sampleDataRstArray = sampleDataRst.split(",");
+			for(int i = 0; i < sampleDataRstArray.length; i++)
+			{
+				System.out.println(sampleDataRstArray[i]);
+			}
+	        
+			// execute test query
+			System.out.println("\nTEST: test query...");
+			String testQueryRst = UIConnector.executeTestQuery("SELECT * FROM tmp1 WHERE user_id < 5;");
+			String[] testQueryRstArray = testQueryRst.split(",");
+			for(int i = 0; i < testQueryRstArray.length; i++)
+			{
+				System.out.println(testQueryRstArray[i]);
+			}
+	        
 	        
 	        // close db connection
 			UIConnector.closeDBConnection();
