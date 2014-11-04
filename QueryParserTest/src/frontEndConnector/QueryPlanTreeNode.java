@@ -64,8 +64,8 @@ public class QueryPlanTreeNode {
 	}
 	
 	 @Override public String toString() {
-		 //final String SPLITTER = "\n";
-		 final String SPLITTER = "`";
+		 final String SPLITTER = "\n";
+		 //final String SPLITTER = "`";
 		 
 		 String nodeFormattedStr = "Type: " + nodeToString(type) + SPLITTER
 				 + "Alias: " + nodeToString(aliasSet) + SPLITTER 
