@@ -17,14 +17,12 @@ public class QueryReconstructor {
 	// - if a user references a view, it won't necessarily appear in the execution plan - may be broken down into component parts and reordered.
 	
 	int tempTableNum;
-	QueryParser qParser;
 	PlanReducer pr;
 	
-	public QueryReconstructor(QueryParser qp)  
+	public QueryReconstructor(PlanReducer p)  
 	{
 		// TODO later: this should actually take a PlanReducer and operate on a simplified version of the execution plan
-		qParser = qp;
-		pr = new PlanReducer(qParser);
+		pr = p;
 		// this will take the topLevelNode JSONObject of the queryParser
 		// it will recursively generate queries for each level
 		generateTempQuery(pr.topLevelNode);
@@ -70,7 +68,7 @@ public class QueryReconstructor {
 				}
 				
 			} else if (pr.getType(curNode).equals("")) { // TODO: fill in condition here. also implement
-				
+				//TODO: aggregate nodes
 			}
 			
 		} else 
@@ -150,8 +148,8 @@ public class QueryReconstructor {
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	
 		// get the top level node
-		
-		QueryReconstructor qr = new QueryReconstructor(qParser);
+		PlanReducer p = new PlanReducer(qParser);
+		QueryReconstructor qr = new QueryReconstructor(p);
 		System.out.println(qr.pr.getQuery(qr.pr.topLevelNode));
 		// previous code -- ignore
 		/*BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
