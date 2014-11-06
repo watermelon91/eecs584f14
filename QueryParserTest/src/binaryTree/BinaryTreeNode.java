@@ -27,6 +27,8 @@ package binaryTree;
      * not have one.
      */
     BinaryTreeNode<E> getLeft();
+    
+    int depth();
 
     /**
      * Removes child from its current parent and inserts it as the

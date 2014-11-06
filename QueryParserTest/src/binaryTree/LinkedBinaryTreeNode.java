@@ -162,4 +162,8 @@ public class LinkedBinaryTreeNode<E> implements BinaryTreeNode<E> {
         visitor.visit(this);
         if (right != null) right.traverseInorder(visitor);
     }
+    
+    public int depth() {
+        return (getParent() == null) ? 0 : 1 + getParent().depth();
+    }  
 }
