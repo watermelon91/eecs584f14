@@ -78,6 +78,11 @@ public class QueryPlanTreeNode {
 		 return nodeFormattedStr;
 	 }
 	 
+	 public interface Visitor 
+	 {
+		 void visit(QueryPlanTreeNode node);
+	 }	
+	 
 	 private String nodeToString(String nodeAttr)
 	 {
 		 if(nodeAttr.isEmpty())
