@@ -12,6 +12,7 @@ import java.awt.event.MouseListener;
 import java.sql.Struct;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFrame;
@@ -362,7 +363,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         JPanel panel_3 = new JPanel();
         panel_3.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
-        JPanel panel_4 = new JPanel();
+        final JPanel panel_4 = new JPanel();
         panel_4.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Subquery Partial Result", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         GroupLayout groupLayout = new GroupLayout(getContentPane());
         groupLayout.setHorizontalGroup(
@@ -401,9 +402,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         treeObjects = new HashMap<Object, QueryPlanTreeNode>();
         
-        model = new DefaultTableModel(); 
-        JTable table = new JTable(model);
-        
         graph = new mxGraph();
         final mxGraphComponent graphComponent = new mxGraphComponent(graph);
         graphComponent.setPreferredSize(new Dimension(500, 300));
@@ -419,15 +417,20 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 Object cell = graphComponent.getCellAt(e.getX(), e.getY());
                 if (treeObjects.containsKey(cell)){
                     QueryPlanTreeNode node = treeObjects.get(cell);
-                    LinkedList<String[]> sampleData = connector.getSampleData(node.getNewTableName());
+                    List<String[]> sampleData = connector.getSampleData(node.getNewTableName());
                     System.out.println("Clicked on Vertex with new table name: "+treeObjects.get(cell).getNewTableName());
+                    System.out.println(sampleData);
                     
-                    model.setColumnIdentifiers(node.getOutputAttrs().split(","));
+                    
+                    model.setColumnIdentifiers(node.getOutputAttrs().substring(1, node.getOutputAttrs().length()-1).split(","));
                     model.setRowCount(0);
-                    for (String[] row: sampleData)
+                    for (String[] row: sampleData){
+                        System.out.println(row);
                         model.addRow(row);
-                    
+                    }
+                                 
                     model.fireTableDataChanged();
+                    
                 }
                 
             }
@@ -460,9 +463,15 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         panel_3.add(graphComponent);
         
-        
-        table = new JTable();
-        panel_4.add(table);
+        model = new DefaultTableModel() {
+            public boolean isCellEditable(int rowIndex, int mColIndex) {
+                return false;
+              }
+            }; 
+        JTable table = new JTable(model);
+        table.setSize(500, 330);
+        panel_4.add(new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                                    JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS));
         
         JLabel lblPleaseEnter = new JLabel("Please enter a query for the node selected in the plan tree:");
         
