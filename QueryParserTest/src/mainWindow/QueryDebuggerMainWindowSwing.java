@@ -1,6 +1,7 @@
 package mainWindow;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FontMetrics;
 import java.awt.Point;
@@ -28,6 +29,7 @@ import javax.swing.JTable;
 import javax.swing.JPasswordField;
 
 import com.mxgraph.swing.mxGraphComponent;
+import com.mxgraph.util.mxRectangle;
 import com.mxgraph.view.mxGraph;
 
 import binaryTree.BinaryTreeNode;
@@ -51,6 +53,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private FrontEndConnector connector;
     
     private LinkedBinaryTreeNode<QueryPlanTreeNode> tree;
+    
+    private Map<Object, BinaryTreeNode> treeObjects;
     
     final int gridwidth = 40, gridheight = 40;
 
@@ -354,12 +358,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         JPanel panel_3 = new JPanel();
         panel_3.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        graph = new mxGraph();
-        mxGraphComponent graphComponent = new mxGraphComponent(graph);
-        graphComponent.getViewport().setOpaque(true);
-        graphComponent.getViewport().setBackground(panel_3.getBackground());
-        graphComponent.setBorder(null);
-        panel_3.add(graphComponent);
         
         JPanel panel_4 = new JPanel();
         panel_4.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Subquery Partial Result", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -397,6 +395,55 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         .addComponent(panel_2, GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE))
                     .addGap(58))
         );
+        
+        treeObjects = new HashMap<Object, BinaryTreeNode>();
+        
+        graph = new mxGraph();
+        final mxGraphComponent graphComponent = new mxGraphComponent(graph);
+        graphComponent.setPreferredSize(new Dimension(500, 300));
+        graphComponent.getViewport().setOpaque(true);
+        graphComponent.getViewport().setBackground(panel_3.getBackground());
+        graphComponent.setBorder(null);
+        graphComponent.setConnectable(false);
+        graphComponent.getGraphControl().addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // TODO Auto-generated method stub
+                Object cell = graphComponent.getCellAt(e.getX(), e.getY());
+                if (treeObjects.containsKey(cell))
+                    System.out.println(cell.getClass());
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });
+        
+        panel_3.add(graphComponent);
+        
         
         table = new JTable();
         panel_4.add(table);
@@ -470,15 +517,15 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graph.getModel().beginUpdate();
         
         final Map<BinaryTreeNode<?>, PlanTreeNode> coordinates = new HashMap<BinaryTreeNode<?>, PlanTreeNode>();
-        //traverse(tree, 0, coordinates);
+        traverse(tree, 250, coordinates);
         
-        tree.traverseInorder(new BinaryTreeNode.Visitor() {
+        /*tree.traverseInorder(new BinaryTreeNode.Visitor() {
             private int x = gridwidth;
             public void visit(BinaryTreeNode node) {
                 x += gridwidth;
                 coordinates.put(node, new PlanTreeNode(new Point(x, gridheight * (node.depth()+1)), null));
             }
-        });
+        });*/
         
 
         tree.traversePreorder(new BinaryTreeNode.Visitor() {
@@ -486,12 +533,14 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 String data = node.getData().toString();
                 PlanTreeNode planTreeNode = coordinates.get(node);
                 planTreeNode.obj = graph.insertVertex(parent, null, data, planTreeNode.point.x, planTreeNode.point.y, 20, 20);
+                treeObjects.put(planTreeNode.obj, node);
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
                     graph.insertEdge(parent, null, "", parentPlanTreeNode.obj, planTreeNode.obj);
                 }
             }
         });
+        
         
         graph.getModel().endUpdate();
     }
