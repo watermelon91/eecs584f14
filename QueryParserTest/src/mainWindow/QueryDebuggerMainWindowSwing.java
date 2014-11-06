@@ -1,5 +1,6 @@
 package mainWindow;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -60,7 +61,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
     private DefaultTableModel model;
     
-    final int gridwidth = 200, gridheight = 200;
+    final int gridwidth = 150, gridheight = 150;
 
     /**
      * Launch the application.
@@ -374,16 +375,13 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         .addComponent(panel, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 943, Short.MAX_VALUE)
                         .addGroup(groupLayout.createSequentialGroup()
                             .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                                .addGroup(groupLayout.createSequentialGroup()
-                                    .addComponent(panel_2, GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE)
-                                    .addGap(18))
-                                .addGroup(groupLayout.createSequentialGroup()
-                                    .addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 414, GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(ComponentPlacement.RELATED)))
+                                .addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 414, GroupLayout.PREFERRED_SIZE)
+                                .addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 414, GroupLayout.PREFERRED_SIZE))
+                            .addGap(18)
                             .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                                 .addComponent(panel_4, GroupLayout.DEFAULT_SIZE, 511, Short.MAX_VALUE)
-                                .addComponent(panel_3, GroupLayout.PREFERRED_SIZE, 511, GroupLayout.PREFERRED_SIZE))))
-                    .addGap(51))
+                                .addComponent(panel_3, GroupLayout.DEFAULT_SIZE, 511, Short.MAX_VALUE))))
+                    .addGap(11))
         );
         groupLayout.setVerticalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
@@ -394,11 +392,36 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         .addComponent(panel_3, GroupLayout.PREFERRED_SIZE, 340, GroupLayout.PREFERRED_SIZE)
                         .addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 340, Short.MAX_VALUE))
                     .addGap(18)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-                        .addComponent(panel_4, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(panel_2, GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE))
-                    .addGap(58))
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(panel_2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(panel_4, GroupLayout.PREFERRED_SIZE, 335, GroupLayout.PREFERRED_SIZE)))
         );
+        
+        model = new DefaultTableModel() {
+            public boolean isCellEditable(int rowIndex, int mColIndex) {
+                return false;
+              }
+            }; 
+        JTable table = new JTable(model);
+        JScrollPane pane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                           JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        
+        GroupLayout gl_panel_4 = new GroupLayout(panel_4);
+        gl_panel_4.setHorizontalGroup(
+            gl_panel_4.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_panel_4.createSequentialGroup()
+                    .addGap(15)
+                    .addComponent(pane, GroupLayout.PREFERRED_SIZE, 470, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(14, Short.MAX_VALUE))
+        );
+        gl_panel_4.setVerticalGroup(
+            gl_panel_4.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_panel_4.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(pane, GroupLayout.PREFERRED_SIZE, 295, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        panel_4.setLayout(gl_panel_4);
         
         treeObjects = new HashMap<Object, QueryPlanTreeNode>();
         
@@ -463,16 +486,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         panel_3.add(graphComponent);
         
-        model = new DefaultTableModel() {
-            public boolean isCellEditable(int rowIndex, int mColIndex) {
-                return false;
-              }
-            }; 
-        JTable table = new JTable(model);
-        table.setSize(500, 330);
-        panel_4.add(new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                                    JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS));
-        
         JLabel lblPleaseEnter = new JLabel("Please enter a query for the node selected in the plan tree:");
         
         JTextPane textPane_1 = new JTextPane();
@@ -482,7 +495,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         JButton button_1 = new JButton("Cancel");
         GroupLayout gl_panel_2 = new GroupLayout(panel_2);
         gl_panel_2.setHorizontalGroup(
-            gl_panel_2.createParallelGroup(Alignment.TRAILING)
+            gl_panel_2.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panel_2.createSequentialGroup()
                     .addGroup(gl_panel_2.createParallelGroup(Alignment.LEADING)
                         .addGroup(gl_panel_2.createSequentialGroup()
@@ -492,14 +505,14 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                             .addGap(12)
                             .addComponent(textPane_1, GroupLayout.PREFERRED_SIZE, 381, GroupLayout.PREFERRED_SIZE))
                         .addGroup(gl_panel_2.createSequentialGroup()
-                            .addGap(214)
+                            .addGap(202)
                             .addComponent(button, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(button_1, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)))
-                    .addContainerGap(374, Short.MAX_VALUE))
+                            .addPreferredGap(ComponentPlacement.UNRELATED)
+                            .addComponent(button_1, GroupLayout.PREFERRED_SIZE, 76, GroupLayout.PREFERRED_SIZE)))
+                    .addContainerGap(9, Short.MAX_VALUE))
         );
         gl_panel_2.setVerticalGroup(
-            gl_panel_2.createParallelGroup(Alignment.LEADING)
+            gl_panel_2.createParallelGroup(Alignment.TRAILING)
                 .addGroup(gl_panel_2.createSequentialGroup()
                     .addContainerGap()
                     .addComponent(lblPleaseEnter)
@@ -509,7 +522,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     .addGroup(gl_panel_2.createParallelGroup(Alignment.BASELINE)
                         .addComponent(button)
                         .addComponent(button_1))
-                    .addContainerGap(8, Short.MAX_VALUE))
+                    .addContainerGap(121, Short.MAX_VALUE))
         );
         panel_2.setLayout(gl_panel_2);
         getContentPane().setLayout(groupLayout);
@@ -525,15 +538,18 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         }
     };
     
-    void traverse(BinaryTreeNode root, int x, Map<BinaryTreeNode<?>, PlanTreeNode> coordinates){
-        if (root == null) return;
-        coordinates.put(root, new PlanTreeNode(new Point(x, gridheight * (root.depth()+1)), null));
+    int traverse(BinaryTreeNode root, int x, Map<BinaryTreeNode<?>, PlanTreeNode> coordinates){
+        if (root == null) return x;
+        
+        coordinates.put(root, new PlanTreeNode(new Point(x, gridheight * root.depth()), null));
 
-        if (root.getRight() == null)
-            traverse(root.getLeft(), x, coordinates);
+        int maxDepth;
+        if (root.getRight() == null){
+            return traverse(root.getLeft(), x, coordinates);
+        }
         else {
-            traverse(root.getLeft(), x-gridwidth, coordinates);
             traverse(root.getRight(), x+gridwidth, coordinates);
+            return traverse(root.getLeft(), x-gridwidth, coordinates);
         }
     }
     private void drawPlanTree(){
@@ -542,22 +558,13 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graph.getModel().beginUpdate();
         
         final Map<BinaryTreeNode<?>, PlanTreeNode> coordinates = new HashMap<BinaryTreeNode<?>, PlanTreeNode>();
-        traverse(tree, 250, coordinates);
-        
-        /*tree.traverseInorder(new BinaryTreeNode.Visitor() {
-            private int x = gridwidth;
-            public void visit(BinaryTreeNode node) {
-                x += gridwidth;
-                coordinates.put(node, new PlanTreeNode(new Point(x, gridheight * (node.depth()+1)), null));
-            }
-        });*/
-        
+        final int maxshift = traverse(tree, 0, coordinates);
 
         tree.traversePreorder(new BinaryTreeNode.Visitor() {
             public void visit(BinaryTreeNode node) {
                 String data = node.getData().toString();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                planTreeNode.obj = graph.insertVertex(parent, null, data, planTreeNode.point.x, planTreeNode.point.y, 285, 100);
+                planTreeNode.obj = graph.insertVertex(parent, null, data, planTreeNode.point.x-maxshift, planTreeNode.point.y, 260, 100);
                 treeObjects.put(planTreeNode.obj, (QueryPlanTreeNode) node.getData());
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
