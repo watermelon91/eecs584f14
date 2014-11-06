@@ -11,6 +11,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.Struct;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.swing.JFrame;
@@ -25,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.JButton;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.JTable;
 import javax.swing.JPasswordField;
 
@@ -42,7 +44,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private JPasswordField textPassword;
     private JButton btnDbSubmit;
     private JButton btnDbCancel;
-    private JTable table;
     
     private JTextPane queryPane;
     private JButton btnQuerySubmit;
@@ -54,7 +55,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
     private LinkedBinaryTreeNode<QueryPlanTreeNode> tree;
     
-    private Map<Object, BinaryTreeNode> treeObjects;
+    private Map<Object, QueryPlanTreeNode> treeObjects;
+    
+    private DefaultTableModel model;
     
     final int gridwidth = 40, gridheight = 40;
 
@@ -396,7 +399,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     .addGap(58))
         );
         
-        treeObjects = new HashMap<Object, BinaryTreeNode>();
+        treeObjects = new HashMap<Object, QueryPlanTreeNode>();
+        
+        model = new DefaultTableModel(); 
+        JTable table = new JTable(model);
         
         graph = new mxGraph();
         final mxGraphComponent graphComponent = new mxGraphComponent(graph);
@@ -411,8 +417,18 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent e) {
                 // TODO Auto-generated method stub
                 Object cell = graphComponent.getCellAt(e.getX(), e.getY());
-                if (treeObjects.containsKey(cell))
-                    System.out.println(cell.getClass());
+                if (treeObjects.containsKey(cell)){
+                    QueryPlanTreeNode node = treeObjects.get(cell);
+                    LinkedList<String[]> sampleData = connector.getSampleData(node.getNewTableName());
+                    System.out.println("Clicked on Vertex with new table name: "+treeObjects.get(cell).getNewTableName());
+                    
+                    model.setColumnIdentifiers(node.getOutputAttrs().split(","));
+                    model.setRowCount(0);
+                    for (String[] row: sampleData)
+                        model.addRow(row);
+                    
+                    model.fireTableDataChanged();
+                }
                 
             }
 
@@ -533,7 +549,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 String data = node.getData().toString();
                 PlanTreeNode planTreeNode = coordinates.get(node);
                 planTreeNode.obj = graph.insertVertex(parent, null, data, planTreeNode.point.x, planTreeNode.point.y, 20, 20);
-                treeObjects.put(planTreeNode.obj, node);
+                treeObjects.put(planTreeNode.obj, (QueryPlanTreeNode) node.getData());
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
                     graph.insertEdge(parent, null, "", parentPlanTreeNode.obj, planTreeNode.obj);
