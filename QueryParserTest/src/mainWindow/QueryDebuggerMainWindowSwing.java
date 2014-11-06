@@ -60,7 +60,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
     private DefaultTableModel model;
     
-    final int gridwidth = 40, gridheight = 40;
+    final int gridwidth = 200, gridheight = 200;
 
     /**
      * Launch the application.
@@ -557,7 +557,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void visit(BinaryTreeNode node) {
                 String data = node.getData().toString();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                planTreeNode.obj = graph.insertVertex(parent, null, data, planTreeNode.point.x, planTreeNode.point.y, 20, 20);
+                planTreeNode.obj = graph.insertVertex(parent, null, data, planTreeNode.point.x, planTreeNode.point.y, 285, 100);
                 treeObjects.put(planTreeNode.obj, (QueryPlanTreeNode) node.getData());
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
