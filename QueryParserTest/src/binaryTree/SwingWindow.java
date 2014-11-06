@@ -2,6 +2,7 @@ package binaryTree;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.util.List;
 
 import javax.swing.JFrame;
 
@@ -87,20 +88,26 @@ public class SwingWindow {
 	        
 	        // get sample data
 	        System.out.println("\nTEST: get sample data...");
-	        String sampleDataRst = UIConnector.getSampleData("tmp1");
-			String[] sampleDataRstArray = sampleDataRst.split(",");
-			for(int i = 0; i < sampleDataRstArray.length; i++)
+	        List<String[]> sampleDataRst = UIConnector.getSampleData("tmp1");
+			for(int i = 0; i < sampleDataRst.size(); i++)
 			{
-				System.out.println(sampleDataRstArray[i]);
+				String[] row = sampleDataRst.get(i);
+				for(int j = 0; j < row.length; j++)
+				{
+					System.out.println(row[j]);
+				}
 			}
 	        
 			// execute test query
 			System.out.println("\nTEST: test query...");
-			String testQueryRst = UIConnector.executeTestQuery("SELECT * FROM tmp1 WHERE user_id < 5;");
-			String[] testQueryRstArray = testQueryRst.split(",");
-			for(int i = 0; i < testQueryRstArray.length; i++)
+			 List<String[]> testQueryRst = UIConnector.executeTestQuery("SELECT * FROM tmp1 WHERE user_id < 5;");
+			for(int i = 0; i < testQueryRst.size(); i++)
 			{
-				System.out.println(testQueryRstArray[i]);
+				String[] row = testQueryRst.get(i);
+				for(int j = 0; j < row.length; j++)
+				{
+					System.out.println(row[j]);
+				}
 			}
 	        
 	        

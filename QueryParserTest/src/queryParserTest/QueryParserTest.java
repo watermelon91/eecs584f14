@@ -39,20 +39,20 @@ public class QueryParserTest {
 		
 		// Example2: getSampleData()
 		System.out.println("\n---------Example 2---------");
-		String sampleDataRst = UIConnector.getSampleData("users");
-		String[] sampleDataRstArray = sampleDataRst.split(",");
-		for(int i = 0; i < sampleDataRstArray.length; i++)
+		List<String[]> sampleDataRst = UIConnector.getSampleData("users");
+		//String[] sampleDataRstArray = sampleDataRst.split(",");
+		for(int i = 0; i < sampleDataRst.size(); i++)
 		{
-			System.out.println(sampleDataRstArray[i]);
+			System.out.println(sampleDataRst.get(i).toString());
 		}
 		
 		// Example3: executeTestQuery()
 		System.out.println("\n---------Example 3---------");
-		String testQueryRst = UIConnector.executeTestQuery("SELECT * FROM users WHERE user_id < 5;");
-		String[] testQueryRstArray = sampleDataRst.split(",");
-		for(int i = 0; i < testQueryRstArray.length; i++)
+		List<String[]> testQueryRst = UIConnector.executeTestQuery("SELECT * FROM users WHERE user_id < 5;");
+		//String[] testQueryRstArray = sampleDataRst.split(",");
+		for(int i = 0; i < testQueryRst.size(); i++)
 		{
-			System.out.println(testQueryRstArray[i]);
+			System.out.println(testQueryRst.get(i).toString());
 		}
 		
 		// Example 4: get query plan

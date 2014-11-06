@@ -72,7 +72,6 @@ public class PostgresDBConnector {
 		}
 	}
 	
-	
 	public List<String> executeQuery(String query) throws SQLException
 	{
 		Statement stmt = null;
@@ -91,6 +90,41 @@ public class PostgresDBConnector {
 			for(int idx = 1; idx <= numCol; idx++)
 			{
 				curRow = curRow + rst.getString(idx) + "\t";
+			}
+			queryResult.add(curRow);
+		}
+		
+		if (stmt != null)
+		{
+			stmt.close();
+		}
+		if (rst != null)
+		{
+			rst.close();
+		}
+		
+		return queryResult;
+	}
+	
+	
+	public List<String[]> executeQuerySeparateResult(String query) throws SQLException
+	{
+		Statement stmt = null;
+		ResultSet rst = null;
+	
+		stmt = connection.createStatement();
+		rst = stmt.executeQuery(query);
+		ResultSetMetaData metadata = rst.getMetaData();
+		
+		int numCol = metadata.getColumnCount();
+		List<String[]> queryResult = new ArrayList<String[]>(); 
+		
+		while(rst.next())
+		{
+			String[] curRow = new String[numCol];
+			for(int idx = 1; idx <= numCol; idx++)
+			{
+				curRow[idx-1] = rst.getString(idx);
 			}
 			queryResult.add(curRow);
 		}

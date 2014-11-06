@@ -46,7 +46,7 @@ public class FrontEndConnector {
 	public LinkedBinaryTreeNode<QueryPlanTreeNode>  debugQuery(String query) throws Exception
 	{
 		// get the query plan in string
-		String queryPlanStr = executeTestQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
+		String queryPlanStr = executeQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
 		QueryParser qParser = new QueryParser(queryPlanStr, false);
 		
 		// reduce plan
@@ -69,7 +69,7 @@ public class FrontEndConnector {
 	 *        of the nodes returned in JSONObject from debugQuery()
 	 * Output: Sample data. See executeTestQuery() for detail.
 	 */
-	public String getSampleData(String tableName)
+	public List<String[]> getSampleData(String tableName)
 	{
 		return executeTestQuery("SELECT * FROM " + tableName + " LIMIT 10");	
 	}
@@ -83,7 +83,25 @@ public class FrontEndConnector {
 	 *         Use string.split(",") to convert it back to an array. 
 	 *         See QueryParserTest for example. 
 	 */
-	public String executeTestQuery(String query)
+	public List<String[]> executeTestQuery(String query)
+	{
+		List<String[]> result = null;
+		
+		try 
+		{
+			result = pdbConnector.executeQuerySeparateResult(query);
+			return result;
+		} 
+		catch (SQLException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
+	
+	public String executeQuery(String query)
 	{
 		List<String> result = null;
 		try 
