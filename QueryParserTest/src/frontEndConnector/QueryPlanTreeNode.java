@@ -67,13 +67,15 @@ public class QueryPlanTreeNode {
 		 final String SPLITTER = "\n";
 		 //final String SPLITTER = "`";
 		 
+		 String outputAttrFormatted = outputAttrs.substring(1, outputAttrs.indexOf(',')) + ", ... [click to show]";
+		 
 		 String nodeFormattedStr = "Type: " + nodeToString(type) + SPLITTER
 				 + "Alias: " + nodeToString(aliasSet) + SPLITTER 
 				 + "Filter: " + nodeToString(filter) + SPLITTER
 				 + "InputTable: " + nodeToString(inputTable) + SPLITTER
 				 + "NewTableName: " + nodeToString(newTableName) + SPLITTER
 				 + "JoinCondition: " + nodeToString(joinCondition) + SPLITTER
-				 + "OutputAttrs: " + nodeToString(outputAttrs) + SPLITTER;
+				 + "OutputAttrs: " + nodeToString(outputAttrFormatted) + SPLITTER;
 
 		 return nodeFormattedStr;
 	 }

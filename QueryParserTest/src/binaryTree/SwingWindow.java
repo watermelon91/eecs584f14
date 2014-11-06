@@ -94,8 +94,9 @@ public class SwingWindow {
 				String[] row = sampleDataRst.get(i);
 				for(int j = 0; j < row.length; j++)
 				{
-					System.out.println(row[j]);
+					System.out.print(row[j] + " ");
 				}
+				System.out.println("");
 			}
 	        
 			// execute test query
@@ -106,8 +107,9 @@ public class SwingWindow {
 				String[] row = testQueryRst.get(i);
 				for(int j = 0; j < row.length; j++)
 				{
-					System.out.println(row[j]);
+					System.out.print(row[j] + " ");
 				}
+				System.out.println("");
 			}
 	        
 	        
