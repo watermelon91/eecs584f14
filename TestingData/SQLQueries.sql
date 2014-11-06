@@ -10,6 +10,14 @@ CREATE TABLE hrecords(
     weight INT
 );
 
+CREATE TABLE dummy(
+    id NUMERIC(5),
+    text VARCHAR(255)
+);
+
+INSERT INTO dummy (id, text) VALUES (0.1, 'd1');
+INSERT INTO dummy (id, text) VALUES (1.1, 'd2');
+
 INSERT INTO users (user_id, first_name, last_name) VALUES (0, 'andy', 'johnson');
 INSERT INTO users (user_id, first_name, last_name) VALUES (1, 'betty', 'white');
 INSERT INTO users (user_id, first_name, last_name) VALUES (2, 'carl', 'potter');

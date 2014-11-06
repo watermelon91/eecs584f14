@@ -1,27 +1,56 @@
 package frontEndConnector;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
+import queryReconstructor.PlanReducer;
+import queryReconstructor.QueryReconstructor;
 
 public class BinaryTreeConverter {
-	private QueryParser qParser;
-	private LinkedBinaryTreeNode<QueryPlanTreeNode> root;
+	//private QueryParser qParser;
+	private PlanReducer pReducer;
+	private List<String> createStatements;
+	private List<String> newTableNames;
 	private static final int MAX_CHILDREN_NUM = 2;
 	
-	public BinaryTreeConverter(QueryParser _qParser)
+	public BinaryTreeConverter(QueryReconstructor _pReconstructor)
 	{
-		qParser = _qParser;
+		pReducer = _pReconstructor.getPlanReducer();
+		createStatements = new ArrayList<String>();
+		newTableNames = new ArrayList<String>();
 	}
 
 	// convert a JSONObject query plan to a tree format
 	public LinkedBinaryTreeNode<QueryPlanTreeNode> convertToTree() throws Exception
 	{
-		return constructTree(qParser.topLevelNode);
+		if( pReducer.topLevelNode == null)
+		{
+			System.out.println("top node null.");
+		}
+		else
+		{
+			System.out.println("topLevelNode: " + pReducer.topLevelNode.toString());
+		}
+		
+		return constructTree(pReducer.topLevelNode);
+	}
+	
+	public List<String> getAllTempTableCreateStatements()
+	{	
+		return createStatements;
+	}
+	
+	public List<String> getAllTempTableNames()
+	{
+		return newTableNames;
 	}
 	
 	// recursive construct the tree
@@ -56,12 +85,25 @@ public class BinaryTreeConverter {
 	private LinkedBinaryTreeNode<QueryPlanTreeNode> createBinaryTreeNode(JSONObject currentNode)
 	{
 		QueryPlanTreeNode node = new QueryPlanTreeNode(
-				qParser.getRelationName(currentNode),
-				qParser.getJoinType(currentNode),
-				qParser.getOutputAttributes(currentNode).toString()
+				pReducer.getType(currentNode),
+				pReducer.getAliasSet(currentNode).toString(),
+				pReducer.getFilter(currentNode),
+				pReducer.getInputTable(currentNode),
+				pReducer.getNewTableName(currentNode),
+				pReducer.getJoinCondition(currentNode),
+				pReducer.getOutputAttributes(currentNode).toString()
 				);
 		
 		LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = new LinkedBinaryTreeNode<QueryPlanTreeNode>(node);
+		
+		if(!createStatements.contains(pReducer.getQuery(currentNode)))
+		{
+			createStatements.add(pReducer.getQuery(currentNode));
+		}
+		if(!newTableNames.contains((pReducer.getNewTableName(currentNode))))
+		{
+			newTableNames.add(pReducer.getNewTableName(currentNode));
+		}
 		
 		return treeNode;
 	}
@@ -69,7 +111,7 @@ public class BinaryTreeConverter {
 	// get all children of the current node
 	private JSONObject[] getAllChildren(JSONObject currentNode) throws Exception
 	{
-		JSONArray childrenNodes = qParser.getChildrenPlanNodes(currentNode);		
+		JSONArray childrenNodes = pReducer.getChildren(currentNode);		
 		JSONObject[] result = new JSONObject[MAX_CHILDREN_NUM];
 		for(int i = 0; i < MAX_CHILDREN_NUM; i++)
 		{

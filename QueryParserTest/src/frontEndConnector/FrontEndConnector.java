@@ -7,6 +7,8 @@ import org.json.simple.JSONObject;
 
 import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
+import queryReconstructor.PlanReducer;
+import queryReconstructor.QueryReconstructor;
 import databaseConnector.PostgresDBConnector;
 
 public class FrontEndConnector {
@@ -16,6 +18,7 @@ public class FrontEndConnector {
 	private String userName = "";
 	private String password = "";
 	private PostgresDBConnector pdbConnector = null;
+	private List<String> tmpTableNames = null;
 	
 	public FrontEndConnector(String _dbIP, String _dbName, String _userName, String _password)
 	{
@@ -46,13 +49,17 @@ public class FrontEndConnector {
 		String queryPlanStr = executeTestQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
 		QueryParser qParser = new QueryParser(queryPlanStr, false);
 		
-		// TODO
-		// call Dana's QueryReducer to get the JSONObject with reduced plan
+		// reduce plan
+		PlanReducer pReducer = new PlanReducer(qParser);
+		// construct CREATE TMP TABLE queries in the reduced plan
+		QueryReconstructor qReconstructor = new QueryReconstructor(pReducer);
 		
-		BinaryTreeConverter converter = new BinaryTreeConverter(qParser);
-		LinkedBinaryTreeNode<QueryPlanTreeNode>  treeRoot =  converter.convertToTree();
+		// convert to UI tree format
+		BinaryTreeConverter converter = new BinaryTreeConverter(qReconstructor);
+		LinkedBinaryTreeNode<QueryPlanTreeNode>  treeRoot =  converter.convertToTree();	
+		initializeAllTempTables(converter.getAllTempTableCreateStatements());
+		tmpTableNames = converter.getAllTempTableNames();
 		
-		// return the unreduced node for now
 		return treeRoot;
 	}
 	
@@ -64,7 +71,7 @@ public class FrontEndConnector {
 	 */
 	public String getSampleData(String tableName)
 	{
-		return executeTestQuery("SELECT * FROM " + tableName);	
+		return executeTestQuery("SELECT * FROM " + tableName + " LIMIT 10");	
 	}
 	
 	/*
@@ -94,8 +101,46 @@ public class FrontEndConnector {
 		}
 	}
 	
+	public String dropAllTmpTables()
+	{
+		String errMsg = "";
+		System.out.println("DROP ALL TMP TABLES");
+		for(int i = 0; i < tmpTableNames.size(); i++)
+		{
+			try {
+				System.out.println("DROP TABLE " + tmpTableNames.get(i));
+				pdbConnector.executeNonSelectQuery("DROP TABLE " + tmpTableNames.get(i));
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				errMsg = errMsg + "\n" + e.getStackTrace().toString();
+			}
+		}
+		
+		return "";
+	}
+	
 	public String closeDBConnection()
 	{
+		dropAllTmpTables();
 		return pdbConnector.closeConnector();
+	}
+	
+	private void initializeAllTempTables(List<String> createStatements)
+	{
+		System.out.println("START TMP TABLE CREATION...");
+		for (int i = createStatements.size() - 1; i >= 0; i--)
+		{
+			try 
+			{
+				System.out.println(createStatements.get(i));
+				pdbConnector.executeNonSelectQuery(createStatements.get(i));
+			} 
+			catch (SQLException e) 
+			{
+				// TODO Auto-generated catch block
+				System.out.println(createStatements.get(i) + " FAILED");
+				e.printStackTrace();
+			}
+		}
 	}
 }
