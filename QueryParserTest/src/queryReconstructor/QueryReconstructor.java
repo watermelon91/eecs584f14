@@ -72,8 +72,9 @@ public class QueryReconstructor {
 					query = query + " where " + filter;
 				}
 				
-			} else if (pr.getType(curNode).equals("")) { // TODO: fill in condition here. also implement
+			} else if (pr.getType(curNode).equals("aggregate")) { // TODO: fill in condition here. also implement
 				//TODO: aggregate nodes
+				
 			}
 			
 		} else 
@@ -95,6 +96,7 @@ public class QueryReconstructor {
 			*/
 			String tmpC1 = pr.getNewTableName((JSONObject)childrenNodes.get(0));
 			String tmpC2 = pr.getNewTableName((JSONObject)childrenNodes.get(1));
+			String joinType = pr.getJoinType(curNode);
 			String joinCond = pr.getJoinCondition(curNode);
 			
 			// join node also needs select statement, but aliases will have to be matched with child nodes and replaced with child table names
@@ -128,13 +130,12 @@ public class QueryReconstructor {
 			if (joinCond == "") {
 				query = query + " from " + tmpC1 + " , " + tmpC2;
 			} else {
-				query = query + " from " + tmpC1 + " inner join " + tmpC2 + " on " + joinCond;
+				query = query + " from " + tmpC1 + " " + joinType + " join " + tmpC2 + " on " + joinCond;
 			}
 			
 			// possible where clause
 			if (!filter.equals("")) {
 				// has filter, needs where clause.
-				// TODO: need to replace any aliases with tmp names
 				query = query + " where " + filter;
 			}
 			

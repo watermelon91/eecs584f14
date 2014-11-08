@@ -47,14 +47,15 @@ public class PlanReducer {
 		switch (getEnumFromNodeType(qParser.getNodeType(curNode))) 
 		{
 		// joins
+		// regular join types are inner joins
 		case HASH_JOIN:
-			reducedCurNode = ReduceHashJoinNode(curNode);
+			reducedCurNode = ReduceHashJoinNode(curNode, "inner");
 			break;
 		case MERGE_JOIN:
-			reducedCurNode = ReduceMergeJoinNode(curNode);
+			reducedCurNode = ReduceMergeJoinNode(curNode, "inner");
 			break;
 		case NESTED_LOOP:
-			reducedCurNode = ReduceNestedLoopJoinNode(curNode);
+			reducedCurNode = ReduceNestedLoopJoinNode(curNode, "inner");
 			break;
 			// need other join types as well (left joins, etc)
 			
@@ -100,7 +101,7 @@ public class PlanReducer {
 	
 	// TODO: all join nodes: need alias set from children so we can resolve the outputAttrs alias stuff.
 	
-	JSONObject ReduceHashJoinNode(JSONObject curNode) {
+	JSONObject ReduceHashJoinNode(JSONObject curNode, String joinType) {
 		JSONObject reducedNode = new JSONObject();
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);
 		
@@ -113,12 +114,12 @@ public class PlanReducer {
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
 		// TODO: make sure hash joins and merge joins will never have joinFilter. not sure if this is a true assumption
-		reducedNode = MakeJoinNode(joinCond, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		reducedNode = MakeJoinNode(joinCond, joinType, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
 	
-	JSONObject ReduceMergeJoinNode(JSONObject curNode) {
+	JSONObject ReduceMergeJoinNode(JSONObject curNode, String joinType) {
 		JSONObject reducedNode = new JSONObject();
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);
 		
@@ -129,12 +130,12 @@ public class PlanReducer {
 		String filter = qParser.getFilter(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
-		reducedNode = MakeJoinNode(joinCond, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		reducedNode = MakeJoinNode(joinCond, joinType, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
 
-	JSONObject ReduceNestedLoopJoinNode(JSONObject curNode) {
+	JSONObject ReduceNestedLoopJoinNode(JSONObject curNode, String joinType) {
 		JSONObject reducedNode = new JSONObject();		
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);	
 		JSONObject reducedFirstChild = ReduceNode((JSONObject) children.get(0));
@@ -151,7 +152,7 @@ public class PlanReducer {
 		// need to combine joinFilter and joinCond
 		// also all of these should handle filters
 		
-		reducedNode = MakeJoinNode(joinCond, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		reducedNode = MakeJoinNode(joinCond, joinType, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
@@ -218,7 +219,13 @@ public class PlanReducer {
 		return reducedNode;
 	}
 	
-	JSONObject MakeJoinNode(String joinCond, String joinFilter, String filter, JSONObject reducedFirstChild, JSONObject reducedSecondChild, JSONArray outputAttrs) 
+	// TODO: groupaggregate, hashaggregate, aggregate
+	
+	// TODO: also should handle index only scan
+	
+	//
+	
+	JSONObject MakeJoinNode(String joinCond, String joinType, String joinFilter, String filter, JSONObject reducedFirstChild, JSONObject reducedSecondChild, JSONArray outputAttrs) 
 	{
 		
 		// things required to make a join tmp table:
@@ -256,12 +263,14 @@ public class PlanReducer {
 			String[] attrParts = attr.split("\\.");
 			String newAttr = "";
 			// check alias, replace with name of child
+			// TODO: add original alias to attribute name
 			if (searchJSONArrayForString(aliasC1, attrParts[0])) {
-				newOutputAttrs.add(tmpC1 + "." + attrParts[1]);
+				newOutputAttrs.add(tmpC1 + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
 			} else if (searchJSONArrayForString(aliasC2, attrParts[0])) {
-				newOutputAttrs.add(tmpC2 + "." + attrParts[1]);
+				newOutputAttrs.add(tmpC2 + "." + attrParts[0] + "_" + attrParts[1]);// + attrParts[1] + " as " + attrParts[0] + "_" + attrParts[1]);
 			} else {
-				// throw exception
+				// may have been an aggregate. pretend it's fine for now.
+				newOutputAttrs.add(attr);
 			}
 		}
 		
@@ -286,6 +295,7 @@ public class PlanReducer {
 		reducedJoinNode.put("children", children);
 		reducedJoinNode.put("filter", aliasReplacedFilter);
 		reducedJoinNode.put("joinCondition", aliasReplacedFinalJoinCond);
+		reducedJoinNode.put("joinType", joinType);
 		reducedJoinNode.put("outputAttrs", newOutputAttrs);
 		reducedJoinNode.put("aliasSet", aliasSet);
 		reducedJoinNode.put("newTableName", "tmp" + curTmp);
@@ -303,6 +313,41 @@ public class PlanReducer {
 		return reducedJoinNode;
 	}
 		
+	JSONObject MakeAggregateNode(String filterCond, JSONObject reducedChild, JSONArray outputAttrs) {
+		JSONObject reducedAggregateNode = new JSONObject();
+		// TODO make sure to rename attributes with 
+		JSONArray aliasSet = getAliasSet(reducedChild);
+		
+		JSONArray newOutputAttrs = new JSONArray();
+		JSONArray children = new JSONArray();
+		children.add(reducedChild);
+		String childTableName = getNewTableName(reducedChild);
+		String aliasReplacedFilter = replaceAliasesWithTableName(filterCond, aliasSet, childTableName);
+
+		Iterator<String> it = outputAttrs.iterator();
+		while (it.hasNext()) {		
+			String attr = it.next();
+			String[] attrParts = attr.split("\\.");
+			String newAttr = "";
+			// check alias, replace with name of child
+			// TODO: check to see if
+			if (attrParts.length == 2) {
+				newOutputAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
+			} else {
+				newOutputAttrs.add(childTableName + "." + attr);
+			}
+		}
+		
+		reducedAggregateNode.put("type", "aggregate");
+		reducedAggregateNode.put("children", children);
+		reducedAggregateNode.put("filter", aliasReplacedFilter);
+		reducedAggregateNode.put("outputAttrs", newOutputAttrs);
+		reducedAggregateNode.put("aliasSet", aliasSet);
+		reducedAggregateNode.put("newTableName", "tmp" + curTmp);
+		curTmp++;
+		
+		return reducedAggregateNode;
+	}
 	
 	JSONObject MakeScanNode(String filterCond, String inputTable, String alias, JSONArray outputAttrs) {
 		// scan node can have children or no children, right?
@@ -312,15 +357,30 @@ public class PlanReducer {
 		// e.g., if it's literally nothing more than a sequential scan, then we don't want to make a node for it
 		// maybe we should have a boolean indicating whether it should be kept as a node
 		// for now, though, make all nodes
+		JSONArray newOutputAttrs = new JSONArray();
+		Iterator<String> it = outputAttrs.iterator();
+		while (it.hasNext()) {		
+			String attr = it.next();
+			String[] attrParts = attr.split("\\.");
+			String newAttr = "";
+			// check alias, replace with name of child
+			// TODO: check to see if
+			if (attrParts.length == 2) {
+				newOutputAttrs.add(attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
+			} else {
+				newOutputAttrs.add(attr);
+			}
+		}
 		
 		JSONObject reducedScanNode = new JSONObject();
 		JSONArray aliasSet = new JSONArray();
+		// TODO: if attributes have alias, add alias name to attribute name
 		aliasSet.add(alias);
 		reducedScanNode.put("type", "scan");
 		reducedScanNode.put("filter", filterCond);
 		reducedScanNode.put("aliasSet", aliasSet);
 		reducedScanNode.put("inputTable", inputTable);
-		reducedScanNode.put("outputAttrs", outputAttrs);
+		reducedScanNode.put("outputAttrs", newOutputAttrs);
 		reducedScanNode.put("newTableName", "tmp" + curTmp);
 		curTmp++;
 		
@@ -444,6 +504,7 @@ public class PlanReducer {
 		INPUT_TABLE,
 		NEW_TABLE_NAME,
 		JOIN_CONDITION,
+		JOIN_TYPE,
 		OUTPUT_ATTRS,
 		CHILDREN,
 		QUERY
@@ -460,6 +521,7 @@ public class PlanReducer {
 		 map.put(REDUCED_PLAN_ATTRS.INPUT_TABLE, "inputTable");
 		 map.put(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME, "newTableName");
 		 map.put(REDUCED_PLAN_ATTRS.JOIN_CONDITION, "joinCondition");
+		 map.put(REDUCED_PLAN_ATTRS.JOIN_TYPE, "joinType");
 		 map.put(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS, "outputAttrs");
 		 map.put(REDUCED_PLAN_ATTRS.CHILDREN, "children");
 		 map.put(REDUCED_PLAN_ATTRS.QUERY, "query");
@@ -469,6 +531,16 @@ public class PlanReducer {
 	public String getType(JSONObject currentNode)
 	{
 		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
+	public String getJoinType(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.JOIN_TYPE));
 		if(rst == null)
 		{
 			return EMPTY_STRING;
