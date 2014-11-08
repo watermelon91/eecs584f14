@@ -45,3 +45,7 @@ explain (FORMAT JSON) select * from hrecords h, users u where h.user_id = u.user
 explain VERBOSE select * from hrecords h, users u where h.user_id = u.user_id;
 
 explain (VERBOSE TRUE, FORMAT JSON) select * from hrecords h, users u where h.user_id = u.user_id;
+
+explain (VERBOSE TRUE, FORMAT JSON) select avg(age) from hrecords h  // QueryPlan2_aggregation
+
+explain (VERBOSE TRUE, FORMAT JSON) select h.age, avg(h.weight) from hrecords h group by h.age; // QueryPlan3_groupby
