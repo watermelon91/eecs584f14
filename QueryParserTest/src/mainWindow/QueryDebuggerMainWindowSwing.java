@@ -392,9 +392,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         .addComponent(panel_3, GroupLayout.PREFERRED_SIZE, 340, GroupLayout.PREFERRED_SIZE)
                         .addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 340, Short.MAX_VALUE))
                     .addGap(18)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(panel_2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(panel_4, GroupLayout.PREFERRED_SIZE, 335, GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(panel_2, 0, 0, Short.MAX_VALUE)
+                        .addComponent(panel_4, GroupLayout.DEFAULT_SIZE, 335, Short.MAX_VALUE))
+                    .addGap(117))
         );
         
         model = new DefaultTableModel() {
@@ -411,8 +412,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             gl_panel_4.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panel_4.createSequentialGroup()
                     .addGap(15)
-                    .addComponent(pane, GroupLayout.PREFERRED_SIZE, 470, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(14, Short.MAX_VALUE))
+                    .addComponent(pane, GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)
+                    .addGap(14))
         );
         gl_panel_4.setVerticalGroup(
             gl_panel_4.createParallelGroup(Alignment.LEADING)
@@ -426,6 +427,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         treeObjects = new HashMap<Object, QueryPlanTreeNode>();
         
         graph = new mxGraph();
+        graph.setCellsEditable(false);
+        graph.setAllowDanglingEdges(false);
         final mxGraphComponent graphComponent = new mxGraphComponent(graph);
         graphComponent.setPreferredSize(new Dimension(500, 300));
         graphComponent.getViewport().setOpaque(true);
@@ -568,7 +571,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 treeObjects.put(planTreeNode.obj, (QueryPlanTreeNode) node.getData());
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
-                    graph.insertEdge(parent, null, "", parentPlanTreeNode.obj, planTreeNode.obj);
+                    graph.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
                 }
             }
         });
