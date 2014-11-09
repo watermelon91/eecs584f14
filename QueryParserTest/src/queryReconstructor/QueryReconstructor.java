@@ -103,21 +103,6 @@ public class QueryReconstructor {
 			// sooo..
 			Iterator<String> it = outputAttrs.iterator();
 			while (it.hasNext()) {
-				/*
-				String attr = it.next();
-				String[] attrParts = attr.split("\\.");
-				String newAttr = "";
-				// check alias, replace with name of child
-				if (searchJSONArrayForString(aliasC1, attrParts[0])) {
-					newAttr = tmpC1 + "." + attrParts[1];
-				} else if (searchJSONArrayForString(aliasC2, attrParts[0])) {
-					newAttr = tmpC2 + "." + attrParts[1];
-				} else {
-					// throw exception
-				}
-				query = query + " " + newAttr + ",";
-				*/
-				
 				query = query + " " + it.next() + ",";
 			}
 			// remove last comma
@@ -150,7 +135,7 @@ public class QueryReconstructor {
 	
 		// input file containing the returned query plan
 	//	String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
-		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan1_verbose.txt";
+		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan3_groupby.txt";
 		
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	

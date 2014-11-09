@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import queryParser.QueryParser;
+import queryParser.QueryProcessingUtilities;
 
 
 import org.json.simple.JSONArray;
@@ -73,6 +74,9 @@ public class PlanReducer {
 			
 		case INDEX_SCAN:
 			reducedCurNode = ReduceIndexScanNode(curNode);
+			break;
+		case SUBQUERY_SCAN: // TODO: do something about this.
+			//reducedCurNode = 
 			break;
 		case SEQ_SCAN:
 			reducedCurNode = ReduceSeqScanNode(curNode);
@@ -164,7 +168,8 @@ public class PlanReducer {
 		JSONArray children = qParser.getChildrenPlanNodes(obj);
 		//TODO: may want this to take the output attributes from this node instead? probably not, but maybe
 		JSONObject reducedNode = ReduceNode((JSONObject) children.get(0));
-		// maybe should get outputAttributes from this node though
+		// maybe should get outputAttributes from this node though.
+		// could then also use it for subquery scans?
 		
 		return reducedNode;
 	}
@@ -181,8 +186,6 @@ public class PlanReducer {
 		String alias = qParser.getAlias(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		reducedNode = MakeScanNode(indexCond, inputTable, alias, outputAttrs);
-		
-		// need to use filter
 		
 		return reducedNode;
 	}
@@ -265,20 +268,24 @@ public class PlanReducer {
 		while (it.hasNext()) {		
 			String attr = it.next();
 			// TODO: check to see if it contains a ( - if so, it shouldn't get normal treatment
-			
-			String[] attrParts = attr.split("\\.");
-			String newAttr = "";
-			// check alias, replace with name of child
-			// TODO: handle functions! should generate new name for attribute, then stick it in the map
-			// if the first character is a (, then some function has already been executed on it, and we should look it up in the map of calculations to attrnames
-			// if the string contains parentheses, it should be handled differently.
-			if (searchJSONArrayForString(aliasC1, attrParts[0])) {
-				newOutputAttrs.add(tmpC1 + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
-			} else if (searchJSONArrayForString(aliasC2, attrParts[0])) {
-				newOutputAttrs.add(tmpC2 + "." + attrParts[0] + "_" + attrParts[1]);// + attrParts[1] + " as " + attrParts[0] + "_" + attrParts[1]);
+			if (attr.contains("(")) {
+				// handle functions/aggregates/previously executed aggregates (should have lookup)
 			} else {
-				// may have been an aggregate. pretend it's fine for now.
-				newOutputAttrs.add(attr);
+			
+				String[] attrParts = attr.split("\\.");
+				String newAttr = "";
+				// check alias, replace with name of child
+				// TODO: handle functions! should generate new name for attribute, then stick it in the map
+				// if the first character is a (, then some function has already been executed on it, and we should look it up in the map of calculations to attrnames
+				// if the string contains parentheses, it should be handled differently.
+				if (searchJSONArrayForString(aliasC1, attrParts[0])) {
+					newOutputAttrs.add(tmpC1 + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
+				} else if (searchJSONArrayForString(aliasC2, attrParts[0])) {
+					newOutputAttrs.add(tmpC2 + "." + attrParts[0] + "_" + attrParts[1]);// + attrParts[1] + " as " + attrParts[0] + "_" + attrParts[1]);
+				} else {
+					// may have been an aggregate. pretend it's fine for now.
+					newOutputAttrs.add(attr);
+				}
 			}
 		}
 		
@@ -297,7 +304,7 @@ public class PlanReducer {
 			aliasReplacedFinalJoinCond = aliasReplacedJoinFilter;
 		}
 		
-		JSONArray aliasSet = concatArrays(getAliasSet(reducedFirstChild), getAliasSet(reducedSecondChild));
+		JSONArray aliasSet = QueryProcessingUtilities.concatArrays(getAliasSet(reducedFirstChild), getAliasSet(reducedSecondChild));
 
 		reducedJoinNode.put("type", "join");
 		reducedJoinNode.put("children", children);
@@ -327,16 +334,37 @@ public class PlanReducer {
 		Iterator<String> it = outputAttrs.iterator();
 		while (it.hasNext()) {		
 			String attr = it.next();
-			String[] attrParts = attr.split("\\.");
-			String newAttr = "";
-			// check alias, replace with name of child
-			// TODO: check for parentheses, process parentheses separately
-			if (attrParts.length == 2) {
-				newOutputAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
-				groupByAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);
+			if (attr.contains("(")) {
+				// handle functions/aggregates/previously executed aggregates (should have lookup)
+				if (attr.substring(0, 1).equals("(")) {
+					// after stripping parentheses, check to see if it's already in the map of execution string to attribute name
+					// if first thing is a paren, check to see if it's a function (if it is, after stripping parentheses there will still be parentheses).
+/*					String tmp_attr = removeParentheses(attr);
+					if (tmp_attr.contains("(")) {
+						// either was double wrapped in parentheses, or has function call. for now assume function call
+					} else {
+						// not function call.
+					}
+*/					// if it's a function inside, then look up the node name
+					// otherwise, it might be the evaluation of some kind of arithmetic/some other garbage
+				} else {
+					// first char not paren = execute the function here
+					newOutputAttrs.add(attr);
+				}
 			} else {
-				// this is probably an aggregation
-				newOutputAttrs.add(attr);
+				
+				String[] attrParts = attr.split("\\.");
+				String newAttr = "";
+				// check alias, replace with name of child
+				// TODO: check for parentheses, process parentheses separately
+				if (attrParts.length == 2) {
+					newOutputAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);
+					groupByAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);
+				} else {
+					// this is probably a query on a single node, so we don't need aliases
+					newOutputAttrs.add(attr);
+					groupByAttrs.add(attr);
+				}
 			}
 		}
 		
@@ -367,7 +395,6 @@ public class PlanReducer {
 			String[] attrParts = attr.split("\\.");
 			String newAttr = "";
 			// check alias, replace with name of child
-			// TODO: check to see if
 			if (attrParts.length == 2) {
 				newOutputAttrs.add(attr + " as " + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
 			} else {
@@ -439,27 +466,12 @@ public class PlanReducer {
 			// possibly add \b for word boundary
 			String alias = it.next();
 			regex = "\\b" + alias + "\\.";
+			// so in here we should be only executing the replace all on sections of the condition that are not string literals.
+			// okay, it shouldn't be THAT bad to implement
+			// but let's get aggregates working first.
 			condition = condition.replaceAll(regex, tablename + "." + alias + "_");
-			System.out.println(regex + " " +condition);		
 		}
 		return condition;
-	}
-	
-	JSONArray concatArrays(JSONArray a1, JSONArray a2) {
-		JSONArray newAr = new JSONArray();
-		Iterator<JSONObject> it = a1.iterator();	
-		while(it.hasNext())
-		{
-			newAr.add(it.next());
-		}
-		
-		it = a2.iterator();	
-		while(it.hasNext())
-		{
-			newAr.add(it.next());
-		}
- 
-		return newAr;
 	}
 	
 	private enum NODE_TYPE {
@@ -476,12 +488,15 @@ public class PlanReducer {
 		SORT,
 		INDEX_SCAN,
 		SEQ_SCAN,
+		SUBQUERY_SCAN,
 		BITMAP_HEAP_SCAN,
 		BITMAP_INDEX_SCAN,
 		LIMIT,
 		UNDEFINED;
 	};
 		
+	// FML, need Subquery Scan as well
+	// plus right/full joins
 	private NODE_TYPE getEnumFromNodeType(String nodeType)
 	{
 		System.out.println(nodeType);
@@ -495,6 +510,7 @@ public class PlanReducer {
 		if (nodeType.equals("Sort")) { return NODE_TYPE.SORT; }
 		if (nodeType.equals("Index Scan")) { return NODE_TYPE.INDEX_SCAN; }
 		if (nodeType.equals("Seq Scan")) { return NODE_TYPE.SEQ_SCAN; }
+		if (nodeType.equals("Subquery Scan")) { return NODE_TYPE.SUBQUERY_SCAN; }
 		if (nodeType.equals("Bitmap Heap Scan")) { return NODE_TYPE.BITMAP_HEAP_SCAN; }
 		if (nodeType.equals("Bitmap Index Scan")) { return NODE_TYPE.BITMAP_INDEX_SCAN; }
 		System.out.println("undefined");
