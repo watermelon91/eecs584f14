@@ -437,8 +437,9 @@ public class PlanReducer {
 		Iterator<String> it = aliases.iterator();
 		while (it.hasNext()) {
 			// possibly add \b for word boundary
-			regex = "\\b" + it.next() + "\\.";
-			condition = condition.replaceAll(regex, tablename + ".");
+			String alias = it.next();
+			regex = "\\b" + alias + "\\.";
+			condition = condition.replaceAll(regex, tablename + "." + alias + "_");
 			System.out.println(regex + " " +condition);		
 		}
 		return condition;

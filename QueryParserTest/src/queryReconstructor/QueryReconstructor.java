@@ -117,6 +117,7 @@ public class QueryReconstructor {
 				}
 				query = query + " " + newAttr + ",";
 				*/
+				
 				query = query + " " + it.next() + ",";
 			}
 			// remove last comma
