@@ -87,13 +87,14 @@ public class QueryPlanTreeNode {
 	 
 	 private String cutOffLongString(String input)
 	 {
-		 if(input.length() <= 20)
+		 int MAX_LEN = 30;
+		 if(input.length() <= MAX_LEN)
 		 {
 			 return input;
 		 }
 		 else
 		 {
-			 return input.substring(0, 15) + "...\n";
+			 return input.substring(0, MAX_LEN-5) + "...\n";
 		 }
 	 }
 	 
