@@ -278,9 +278,9 @@ public class PlanReducer {
 				// TODO: handle functions! should generate new name for attribute, then stick it in the map
 				// if the first character is a (, then some function has already been executed on it, and we should look it up in the map of calculations to attrnames
 				// if the string contains parentheses, it should be handled differently.
-				if (searchJSONArrayForString(aliasC1, attrParts[0])) {
+				if (QueryProcessingUtilities.searchJSONArrayForString(aliasC1, attrParts[0])) {
 					newOutputAttrs.add(tmpC1 + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
-				} else if (searchJSONArrayForString(aliasC2, attrParts[0])) {
+				} else if (QueryProcessingUtilities.searchJSONArrayForString(aliasC2, attrParts[0])) {
 					newOutputAttrs.add(tmpC2 + "." + attrParts[0] + "_" + attrParts[1]);// + attrParts[1] + " as " + attrParts[0] + "_" + attrParts[1]);
 				} else {
 					// may have been an aggregate. pretend it's fine for now.
@@ -634,15 +634,6 @@ public class PlanReducer {
 	}
 
 	private static final String EMPTY_STRING = "";
-	
-	private boolean searchJSONArrayForString(JSONArray ar, String search) {
-		for (int i = 0; i < ar.size(); i++) {
-			if (((String)ar.get(i)).equals(search)) {
-				return true;
-			}
-		}
-		return false;
-	}
 	
 	private boolean containsAggregateFunction(String attr) {
 		// need total list of 

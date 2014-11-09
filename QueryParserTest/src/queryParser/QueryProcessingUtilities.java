@@ -39,5 +39,16 @@ public class QueryProcessingUtilities {
  
 		return newAr;
 	}
+	
+	
+	public static boolean searchJSONArrayForString(JSONArray ar, String search) {
+		for (int i = 0; i < ar.size(); i++) {
+			if (((String)ar.get(i)).equals(search)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 }
