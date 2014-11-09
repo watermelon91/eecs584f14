@@ -123,6 +123,13 @@ public class FrontEndConnector {
 	{
 		String errMsg = "";
 		System.out.println("DROP ALL TMP TABLES");
+		
+		if(tmpTableNames == null)
+		{
+			// nothing has initialized yet.
+			return "";
+		}
+		
 		for(int i = 0; i < tmpTableNames.size(); i++)
 		{
 			try {
