@@ -144,6 +144,8 @@ public class QueryReconstructor {
 				// remove last comma
 				query = query.substring(0, query.length() - 1);
 				
+				query = query + " from " + tmpC1;
+				
 				JSONArray groupByAttrs = pr.getGroupByAttributes(curNode);
 				if (groupByAttrs != null) {
 					query = query + " group by ";
