@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.JFrame;
 
 import frontEndConnector.FrontEndConnector;
+import frontEndConnector.FrontEndConnector.Pair;
 import frontEndConnector.QueryPlanTreeNode;
 
 public class SwingWindow {
@@ -88,8 +89,9 @@ public class SwingWindow {
 	        
 	        // get sample data
 	        System.out.println("\nTEST: get sample data...");
-	        List<String[]> sampleDataRst = UIConnector.getSampleData("tmp1").data;
-	        String[] sampleDataAttrs = UIConnector.getSampleData("tmp1").attribtues;
+	        Pair sampleRstPair = UIConnector.getSampleData("tmp1");
+	        List<String[]> sampleDataRst = sampleRstPair.data;
+	        String[] sampleDataAttrs =sampleRstPair.attribtues;
 			for(int i = 0; i < sampleDataRst.size(); i++)
 			{
 				String[] row = sampleDataRst.get(i);
