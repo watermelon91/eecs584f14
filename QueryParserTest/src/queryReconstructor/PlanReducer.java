@@ -2,9 +2,12 @@ package queryReconstructor;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import queryParser.QueryParser;
+import queryParser.QueryProcessingUtilities;
 
 
 import org.json.simple.JSONArray;
@@ -47,14 +50,15 @@ public class PlanReducer {
 		switch (getEnumFromNodeType(qParser.getNodeType(curNode))) 
 		{
 		// joins
+		// regular join types are inner joins
 		case HASH_JOIN:
-			reducedCurNode = ReduceHashJoinNode(curNode);
+			reducedCurNode = ReduceHashJoinNode(curNode, "inner");
 			break;
 		case MERGE_JOIN:
-			reducedCurNode = ReduceMergeJoinNode(curNode);
+			reducedCurNode = ReduceMergeJoinNode(curNode, "inner");
 			break;
 		case NESTED_LOOP:
-			reducedCurNode = ReduceNestedLoopJoinNode(curNode);
+			reducedCurNode = ReduceNestedLoopJoinNode(curNode, "inner");
 			break;
 			// need other join types as well (left joins, etc)
 			
@@ -71,6 +75,9 @@ public class PlanReducer {
 		case INDEX_SCAN:
 			reducedCurNode = ReduceIndexScanNode(curNode);
 			break;
+		case SUBQUERY_SCAN: // TODO: do something about this.
+			//reducedCurNode = 
+			break;
 		case SEQ_SCAN:
 			reducedCurNode = ReduceSeqScanNode(curNode);
 			break;
@@ -80,6 +87,10 @@ public class PlanReducer {
 		case BITMAP_INDEX_SCAN:
 			// don't think we should ever run into one of these, 
 			// since I believe it will always be a child of a bitmap heap scan.
+			break;
+			
+		case AGGREGATE:
+			reducedCurNode = ReduceAggregateNode(curNode);
 			break;
 			
 		//misc
@@ -100,7 +111,7 @@ public class PlanReducer {
 	
 	// TODO: all join nodes: need alias set from children so we can resolve the outputAttrs alias stuff.
 	
-	JSONObject ReduceHashJoinNode(JSONObject curNode) {
+	JSONObject ReduceHashJoinNode(JSONObject curNode, String joinType) {
 		JSONObject reducedNode = new JSONObject();
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);
 		
@@ -113,12 +124,12 @@ public class PlanReducer {
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
 		// TODO: make sure hash joins and merge joins will never have joinFilter. not sure if this is a true assumption
-		reducedNode = MakeJoinNode(joinCond, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		reducedNode = MakeJoinNode(joinCond, joinType, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
 	
-	JSONObject ReduceMergeJoinNode(JSONObject curNode) {
+	JSONObject ReduceMergeJoinNode(JSONObject curNode, String joinType) {
 		JSONObject reducedNode = new JSONObject();
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);
 		
@@ -129,12 +140,12 @@ public class PlanReducer {
 		String filter = qParser.getFilter(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
-		reducedNode = MakeJoinNode(joinCond, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		reducedNode = MakeJoinNode(joinCond, joinType, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
 
-	JSONObject ReduceNestedLoopJoinNode(JSONObject curNode) {
+	JSONObject ReduceNestedLoopJoinNode(JSONObject curNode, String joinType) {
 		JSONObject reducedNode = new JSONObject();		
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);	
 		JSONObject reducedFirstChild = ReduceNode((JSONObject) children.get(0));
@@ -151,7 +162,7 @@ public class PlanReducer {
 		// need to combine joinFilter and joinCond
 		// also all of these should handle filters
 		
-		reducedNode = MakeJoinNode(joinCond, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		reducedNode = MakeJoinNode(joinCond, joinType, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
 		return reducedNode;
 	}
@@ -161,7 +172,8 @@ public class PlanReducer {
 		JSONArray children = qParser.getChildrenPlanNodes(obj);
 		//TODO: may want this to take the output attributes from this node instead? probably not, but maybe
 		JSONObject reducedNode = ReduceNode((JSONObject) children.get(0));
-		// maybe should get outputAttributes from this node though
+		// maybe should get outputAttributes from this node though.
+		// could then also use it for subquery scans?
 		
 		return reducedNode;
 	}
@@ -179,8 +191,6 @@ public class PlanReducer {
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		reducedNode = MakeScanNode(indexCond, inputTable, alias, outputAttrs);
 		
-		// need to use filter
-		
 		return reducedNode;
 	}
 	
@@ -196,7 +206,7 @@ public class PlanReducer {
 		String alias = qParser.getAlias(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
-		//TODO
+		// TODO
 		
 		reducedNode = MakeScanNode(indexCond, inputTable, alias, outputAttrs);		
 		
@@ -218,7 +228,26 @@ public class PlanReducer {
 		return reducedNode;
 	}
 	
-	JSONObject MakeJoinNode(String joinCond, String joinFilter, String filter, JSONObject reducedFirstChild, JSONObject reducedSecondChild, JSONArray outputAttrs) 
+	// TODO: groupaggregate, hashaggregate, aggregate
+	
+	// TODO: also should handle index only scan
+	
+	//
+	
+	JSONObject ReduceAggregateNode(JSONObject curNode) {
+		// may want to process Aggregate differently from HashAggregate or others - I think Aggregate doesn't group by anything
+		JSONObject reducedNode = new JSONObject();
+		System.out.println(curNode.toJSONString());
+		System.out.println(qParser.getChildrenPlanNodes(curNode));
+		JSONObject child = ReduceNode((JSONObject) qParser.getChildrenPlanNodes(curNode).get(0));	
+		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
+		
+		reducedNode = MakeAggregateNode(child, outputAttrs);
+		
+		return reducedNode;
+	}
+		
+	JSONObject MakeJoinNode(String joinCond, String joinType, String joinFilter, String filter, JSONObject reducedFirstChild, JSONObject reducedSecondChild, JSONArray outputAttrs) 
 	{
 		
 		// things required to make a join tmp table:
@@ -251,17 +280,29 @@ public class PlanReducer {
 		
 		JSONArray newOutputAttrs = new JSONArray();
 		
+		// TODO: if there was an aggregate computation, that attribute appears in () - we'll have to check for that and keep some kind of attribute
+		// lookup to locate it. maybe just keep a map from string(computation) to string(attribute name)
 		while (it.hasNext()) {		
 			String attr = it.next();
-			String[] attrParts = attr.split("\\.");
-			String newAttr = "";
-			// check alias, replace with name of child
-			if (searchJSONArrayForString(aliasC1, attrParts[0])) {
-				newOutputAttrs.add(tmpC1 + "." + attrParts[1]);
-			} else if (searchJSONArrayForString(aliasC2, attrParts[0])) {
-				newOutputAttrs.add(tmpC2 + "." + attrParts[1]);
+			// TODO: check to see if it contains a ( - if so, it shouldn't get normal treatment
+			if (attr.contains("(")) {
+				// handle functions/aggregates/previously executed aggregates (should have lookup)
 			} else {
-				// throw exception
+			
+				String[] attrParts = attr.split("\\.");
+				String newAttr = "";
+				// check alias, replace with name of child
+				// TODO: handle functions! should generate new name for attribute, then stick it in the map
+				// if the first character is a (, then some function has already been executed on it, and we should look it up in the map of calculations to attrnames
+				// if the string contains parentheses, it should be handled differently.
+				if (QueryProcessingUtilities.searchJSONArrayForString(aliasC1, attrParts[0])) {
+					newOutputAttrs.add(tmpC1 + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
+				} else if (QueryProcessingUtilities.searchJSONArrayForString(aliasC2, attrParts[0])) {
+					newOutputAttrs.add(tmpC2 + "." + attrParts[0] + "_" + attrParts[1]);// + attrParts[1] + " as " + attrParts[0] + "_" + attrParts[1]);
+				} else {
+					// may have been an aggregate. pretend it's fine for now.
+					newOutputAttrs.add(attr);
+				}
 			}
 		}
 		
@@ -280,29 +321,89 @@ public class PlanReducer {
 			aliasReplacedFinalJoinCond = aliasReplacedJoinFilter;
 		}
 		
-		JSONArray aliasSet = concatArrays(getAliasSet(reducedFirstChild), getAliasSet(reducedSecondChild));
+		JSONArray aliasSet = QueryProcessingUtilities.concatArrays(getAliasSet(reducedFirstChild), getAliasSet(reducedSecondChild));
 
 		reducedJoinNode.put("type", "join");
 		reducedJoinNode.put("children", children);
 		reducedJoinNode.put("filter", aliasReplacedFilter);
 		reducedJoinNode.put("joinCondition", aliasReplacedFinalJoinCond);
+		reducedJoinNode.put("joinType", joinType);
 		reducedJoinNode.put("outputAttrs", newOutputAttrs);
 		reducedJoinNode.put("aliasSet", aliasSet);
 		reducedJoinNode.put("newTableName", "tmp" + curTmp);
 		curTmp++;
-		
-		// join node should contain:
-		// array of children
-		// its tmp tablename
-		// possibly names of child tables (or could be acquired from child nodes)
-		// join condition
-		// anything else?
-		
-		// 
-		
+				
 		return reducedJoinNode;
 	}
 		
+	JSONObject MakeAggregateNode(JSONObject reducedChild, JSONArray outputAttrs) {
+		JSONObject reducedAggregateNode = new JSONObject();
+		// TODO make sure to rename attributes with 
+		JSONArray aliasSet = getAliasSet(reducedChild);
+		
+		JSONArray newOutputAttrs = new JSONArray();
+		JSONArray children = new JSONArray();
+		children.add(reducedChild);
+		String childTableName = getNewTableName(reducedChild);
+		JSONArray groupByAttrs = null;
+
+		Iterator<String> it = outputAttrs.iterator();
+		while (it.hasNext()) {		
+			String attr = it.next();
+			if (attr.contains("(")) {
+				// handle functions/aggregates/previously executed aggregates (should have lookup)
+				if (attr.substring(0, 1).equals("(")) {
+					// after stripping parentheses, check to see if it's already in the map of execution string to attribute name
+					// if first thing is a paren, check to see if it's a function (if it is, after stripping parentheses there will still be parentheses).
+					String tmp_attr = attr;
+					
+					// remove any wrapping parentheses
+					while (tmp_attr.substring(0, 1).equals("(")) {
+						tmp_attr = QueryProcessingUtilities.removeParenthesis(tmp_attr);				
+					}
+					
+					if (tmp_attr.contains("(")) {
+						// is function call
+					} else {
+						// not function call.
+					}
+					
+				} else {
+					// first char not paren = execute the function here
+					
+					newOutputAttrs.add(attr);
+				}
+			} else {
+				System.out.println(attr);
+				String[] attrParts = attr.split("\\.");
+				String newAttr = "";
+				// check alias, replace with name of child
+				// TODO: check for parentheses, process parentheses separately
+				if (groupByAttrs == null) {
+					groupByAttrs = new JSONArray();
+				}
+				if (attrParts.length == 2) {
+					newOutputAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);
+					groupByAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);
+				} else {
+					// this is probably a query on a single node, so we don't need aliases
+					newOutputAttrs.add(attr);
+					groupByAttrs.add(attr);
+				}
+			}
+		}
+		
+		reducedAggregateNode.put("type", "aggregate");
+		reducedAggregateNode.put("children", children);
+//		reducedAggregateNode.put("filter", aliasReplacedFilter);
+		reducedAggregateNode.put("outputAttrs", newOutputAttrs);
+		reducedAggregateNode.put("aliasSet", aliasSet);
+		reducedAggregateNode.put("newTableName", "tmp" + curTmp);
+		reducedAggregateNode.put("groupByAttrs", groupByAttrs);
+		curTmp++;
+		
+		return reducedAggregateNode;
+	}
 	
 	JSONObject MakeScanNode(String filterCond, String inputTable, String alias, JSONArray outputAttrs) {
 		// scan node can have children or no children, right?
@@ -312,15 +413,29 @@ public class PlanReducer {
 		// e.g., if it's literally nothing more than a sequential scan, then we don't want to make a node for it
 		// maybe we should have a boolean indicating whether it should be kept as a node
 		// for now, though, make all nodes
+		JSONArray newOutputAttrs = new JSONArray();
+		Iterator<String> it = outputAttrs.iterator();
+		while (it.hasNext()) {		
+			String attr = it.next();
+			String[] attrParts = attr.split("\\.");
+			String newAttr = "";
+			// check alias, replace with name of child
+			if (attrParts.length == 2) {
+				newOutputAttrs.add(attr + " as " + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
+			} else {
+				newOutputAttrs.add(attr);
+			}
+		}
 		
 		JSONObject reducedScanNode = new JSONObject();
 		JSONArray aliasSet = new JSONArray();
+		// TODO: if attributes have alias, add alias name to attribute name
 		aliasSet.add(alias);
 		reducedScanNode.put("type", "scan");
 		reducedScanNode.put("filter", filterCond);
 		reducedScanNode.put("aliasSet", aliasSet);
 		reducedScanNode.put("inputTable", inputTable);
-		reducedScanNode.put("outputAttrs", outputAttrs);
+		reducedScanNode.put("outputAttrs", newOutputAttrs);
 		reducedScanNode.put("newTableName", "tmp" + curTmp);
 		curTmp++;
 		
@@ -374,28 +489,14 @@ public class PlanReducer {
 		Iterator<String> it = aliases.iterator();
 		while (it.hasNext()) {
 			// possibly add \b for word boundary
-			regex = "\\b" + it.next() + "\\.";
-			condition = condition.replaceAll(regex, tablename + ".");
-			System.out.println(regex + " " +condition);		
+			String alias = it.next();
+			regex = "\\b" + alias + "\\.";
+			// so in here we should be only executing the replace all on sections of the condition that are not string literals.
+			// okay, it shouldn't be THAT bad to implement
+			// but let's get aggregates working first.
+			condition = condition.replaceAll(regex, tablename + "." + alias + "_");
 		}
 		return condition;
-	}
-	
-	JSONArray concatArrays(JSONArray a1, JSONArray a2) {
-		JSONArray newAr = new JSONArray();
-		Iterator<JSONObject> it = a1.iterator();	
-		while(it.hasNext())
-		{
-			newAr.add(it.next());
-		}
-		
-		it = a2.iterator();	
-		while(it.hasNext())
-		{
-			newAr.add(it.next());
-		}
- 
-		return newAr;
 	}
 	
 	private enum NODE_TYPE {
@@ -408,16 +509,20 @@ public class PlanReducer {
 		MERGE_LEFT_JOIN,
 		NESTED_LOOP,
 		NESTED_LOOP_LEFT_JOIN,
+		AGGREGATE,
 		HASH,
 		SORT,
 		INDEX_SCAN,
 		SEQ_SCAN,
+		SUBQUERY_SCAN,
 		BITMAP_HEAP_SCAN,
 		BITMAP_INDEX_SCAN,
 		LIMIT,
 		UNDEFINED;
 	};
 		
+	// FML, need Subquery Scan as well
+	// plus right/full joins
 	private NODE_TYPE getEnumFromNodeType(String nodeType)
 	{
 		System.out.println(nodeType);
@@ -431,8 +536,12 @@ public class PlanReducer {
 		if (nodeType.equals("Sort")) { return NODE_TYPE.SORT; }
 		if (nodeType.equals("Index Scan")) { return NODE_TYPE.INDEX_SCAN; }
 		if (nodeType.equals("Seq Scan")) { return NODE_TYPE.SEQ_SCAN; }
+		if (nodeType.equals("Subquery Scan")) { return NODE_TYPE.SUBQUERY_SCAN; }
 		if (nodeType.equals("Bitmap Heap Scan")) { return NODE_TYPE.BITMAP_HEAP_SCAN; }
 		if (nodeType.equals("Bitmap Index Scan")) { return NODE_TYPE.BITMAP_INDEX_SCAN; }
+		if (nodeType.equals("GroupAggregate")) { return NODE_TYPE.AGGREGATE; }
+		if (nodeType.equals("HashAggregate")) { return NODE_TYPE.AGGREGATE; }
+		if (nodeType.equals("Aggregate")) { return NODE_TYPE.AGGREGATE; }
 		System.out.println("undefined");
 		return NODE_TYPE.UNDEFINED;
 	}
@@ -444,7 +553,9 @@ public class PlanReducer {
 		INPUT_TABLE,
 		NEW_TABLE_NAME,
 		JOIN_CONDITION,
+		JOIN_TYPE,
 		OUTPUT_ATTRS,
+		GROUP_BY_ATTRS,
 		CHILDREN,
 		QUERY
 		};
@@ -460,7 +571,9 @@ public class PlanReducer {
 		 map.put(REDUCED_PLAN_ATTRS.INPUT_TABLE, "inputTable");
 		 map.put(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME, "newTableName");
 		 map.put(REDUCED_PLAN_ATTRS.JOIN_CONDITION, "joinCondition");
+		 map.put(REDUCED_PLAN_ATTRS.JOIN_TYPE, "joinType");
 		 map.put(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS, "outputAttrs");
+		 map.put(REDUCED_PLAN_ATTRS.GROUP_BY_ATTRS, "groupByAttrs");
 		 map.put(REDUCED_PLAN_ATTRS.CHILDREN, "children");
 		 map.put(REDUCED_PLAN_ATTRS.QUERY, "query");
 		 return Collections.unmodifiableMap(map);
@@ -469,6 +582,16 @@ public class PlanReducer {
 	public String getType(JSONObject currentNode)
 	{
 		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
+	public String getJoinType(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.JOIN_TYPE));
 		if(rst == null)
 		{
 			return EMPTY_STRING;
@@ -536,6 +659,11 @@ public class PlanReducer {
 		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS));
 	}
 	
+	public JSONArray getGroupByAttributes(JSONObject currentNode)
+	{
+		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.GROUP_BY_ATTRS));
+	}
+	
 	public JSONArray getChildren(JSONObject currentNode)
 	{
 		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN));
@@ -543,14 +671,33 @@ public class PlanReducer {
 
 	private static final String EMPTY_STRING = "";
 	
-	private boolean searchJSONArrayForString(JSONArray ar, String search) {
-		for (int i = 0; i < ar.size(); i++) {
-			if (((String)ar.get(i)).equals(search)) {
-				return true;
-			}
-		}
+	private boolean containsAggregateFunction(String attr) {
+		// need total list of 
 		return false;
 	}
+	
+	/*
+	
+	private List<String> aggregateFunctions = aggregateFunctionInitializer();
+	private List<String> aggregateFunctionInitializer() {
+		List<String> lst = new ArrayList<String>();
+		lst.add("array_agg");
+		lst.add("avg");
+		lst.add("bit_and");
+		lst.add("bit_or");
+		lst.add("bool_and");
+		lst.add("bool_or");
+		lst.add("count");
+		lst.add("every");
+		lst.add("max");
+		lst.add("min");
+		lst.add("string_agg");
+		lst.add("sum");
+		lst.add("xmlagg");
+		
+		return lst;
+	}
+	*/
 	
 	public static void main(String [ ] args) throws Exception 
 	{

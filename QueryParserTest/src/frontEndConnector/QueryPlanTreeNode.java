@@ -93,7 +93,7 @@ public class QueryPlanTreeNode {
 		 }
 		 else
 		 {
-			 return input.substring(0, 16) + "...";
+			 return input.substring(0, 15) + "...\n";
 		 }
 	 }
 	 
