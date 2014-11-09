@@ -39,7 +39,7 @@ public class QueryParserTest {
 		
 		// Example2: getSampleData()
 		System.out.println("\n---------Example 2---------");
-		List<String[]> sampleDataRst = UIConnector.getSampleData("users");
+		List<String[]> sampleDataRst = UIConnector.getSampleData("users").data;
 		//String[] sampleDataRstArray = sampleDataRst.split(",");
 		for(int i = 0; i < sampleDataRst.size(); i++)
 		{
@@ -48,7 +48,7 @@ public class QueryParserTest {
 		
 		// Example3: executeTestQuery()
 		System.out.println("\n---------Example 3---------");
-		List<String[]> testQueryRst = UIConnector.executeTestQuery("SELECT * FROM users WHERE user_id < 5;");
+		List<String[]> testQueryRst = UIConnector.executeTestQuery("SELECT * FROM users WHERE user_id < 5;").data;
 		//String[] testQueryRstArray = sampleDataRst.split(",");
 		for(int i = 0; i < testQueryRst.size(); i++)
 		{

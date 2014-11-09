@@ -88,7 +88,8 @@ public class SwingWindow {
 	        
 	        // get sample data
 	        System.out.println("\nTEST: get sample data...");
-	        List<String[]> sampleDataRst = UIConnector.getSampleData("tmp1");
+	        List<String[]> sampleDataRst = UIConnector.getSampleData("tmp1").data;
+	        String[] sampleDataAttrs = UIConnector.getSampleData("tmp1").attribtues;
 			for(int i = 0; i < sampleDataRst.size(); i++)
 			{
 				String[] row = sampleDataRst.get(i);
@@ -98,10 +99,17 @@ public class SwingWindow {
 				}
 				System.out.println("");
 			}
+			for(int i = 0; i < sampleDataAttrs.length; i++)
+			{
+				System.out.print(sampleDataAttrs[i] + " ");
+			}
+			System.out.println("Attrs");
+			
 	        
 			// execute test query
+			/*
 			System.out.println("\nTEST: test query...");
-			 List<String[]> testQueryRst = UIConnector.executeTestQuery("SELECT * FROM tmp1 WHERE user_id < 5;");
+			 List<String[]> testQueryRst = UIConnector.executeTestQuery("SELECT * FROM tmp1 WHERE user_id < 5;").data;
 			for(int i = 0; i < testQueryRst.size(); i++)
 			{
 				String[] row = testQueryRst.get(i);
@@ -111,7 +119,7 @@ public class SwingWindow {
 				}
 				System.out.println("");
 			}
-	        
+	        */
 	        
 	        // close db connection
 			UIConnector.closeDBConnection();

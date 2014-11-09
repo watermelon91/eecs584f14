@@ -1,8 +1,10 @@
 package frontEndConnector;
 
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import binaryTree.LinkedBinaryTreeNode;
@@ -19,6 +21,16 @@ public class FrontEndConnector {
 	private String password = "";
 	private PostgresDBConnector pdbConnector = null;
 	private List<String> tmpTableNames = null;
+	
+	public class Pair{
+		public String[] attribtues;
+		public List<String[]> data;
+		
+		public Pair(String[] _attr, List<String[]> _data){
+			attribtues = _attr;
+			data = _data;
+		}
+	}
 	
 	public FrontEndConnector(String _dbIP, String _dbName, String _userName, String _password)
 	{
@@ -69,12 +81,12 @@ public class FrontEndConnector {
 	 *        of the nodes returned in JSONObject from debugQuery()
 	 * Output: Sample data. See executeTestQuery() for detail.
 	 */
-	public List<String[]> getSampleData(String tableName)
+	public Pair getSampleData(String tableName)
 	{
 		return executeTestQuery("SELECT * FROM " + tableName + " LIMIT 10");	
 	}
 	
-	public List<String[]> getAllSampleData(String tableName)
+	public Pair getAllSampleData(String tableName)
 	{
 		return executeTestQuery("SELECT * FROM " + tableName);
 	}
@@ -82,20 +94,50 @@ public class FrontEndConnector {
 	/*
 	 * Input: A query that the user wants to run on the test data 
 	 * 		  generated using getSampleData()
-	 * Output: Query result. 
+	 * Output: Query result limit to top 10.
 	 * 		   The query result is stored by row into a List<String> and then 
 	 *		   converted into a string use the toString() method.
 	 *         Use string.split(",") to convert it back to an array. 
 	 *         See QueryParserTest for example. 
 	 */
-	public List<String[]> executeTestQuery(String query)
+	public Pair executeTestQuery(String query)
 	{
-		List<String[]> result = null;
+		int LIMIT = 10;
 		
 		try 
 		{
-			result = pdbConnector.executeQuerySeparateResult(query);
-			return result;
+			List<String[]> result = pdbConnector.executeQuerySeparateResult(query, LIMIT);
+			String[] attrs = getReturnedAttr(query);
+			
+			Pair rstPair = new Pair(attrs, result);			
+			return rstPair;
+		} 
+		catch (SQLException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}		
+	}
+	
+	/*
+	 * Input: A query that the user wants to run on the test data 
+	 * 		  generated using getSampleData()
+	 * Output: Query result ALL.
+	 * 		   The query result is stored by row into a List<String> and then 
+	 *		   converted into a string use the toString() method.
+	 *         Use string.split(",") to convert it back to an array. 
+	 *         See QueryParserTest for example. 
+	 */
+	public Pair executeTestQueryAll(String query)
+	{
+		try 
+		{
+			List<String[]> result = pdbConnector.executeQuerySeparateResult(query);
+			String[] attrs = getReturnedAttr(query);
+			
+			Pair rstPair = new Pair(attrs, result);			
+			return rstPair;
 		} 
 		catch (SQLException e) 
 		{
@@ -106,22 +148,23 @@ public class FrontEndConnector {
 		
 	}
 	
-	public List<String[]> executeTestQueryAll(String query)
+	private String[] getReturnedAttr(String query)
 	{
-		List<String[]> result = null;
+		String queryPlanStr = executeQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
+		QueryParser qParser = new QueryParser(queryPlanStr, true);
+		JSONArray attrs = qParser.getOutputAttributes(qParser.topLevelNode);
+		System.out.println(attrs.toJSONString());
 		
-		try 
+		String[] attrStrArray = new String[attrs.size()];
+		Iterator<String> aiterator = attrs.iterator();
+		int count = 0;
+		while(aiterator.hasNext() && count < attrs.size())
 		{
-			result = pdbConnector.executeQuerySeparateResult(query);
-			return result;
-		} 
-		catch (SQLException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
+			attrStrArray[count] = aiterator.next();
+			count++;
 		}
 		
+		return attrStrArray;
 	}
 	
 	public String executeQuery(String query)
