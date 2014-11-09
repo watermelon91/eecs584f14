@@ -2,6 +2,8 @@ package queryReconstructor;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import queryParser.QueryParser;
@@ -258,12 +260,18 @@ public class PlanReducer {
 		
 		JSONArray newOutputAttrs = new JSONArray();
 		
+		// TODO: if there was an aggregate computation, that attribute appears in () - we'll have to check for that and keep some kind of attribute
+		// lookup to locate it. maybe just keep a map from string(computation) to string(attribute name)
 		while (it.hasNext()) {		
 			String attr = it.next();
+			// TODO: check to see if it contains a ( - if so, it shouldn't get normal treatment
+			
 			String[] attrParts = attr.split("\\.");
 			String newAttr = "";
 			// check alias, replace with name of child
-			// TODO: add original alias to attribute name
+			// TODO: handle functions! should generate new name for attribute, then stick it in the map
+			// if the first character is a (, then some function has already been executed on it, and we should look it up in the map of calculations to attrnames
+			// if the string contains parentheses, it should be handled differently.
 			if (searchJSONArrayForString(aliasC1, attrParts[0])) {
 				newOutputAttrs.add(tmpC1 + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
 			} else if (searchJSONArrayForString(aliasC2, attrParts[0])) {
@@ -300,16 +308,7 @@ public class PlanReducer {
 		reducedJoinNode.put("aliasSet", aliasSet);
 		reducedJoinNode.put("newTableName", "tmp" + curTmp);
 		curTmp++;
-		
-		// join node should contain:
-		// array of children
-		// its tmp tablename
-		// possibly names of child tables (or could be acquired from child nodes)
-		// join condition
-		// anything else?
-		
-		// 
-		
+				
 		return reducedJoinNode;
 	}
 		
@@ -323,6 +322,7 @@ public class PlanReducer {
 		children.add(reducedChild);
 		String childTableName = getNewTableName(reducedChild);
 		String aliasReplacedFilter = replaceAliasesWithTableName(filterCond, aliasSet, childTableName);
+		JSONArray groupByAttrs = new JSONArray();
 
 		Iterator<String> it = outputAttrs.iterator();
 		while (it.hasNext()) {		
@@ -330,11 +330,13 @@ public class PlanReducer {
 			String[] attrParts = attr.split("\\.");
 			String newAttr = "";
 			// check alias, replace with name of child
-			// TODO: check to see if
+			// TODO: check for parentheses, process parentheses separately
 			if (attrParts.length == 2) {
 				newOutputAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
+				groupByAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);
 			} else {
-				newOutputAttrs.add(childTableName + "." + attr);
+				// this is probably an aggregation
+				newOutputAttrs.add(attr);
 			}
 		}
 		
@@ -344,6 +346,7 @@ public class PlanReducer {
 		reducedAggregateNode.put("outputAttrs", newOutputAttrs);
 		reducedAggregateNode.put("aliasSet", aliasSet);
 		reducedAggregateNode.put("newTableName", "tmp" + curTmp);
+		reducedAggregateNode.put("groupByAttrs", groupByAttrs);
 		curTmp++;
 		
 		return reducedAggregateNode;
@@ -366,7 +369,7 @@ public class PlanReducer {
 			// check alias, replace with name of child
 			// TODO: check to see if
 			if (attrParts.length == 2) {
-				newOutputAttrs.add(attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
+				newOutputAttrs.add(attr + " as " + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
 			} else {
 				newOutputAttrs.add(attr);
 			}
@@ -623,6 +626,34 @@ public class PlanReducer {
 		}
 		return false;
 	}
+	
+	private boolean containsAggregateFunction(String attr) {
+		// need total list of 
+		return false;
+	}
+	
+	/*
+	
+	private List<String> aggregateFunctions = aggregateFunctionInitializer();
+	private List<String> aggregateFunctionInitializer() {
+		List<String> lst = new ArrayList<String>();
+		lst.add("array_agg");
+		lst.add("avg");
+		lst.add("bit_and");
+		lst.add("bit_or");
+		lst.add("bool_and");
+		lst.add("bool_or");
+		lst.add("count");
+		lst.add("every");
+		lst.add("max");
+		lst.add("min");
+		lst.add("string_agg");
+		lst.add("sum");
+		lst.add("xmlagg");
+		
+		return lst;
+	}
+	*/
 	
 	public static void main(String [ ] args) throws Exception 
 	{
