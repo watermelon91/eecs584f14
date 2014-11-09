@@ -205,7 +205,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     .addComponent(lblUsername)
                     .addPreferredGap(ComponentPlacement.UNRELATED)
                     .addComponent(textUsername, GroupLayout.PREFERRED_SIZE, 272, GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(lblPassword, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(textPassword, GroupLayout.PREFERRED_SIZE, 278, GroupLayout.PREFERRED_SIZE)
@@ -213,7 +213,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     .addComponent(btnDbCancel, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(btnDbSubmit, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)
-                    .addGap(42))
+                    .addContainerGap(42, Short.MAX_VALUE))
         );
         gl_panel.setVerticalGroup(
             gl_panel.createParallelGroup(Alignment.LEADING)
@@ -387,16 +387,16 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         groupLayout.setVerticalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
                 .addGroup(groupLayout.createSequentialGroup()
-                    .addComponent(panel, GroupLayout.PREFERRED_SIZE, 62, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(panel, GroupLayout.PREFERRED_SIZE, 62, Short.MAX_VALUE)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(panel_3, GroupLayout.PREFERRED_SIZE, 340, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(panel_3, GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
                         .addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 340, Short.MAX_VALUE))
                     .addGap(18)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-                        .addComponent(panel_2, 0, 0, Short.MAX_VALUE)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addComponent(panel_4, GroupLayout.DEFAULT_SIZE, 335, Short.MAX_VALUE))
-                    .addGap(117))
+                    .addGap(17))
         );
         
         model = new DefaultTableModel() {
@@ -408,20 +408,28 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         JScrollPane pane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                                            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         
+        JButton btnExpandAll = new JButton("Expand All");
+        
         GroupLayout gl_panel_4 = new GroupLayout(panel_4);
         gl_panel_4.setHorizontalGroup(
             gl_panel_4.createParallelGroup(Alignment.LEADING)
-                .addGroup(gl_panel_4.createSequentialGroup()
+                .addGroup(Alignment.TRAILING, gl_panel_4.createSequentialGroup()
                     .addGap(15)
                     .addComponent(pane, GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)
                     .addGap(14))
+                .addGroup(Alignment.TRAILING, gl_panel_4.createSequentialGroup()
+                    .addContainerGap(349, Short.MAX_VALUE)
+                    .addComponent(btnExpandAll, GroupLayout.PREFERRED_SIZE, 120, GroupLayout.PREFERRED_SIZE)
+                    .addGap(30))
         );
         gl_panel_4.setVerticalGroup(
             gl_panel_4.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panel_4.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(pane, GroupLayout.PREFERRED_SIZE, 295, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(pane, GroupLayout.PREFERRED_SIZE, 257, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(btnExpandAll)
+                    .addContainerGap(9, Short.MAX_VALUE))
         );
         panel_4.setLayout(gl_panel_4);
         
@@ -430,8 +438,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graph = new mxGraph();
         graph.setCellsEditable(false);
         graph.setAllowDanglingEdges(false);
+        
         final mxGraphComponent graphComponent = new mxGraphComponent(graph);
         graphComponent.setPreferredSize(new Dimension(500, 300));
+        graphComponent.setAutoExtend(true);
         graphComponent.getViewport().setOpaque(true);
         graphComponent.getViewport().setBackground(panel_3.getBackground());
         graphComponent.setBorder(null);
