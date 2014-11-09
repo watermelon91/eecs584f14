@@ -252,6 +252,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     // TODO delete tree tree below
                     try
                     {
+                        connector.dropAllTmpTables();
                         tree = connector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
                     } catch (Exception e)
                     {
