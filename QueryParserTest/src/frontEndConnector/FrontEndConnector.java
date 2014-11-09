@@ -106,6 +106,24 @@ public class FrontEndConnector {
 		
 	}
 	
+	public List<String[]> executeTestQueryAll(String query)
+	{
+		List<String[]> result = null;
+		
+		try 
+		{
+			result = pdbConnector.executeQuerySeparateResult(query);
+			return result;
+		} 
+		catch (SQLException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
+	
 	public String executeQuery(String query)
 	{
 		List<String> result = null;
