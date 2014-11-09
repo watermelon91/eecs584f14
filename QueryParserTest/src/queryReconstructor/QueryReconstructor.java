@@ -72,57 +72,89 @@ public class QueryReconstructor {
 					query = query + " where " + filter;
 				}
 				
-			} else if (pr.getType(curNode).equals("aggregate")) { // TODO: fill in condition here. also implement
-				//TODO: aggregate nodes
-				
+			} else {
+				// scans should be the only nodes without children.
 			}
 			
 		} else 
 		{
 			// process children
-			Iterator<JSONObject> citerator = childrenNodes.iterator();	
-			while(citerator.hasNext())
-			{
-				// first, recurse on any child nodes
-				JSONObject curChild = citerator.next();	
-				System.out.println(curChild.toJSONString());
-				generateTempQuery(curChild);
+			if (pr.getType(curNode).equals("join")) {
+				Iterator<JSONObject> citerator = childrenNodes.iterator();	
+				while(citerator.hasNext())
+				{
+					// first, recurse on any child nodes
+					JSONObject curChild = citerator.next();	
+					System.out.println(curChild.toJSONString());
+					generateTempQuery(curChild);
+					
+				}
+				// then, once children have been processed, we can use them
+				/*
+				JSONArray aliasC1 = pr.getAliasSet((JSONObject)childrenNodes.get(0));
+				JSONArray aliasC2 = pr.getAliasSet((JSONObject)childrenNodes.get(1));
+				*/
+				String tmpC1 = pr.getNewTableName((JSONObject)childrenNodes.get(0));
+				String tmpC2 = pr.getNewTableName((JSONObject)childrenNodes.get(1));
+				String joinType = pr.getJoinType(curNode);
+				String joinCond = pr.getJoinCondition(curNode);
 				
-			}
-			// then, once children have been processed, we can use them
-			/*
-			JSONArray aliasC1 = pr.getAliasSet((JSONObject)childrenNodes.get(0));
-			JSONArray aliasC2 = pr.getAliasSet((JSONObject)childrenNodes.get(1));
-			*/
-			String tmpC1 = pr.getNewTableName((JSONObject)childrenNodes.get(0));
-			String tmpC2 = pr.getNewTableName((JSONObject)childrenNodes.get(1));
-			String joinType = pr.getJoinType(curNode);
-			String joinCond = pr.getJoinCondition(curNode);
-			
-			// join node also needs select statement, but aliases will have to be matched with child nodes and replaced with child table names
-			// sooo..
-			Iterator<String> it = outputAttrs.iterator();
-			while (it.hasNext()) {
-				query = query + " " + it.next() + ",";
-			}
-			// remove last comma
-			query = query.substring(0, query.length() - 1);
-
-			
-			// from clause will have join statement, use join filters
-			
-			
-			// not guaranteed to have a join condition, take cross product
-			if (joinCond == "") {
-				query = query + " from " + tmpC1 + " , " + tmpC2;
-			} else {
-				query = query + " from " + tmpC1 + " " + joinType + " join " + tmpC2 + " on " + joinCond;
-			}
-			
-			// possible where clause
-			if (!filter.equals("")) {
-				// has filter, needs where clause.
-				query = query + " where " + filter;
+				// join node also needs select statement, but aliases will have to be matched with child nodes and replaced with child table names
+				// sooo..
+				Iterator<String> it = outputAttrs.iterator();
+				while (it.hasNext()) {
+					query = query + " " + it.next() + ",";
+				}
+				// remove last comma
+				query = query.substring(0, query.length() - 1);
+	
+				
+				// from clause will have join statement, use join filters
+				
+				
+				// not guaranteed to have a join condition, take cross product
+				if (joinCond == "") {
+					query = query + " from " + tmpC1 + " , " + tmpC2;
+				} else {
+					query = query + " from " + tmpC1 + " " + joinType + " join " + tmpC2 + " on " + joinCond;
+				}
+				
+				// possible where clause
+				if (!filter.equals("")) {
+					// has filter, needs where clause.
+					query = query + " where " + filter;
+				}
+			} else if (pr.getType(curNode).equals("aggregate")) { // TODO: fill in condition here. also implement
+				//TODO: aggregate nodes
+				Iterator<JSONObject> citerator = childrenNodes.iterator();	
+				while(citerator.hasNext())
+				{
+					// first, recurse on any child nodes
+					JSONObject curChild = citerator.next();	
+					System.out.println(curChild.toJSONString());
+					generateTempQuery(curChild);
+					
+				}
+				String tmpC1 = pr.getNewTableName((JSONObject)childrenNodes.get(0));
+				
+				Iterator<String> it = outputAttrs.iterator();
+				while (it.hasNext()) {
+					query = query + " " + it.next() + ",";
+				}
+				// remove last comma
+				query = query.substring(0, query.length() - 1);
+				
+				JSONArray groupByAttrs = pr.getGroupByAttributes(curNode);
+				if (groupByAttrs != null) {
+					query = query + " group by ";
+					
+					Iterator<String> gbit = groupByAttrs.iterator();
+					while (gbit.hasNext()) {
+						query = query + " " + gbit.next() + ",";
+					}
+					// remove last comma
+					query = query.substring(0, query.length() - 1);
+				}
 			}
 			
 		}

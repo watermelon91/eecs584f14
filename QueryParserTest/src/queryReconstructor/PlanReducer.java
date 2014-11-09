@@ -89,6 +89,10 @@ public class PlanReducer {
 			// since I believe it will always be a child of a bitmap heap scan.
 			break;
 			
+		case AGGREGATE:
+			reducedCurNode = ReduceAggregateNode(curNode);
+			break;
+			
 		//misc
 		case LIMIT:
 			// probably not going to do anything about this yet.
@@ -202,7 +206,7 @@ public class PlanReducer {
 		String alias = qParser.getAlias(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
-		//TODO
+		// TODO
 		
 		reducedNode = MakeScanNode(indexCond, inputTable, alias, outputAttrs);		
 		
@@ -230,6 +234,19 @@ public class PlanReducer {
 	
 	//
 	
+	JSONObject ReduceAggregateNode(JSONObject curNode) {
+		// may want to process Aggregate differently from HashAggregate or others - I think Aggregate doesn't group by anything
+		JSONObject reducedNode = new JSONObject();
+		System.out.println(curNode.toJSONString());
+		System.out.println(qParser.getChildrenPlanNodes(curNode));
+		JSONObject child = ReduceNode((JSONObject) qParser.getChildrenPlanNodes(curNode).get(0));	
+		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
+		
+		reducedNode = MakeAggregateNode(child, outputAttrs);
+		
+		return reducedNode;
+	}
+		
 	JSONObject MakeJoinNode(String joinCond, String joinType, String joinFilter, String filter, JSONObject reducedFirstChild, JSONObject reducedSecondChild, JSONArray outputAttrs) 
 	{
 		
@@ -319,7 +336,7 @@ public class PlanReducer {
 		return reducedJoinNode;
 	}
 		
-	JSONObject MakeAggregateNode(String filterCond, JSONObject reducedChild, JSONArray outputAttrs) {
+	JSONObject MakeAggregateNode(JSONObject reducedChild, JSONArray outputAttrs) {
 		JSONObject reducedAggregateNode = new JSONObject();
 		// TODO make sure to rename attributes with 
 		JSONArray aliasSet = getAliasSet(reducedChild);
@@ -328,8 +345,7 @@ public class PlanReducer {
 		JSONArray children = new JSONArray();
 		children.add(reducedChild);
 		String childTableName = getNewTableName(reducedChild);
-		String aliasReplacedFilter = replaceAliasesWithTableName(filterCond, aliasSet, childTableName);
-		JSONArray groupByAttrs = new JSONArray();
+		JSONArray groupByAttrs = null;
 
 		Iterator<String> it = outputAttrs.iterator();
 		while (it.hasNext()) {		
@@ -339,24 +355,33 @@ public class PlanReducer {
 				if (attr.substring(0, 1).equals("(")) {
 					// after stripping parentheses, check to see if it's already in the map of execution string to attribute name
 					// if first thing is a paren, check to see if it's a function (if it is, after stripping parentheses there will still be parentheses).
-/*					String tmp_attr = removeParentheses(attr);
+					String tmp_attr = attr;
+					
+					// remove any wrapping parentheses
+					while (tmp_attr.substring(0, 1).equals("(")) {
+						tmp_attr = QueryProcessingUtilities.removeParenthesis(tmp_attr);				
+					}
+					
 					if (tmp_attr.contains("(")) {
-						// either was double wrapped in parentheses, or has function call. for now assume function call
+						// is function call
 					} else {
 						// not function call.
 					}
-*/					// if it's a function inside, then look up the node name
-					// otherwise, it might be the evaluation of some kind of arithmetic/some other garbage
+					
 				} else {
 					// first char not paren = execute the function here
+					
 					newOutputAttrs.add(attr);
 				}
 			} else {
-				
+				System.out.println(attr);
 				String[] attrParts = attr.split("\\.");
 				String newAttr = "";
 				// check alias, replace with name of child
 				// TODO: check for parentheses, process parentheses separately
+				if (groupByAttrs == null) {
+					groupByAttrs = new JSONArray();
+				}
 				if (attrParts.length == 2) {
 					newOutputAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);
 					groupByAttrs.add(childTableName + "." + attrParts[0] + "_" + attrParts[1]);
@@ -370,7 +395,7 @@ public class PlanReducer {
 		
 		reducedAggregateNode.put("type", "aggregate");
 		reducedAggregateNode.put("children", children);
-		reducedAggregateNode.put("filter", aliasReplacedFilter);
+//		reducedAggregateNode.put("filter", aliasReplacedFilter);
 		reducedAggregateNode.put("outputAttrs", newOutputAttrs);
 		reducedAggregateNode.put("aliasSet", aliasSet);
 		reducedAggregateNode.put("newTableName", "tmp" + curTmp);
@@ -484,6 +509,7 @@ public class PlanReducer {
 		MERGE_LEFT_JOIN,
 		NESTED_LOOP,
 		NESTED_LOOP_LEFT_JOIN,
+		AGGREGATE,
 		HASH,
 		SORT,
 		INDEX_SCAN,
@@ -513,6 +539,9 @@ public class PlanReducer {
 		if (nodeType.equals("Subquery Scan")) { return NODE_TYPE.SUBQUERY_SCAN; }
 		if (nodeType.equals("Bitmap Heap Scan")) { return NODE_TYPE.BITMAP_HEAP_SCAN; }
 		if (nodeType.equals("Bitmap Index Scan")) { return NODE_TYPE.BITMAP_INDEX_SCAN; }
+		if (nodeType.equals("GroupAggregate")) { return NODE_TYPE.AGGREGATE; }
+		if (nodeType.equals("HashAggregate")) { return NODE_TYPE.AGGREGATE; }
+		if (nodeType.equals("Aggregate")) { return NODE_TYPE.AGGREGATE; }
 		System.out.println("undefined");
 		return NODE_TYPE.UNDEFINED;
 	}
@@ -526,6 +555,7 @@ public class PlanReducer {
 		JOIN_CONDITION,
 		JOIN_TYPE,
 		OUTPUT_ATTRS,
+		GROUP_BY_ATTRS,
 		CHILDREN,
 		QUERY
 		};
@@ -543,6 +573,7 @@ public class PlanReducer {
 		 map.put(REDUCED_PLAN_ATTRS.JOIN_CONDITION, "joinCondition");
 		 map.put(REDUCED_PLAN_ATTRS.JOIN_TYPE, "joinType");
 		 map.put(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS, "outputAttrs");
+		 map.put(REDUCED_PLAN_ATTRS.GROUP_BY_ATTRS, "groupByAttrs");
 		 map.put(REDUCED_PLAN_ATTRS.CHILDREN, "children");
 		 map.put(REDUCED_PLAN_ATTRS.QUERY, "query");
 		 return Collections.unmodifiableMap(map);
@@ -626,6 +657,11 @@ public class PlanReducer {
 	public JSONArray getOutputAttributes(JSONObject currentNode)
 	{
 		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS));
+	}
+	
+	public JSONArray getGroupByAttributes(JSONObject currentNode)
+	{
+		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.GROUP_BY_ATTRS));
 	}
 	
 	public JSONArray getChildren(JSONObject currentNode)
