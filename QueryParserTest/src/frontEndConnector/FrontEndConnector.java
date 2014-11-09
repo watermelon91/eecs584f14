@@ -74,6 +74,11 @@ public class FrontEndConnector {
 		return executeTestQuery("SELECT * FROM " + tableName + " LIMIT 10");	
 	}
 	
+	public List<String[]> getAllSampleData(String tableName)
+	{
+		return executeTestQuery("SELECT * FROM " + tableName);
+	}
+	
 	/*
 	 * Input: A query that the user wants to run on the test data 
 	 * 		  generated using getSampleData()
