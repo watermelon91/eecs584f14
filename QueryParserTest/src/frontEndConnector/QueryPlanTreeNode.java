@@ -3,13 +3,35 @@ package frontEndConnector;
 import  java.lang.Math;
 
 public class QueryPlanTreeNode {
-	public String type;
-	public String aliasSet;
-	public String filter;
-	public String inputTable;
-	public String newTableName;
-	public String joinCondition;
-	public String outputAttrs;
+	private String type;
+	private String aliasSet;
+	private String filter;
+	private String inputTable;
+	private String newTableName;
+	private String joinCondition;
+	private String outputAttrs;
+	private AbbreviatedTreeNode abbrTreeNode;
+	
+	public class AbbreviatedTreeNode{
+		private String LargeFontStr;
+		private String SmallFontStr;
+		
+		public AbbreviatedTreeNode(String _Large, String _Small)
+		{
+			LargeFontStr = _Large;
+			SmallFontStr = _Small;
+		}
+		
+		public String getLargeFontStr()
+		{
+			return LargeFontStr;
+		}
+		
+		public String getSmallFontStr()
+		{
+			return SmallFontStr;
+		}
+	}
 	
 	public QueryPlanTreeNode(
 			String _type, 
@@ -28,6 +50,43 @@ public class QueryPlanTreeNode {
 		newTableName = _newTableName;
 		joinCondition = _joinCondition;
 		outputAttrs = _outputAttrs;
+		
+		abbrTreeNode = new AbbreviatedTreeNode(constructLargeFontString(), constructSmallFontString());
+	}
+	
+	/*
+	 * - only type, filter, inputTable, joinCondition matter in the abbreviated version
+	 * - large font: type, inputTable
+	 * - small font: filter, joinCondition
+	 */
+	private String constructSmallFontString()
+	{
+		String str = "";
+		if(!filter.isEmpty())
+		{
+			str = str + filter;
+		}
+		if(!joinCondition.isEmpty())
+		{
+			str = str + "; " + joinCondition;
+		}
+		
+		return str;
+	}
+	
+	private String constructLargeFontString()
+	{
+		String str = "";
+		if(!type.isEmpty())
+		{
+			str = str + type;
+		}
+		if(!inputTable.isEmpty())
+		{
+			str = str + "; " + inputTable;
+		}
+		
+		return str;
 	}
 	
 	public String getType()
@@ -65,6 +124,11 @@ public class QueryPlanTreeNode {
 		return outputAttrs;
 	}
 	
+	public AbbreviatedTreeNode getAbbreviatedTreeNode()
+	{
+		return abbrTreeNode;
+	}
+	
 	 @Override public String toString() {
 		 final String SPLITTER = "\n";
 		 //final String SPLITTER = "`";
@@ -90,6 +154,7 @@ public class QueryPlanTreeNode {
 	 
 	 private String constructString(String nodeLabel, String nodeAttr, String SPLITTER)
 	 {
+
 		 if(nodeAttr.isEmpty())
 		 {
 			 return "";
