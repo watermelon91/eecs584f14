@@ -39,7 +39,9 @@ import com.mxgraph.view.mxGraph;
 import binaryTree.BinaryTreeNode;
 import binaryTree.LinkedBinaryTreeNode;
 import frontEndConnector.FrontEndConnector;
+import frontEndConnector.FrontEndConnector.Pair;
 import frontEndConnector.QueryPlanTreeNode;
+
 import java.awt.event.ActionEvent;
 
 public class QueryDebuggerMainWindowSwing extends JFrame{
@@ -54,7 +56,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
     private JTextPane subQueryPane;
     private JButton btnSubQuerySubmit;
-    private JButton btnSubQueryCalcel;
+    private JButton btnSubQueryCancel;
     
     private mxGraph graph;
 
@@ -67,6 +69,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private DefaultTableModel model;
     
     final int gridwidth = 150, gridheight = 150;
+    private JTextField queryFrom;
 
     /**
      * Launch the application.
@@ -418,24 +421,34 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                QueryPlanTreeNode node = treeObjects.get(graph.getSelectionCell());
-
-                model.setColumnIdentifiers(node.getOutputAttrs().substring(1, node.getOutputAttrs().length()-1).split(","));
-                model.setRowCount(0);
                 
-                List<String[]> sampleData;
+                Pair samplePair = null;
                 if (btnExpandAll.getText() == "Expand All"){
-                    sampleData = connector.getAllSampleData(node.getNewTableName());                
+                    //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
+                    if (queryFrom.getText().equals("Subquery"))
+                        samplePair = connector.executeTestQueryAll("select * from tmp0 order by user_id");  
+                    else if (queryFrom.getText().equals("Plan Tree Node"))
+                        samplePair = connector.getAllSampleData(treeObjects.get(graph.getSelectionCell()).newTableName);
+                    
                     btnExpandAll.setText("Collapse sample");
                 } else {
-                    sampleData = connector.getSampleData(node.getNewTableName());                
+                    //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
+                    if (queryFrom.getText().equals("Subquery"))
+                        samplePair = connector.executeTestQuery("select * from tmp0 order by user_id");  
+                    else if (queryFrom.getText().equals("Plan Tree Node"))
+                        samplePair = connector.getSampleData(treeObjects.get(graph.getSelectionCell()).newTableName);               
                     btnExpandAll.setText("Expand All");
                 }
 
-                for (String[] row: sampleData){
-                    model.addRow(row);
+                model.setRowCount(0);
+                if (samplePair != null) {
+                    model.setColumnIdentifiers(samplePair.attribtues);
+                    for (String[] row: samplePair.data){
+                        model.addRow(row);
+                    }             
+                    model.addRow(new String[]{"123", "123", "123"});
                 }
-                             
+
                 model.fireTableDataChanged();
                 
             }
@@ -466,24 +479,38 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             
         });
         
+        JLabel lblTableName = new JLabel("Query For:");
+        
+        queryFrom = new JTextField();
+        queryFrom.setEditable(false);
+        
         GroupLayout gl_panel_4 = new GroupLayout(panel_4);
         gl_panel_4.setHorizontalGroup(
-            gl_panel_4.createParallelGroup(Alignment.LEADING)
-                .addGroup(Alignment.TRAILING, gl_panel_4.createSequentialGroup()
-                    .addGap(15)
-                    .addComponent(pane, GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)
-                    .addGap(14))
-                .addGroup(Alignment.TRAILING, gl_panel_4.createSequentialGroup()
+            gl_panel_4.createParallelGroup(Alignment.TRAILING)
+                .addGroup(gl_panel_4.createSequentialGroup()
                     .addContainerGap(349, Short.MAX_VALUE)
                     .addComponent(btnExpandAll, GroupLayout.PREFERRED_SIZE, 120, GroupLayout.PREFERRED_SIZE)
                     .addGap(30))
+                .addGroup(Alignment.LEADING, gl_panel_4.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(lblTableName, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(queryFrom, GroupLayout.PREFERRED_SIZE, 272, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(126, Short.MAX_VALUE))
+                .addGroup(Alignment.LEADING, gl_panel_4.createSequentialGroup()
+                    .addGap(15)
+                    .addComponent(pane, GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)
+                    .addGap(14))
         );
         gl_panel_4.setVerticalGroup(
             gl_panel_4.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panel_4.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(pane, GroupLayout.PREFERRED_SIZE, 257, GroupLayout.PREFERRED_SIZE)
+                    .addGroup(gl_panel_4.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(lblTableName)
+                        .addComponent(queryFrom, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                     .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(pane, GroupLayout.PREFERRED_SIZE, 229, GroupLayout.PREFERRED_SIZE)
+                    .addGap(18)
                     .addComponent(btnExpandAll)
                     .addContainerGap(9, Short.MAX_VALUE))
         );
@@ -510,13 +537,14 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 Object cell = graphComponent.getCellAt(e.getX(), e.getY());
                 if (treeObjects.containsKey(cell)){
                     btnExpandAll.setText("Expand All");
+                    queryFrom.setText("Plan Tree Node");
                     
                     QueryPlanTreeNode node = treeObjects.get(cell);
-                    List<String[]> sampleData = connector.getSampleData(node.getNewTableName());
+                    Pair samplePair = connector.getSampleData(node.getNewTableName());
                     
-                    model.setColumnIdentifiers(node.getOutputAttrs().substring(1, node.getOutputAttrs().length()-1).split(","));
+                    model.setColumnIdentifiers(samplePair.attribtues);
                     model.setRowCount(0);
-                    for (String[] row: sampleData){
+                    for (String[] row: samplePair.data){
                         model.addRow(row);
                     }
                                  
@@ -562,30 +590,26 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (btnQuerySubmit.getText() == "Submit"){
+                if (btnSubQuerySubmit.getText() == "Submit"){
                     // submit query to connector and receive tree
-                    btnQuerySubmit.setText("Edit"); 
-                    btnQueryCancel.setEnabled(false);
-                    
-                    // delete tree below
-                    try
-                    {
-                        connector.dropAllTmpTables();
-                        tree = connector.executeTestQuery(subQueryPane.getText());
-);
-                    } catch (Exception e)
-                    {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    
-                    if (tree!= null) {
-                        drawPlanTree();
-                    }
-                } else if (btnQuerySubmit.getText() == "Edit") {
-                    queryPane.setEnabled(true);
-                    btnQuerySubmit.setText("Submit");
-                    btnQueryCancel.setEnabled(true);
+                    btnSubQuerySubmit.setText("Edit"); 
+                    btnSubQueryCancel.setEnabled(false);
+                    btnExpandAll.setText("Expand All");
+                    queryFrom.setText("Subquery");
+              
+                    Pair samplePair = connector.executeTestQuery("select * from tmp0 order by u_user_id");  
+
+                    model.setColumnIdentifiers(samplePair.attribtues);
+                    model.setRowCount(0);
+                    for (String[] row: samplePair.data){
+                        model.addRow(row);
+                    }                              
+
+                    model.fireTableDataChanged();
+                } else if (btnSubQuerySubmit.getText() == "Edit") {
+                    subQueryPane.setEnabled(true);
+                    btnSubQuerySubmit.setText("Submit");
+                    btnSubQueryCancel.setEnabled(true);
                 }                
             }
 
@@ -609,6 +633,41 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
             @Override
             public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });
+        
+        btnSubQueryCancel = new JButton("Cancel");
+        btnSubQueryCancel.addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // TODO Auto-generated method stub
+                queryPane.setText("");
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
                 // TODO Auto-generated method stub
                 
             }
