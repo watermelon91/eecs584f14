@@ -68,7 +68,11 @@ public class QueryPlanTreeNode {
 		}
 		if(!joinCondition.isEmpty())
 		{
-			str = str + "; " + joinCondition;
+			if(str.isEmpty())
+			{
+				str = str + "; ";
+			}
+			str = str + joinCondition;
 		}
 		
 		return str;
@@ -83,7 +87,11 @@ public class QueryPlanTreeNode {
 		}
 		if(!inputTable.isEmpty())
 		{
-			str = str + "; " + inputTable;
+			if(str.isEmpty())
+			{
+				str = str + "; ";
+			}
+			str = str + inputTable;
 		}
 		
 		return str;
