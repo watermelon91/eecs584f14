@@ -54,6 +54,12 @@ public class LoggingUtilities {
 				break;
 			}
 			
+			case QUERY_PLAN_NODE_CLICK:
+			{
+				logContent = logContent +  "[NODE_CLICK] ";
+				break;
+			}
+			
 			case OTHER:
 			{
 				logContent = logContent +  "[OTHER] ";
