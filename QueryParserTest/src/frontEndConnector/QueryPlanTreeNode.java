@@ -1,5 +1,7 @@
 package frontEndConnector;
 
+import  java.lang.Math;
+
 public class QueryPlanTreeNode {
 	public String type;
 	public String aliasSet;
@@ -67,15 +69,16 @@ public class QueryPlanTreeNode {
 		 final String SPLITTER = "\n";
 		 //final String SPLITTER = "`";
 		 
-		 String outputAttrFormatted = outputAttrs.substring(1, outputAttrs.indexOf(',')) + ", ...";
+		 //String outputAttrFormatted = outputAttrs.substring(1, outputAttrs.indexOf(',')) + ", ...";
+		 String outputAttrFormatted = outputAttrs.substring(1, outputAttrs.length()-2);
 		 
-		 String nodeFormattedStr = cutOffLongString("Type: " + nodeToString(type) + SPLITTER)
-				 + cutOffLongString("Alias: " + nodeToString(aliasSet) + SPLITTER) 
-				 + cutOffLongString("Filter: " + nodeToString(filter) + SPLITTER)
-				 + cutOffLongString("InputTable: " + nodeToString(inputTable) + SPLITTER)
-				 + cutOffLongString("NewTableName: " + nodeToString(newTableName) + SPLITTER)
-				 + cutOffLongString("JoinCondition: " + nodeToString(joinCondition) + SPLITTER)
-				 + cutOffLongString("OutputAttrs: " + nodeToString(outputAttrFormatted) + SPLITTER);
+		 String nodeFormattedStr = constructString("Type", type, SPLITTER) 
+				 + constructString("Alias", aliasSet, SPLITTER) 
+				 + constructString("Filter", filter, SPLITTER)
+				 + constructString("Input", inputTable, SPLITTER)
+				 + constructString("TempTable", newTableName, SPLITTER)
+				 + constructString("JoinCond", joinCondition, SPLITTER)
+				 + constructString("Output", outputAttrFormatted, SPLITTER);
 
 		 return nodeFormattedStr;
 	 }
@@ -85,28 +88,39 @@ public class QueryPlanTreeNode {
 		 void visit(QueryPlanTreeNode node);
 	 }	
 	 
+	 private String constructString(String nodeLabel, String nodeAttr, String SPLITTER)
+	 {
+		 if(nodeAttr.isEmpty())
+		 {
+			 return "";
+		 }
+		 else
+		 {
+			 return cutOffLongString(nodeLabel + ": " + nodeAttr + SPLITTER);
+		 }
+	 }
+	 
 	 private String cutOffLongString(String input)
 	 {
-		 int MAX_LEN = 30;
+		 int MAX_LEN = 45;
 		 if(input.length() <= MAX_LEN)
 		 {
 			 return input;
 		 }
 		 else
 		 {
-			 return input.substring(0, MAX_LEN-5) + "...\n";
-		 }
-	 }
-	 
-	 private String nodeToString(String nodeAttr)
-	 {
-		 if(nodeAttr.isEmpty())
-		 {
-			 return "N/A";
-		 }
-		 else
-		 {
-			 return nodeAttr;
+			 String multilineInput = "";
+			 int i = 0;
+			 for(; i < (int)Math.floor((input.length() * 1.0 / MAX_LEN)); i++)
+			 {
+				 multilineInput = multilineInput + input.substring(i * MAX_LEN, (i+1) * MAX_LEN) + "\n";
+			 }
+			 if(input.length() > i * MAX_LEN)
+			 {
+				 multilineInput = multilineInput + input.substring(i * MAX_LEN, input.length());
+			 }
+			 
+			 return multilineInput;
 		 }
 	 }
 	
