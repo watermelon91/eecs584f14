@@ -23,11 +23,11 @@ public class FrontEndConnector {
 	private List<String> tmpTableNames = null;
 	
 	public class Pair{
-		public String[] attribtues;
+		public String[] attributes;
 		public List<String[]> data;
 		
 		public Pair(String[] _attr, List<String[]> _data){
-			attribtues = _attr;
+			attributes = _attr;
 			data = _data;
 		}
 	}

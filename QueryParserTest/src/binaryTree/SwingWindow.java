@@ -91,7 +91,7 @@ public class SwingWindow {
 	        System.out.println("\nTEST: get sample data...");
 	        Pair sampleRstPair = UIConnector.getSampleData("tmp1");
 	        List<String[]> sampleDataRst = sampleRstPair.data;
-	        String[] sampleDataAttrs =sampleRstPair.attribtues;
+	        String[] sampleDataAttrs =sampleRstPair.attributes;
 			for(int i = 0; i < sampleDataRst.size(); i++)
 			{
 				String[] row = sampleDataRst.get(i);
