@@ -15,7 +15,7 @@ import javax.mail.internet.*;
 
 public class LoggingUtilities {
 	
-	enum LOG_TYPES {BUTTON_CLICK, TEXT_ENTER, OTHER};
+	enum LOG_TYPES {BUTTON_CLICK, TEXT_ENTER, QUERY_PLAN_NODE_CLICK, OTHER};
 
 	public LoggingUtilities ()
 	{
