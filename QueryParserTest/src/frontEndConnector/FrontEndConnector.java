@@ -88,7 +88,7 @@ public class FrontEndConnector {
 	
 	public Pair getAllSampleData(String tableName)
 	{
-		return executeTestQuery("SELECT * FROM " + tableName);
+		return executeTestQueryAll("SELECT * FROM " + tableName);
 	}
 	
 	/*
