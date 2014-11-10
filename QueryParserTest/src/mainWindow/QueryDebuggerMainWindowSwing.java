@@ -40,6 +40,7 @@ import binaryTree.BinaryTreeNode;
 import binaryTree.LinkedBinaryTreeNode;
 import frontEndConnector.FrontEndConnector;
 import frontEndConnector.QueryPlanTreeNode;
+import java.awt.event.ActionEvent;
 
 public class QueryDebuggerMainWindowSwing extends JFrame{
     private JTextField textUsername;
@@ -50,6 +51,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private JTextPane queryPane;
     private JButton btnQuerySubmit;
     private JButton btnQueryCancel;
+    
+    private JTextPane subQueryPane;
+    private JButton btnSubQuerySubmit;
+    private JButton btnSubQueryCalcel;
     
     private mxGraph graph;
 
@@ -244,12 +249,12 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             @Override
             public void mouseClicked(MouseEvent arg0) {
                 if (btnQuerySubmit.getText() == "Submit"){
-                    // TODO submit query to connector and receive tree
+                    // submit query to connector and receive tree
                     queryPane.setEnabled(false);
                     btnQuerySubmit.setText("Edit"); 
                     btnQueryCancel.setEnabled(false);
                     
-                    // TODO delete tree tree below
+                    // delete tree below
                     try
                     {
                         connector.dropAllTmpTables();
@@ -408,7 +413,58 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         JScrollPane pane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                                            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         
-        JButton btnExpandAll = new JButton("Expand All");
+        final JButton btnExpandAll = new JButton("Expand All");
+        btnExpandAll.addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                QueryPlanTreeNode node = treeObjects.get(graph.getSelectionCell());
+
+                model.setColumnIdentifiers(node.getOutputAttrs().substring(1, node.getOutputAttrs().length()-1).split(","));
+                model.setRowCount(0);
+                
+                List<String[]> sampleData;
+                if (btnExpandAll.getText() == "Expand All"){
+                    sampleData = connector.getAllSampleData(node.getNewTableName());                
+                    btnExpandAll.setText("Collapse sample");
+                } else {
+                    sampleData = connector.getSampleData(node.getNewTableName());                
+                    btnExpandAll.setText("Expand All");
+                }
+
+                for (String[] row: sampleData){
+                    model.addRow(row);
+                }
+                             
+                model.fireTableDataChanged();
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });
         
         GroupLayout gl_panel_4 = new GroupLayout(panel_4);
         gl_panel_4.setHorizontalGroup(
@@ -453,22 +509,19 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 // TODO Auto-generated method stub
                 Object cell = graphComponent.getCellAt(e.getX(), e.getY());
                 if (treeObjects.containsKey(cell)){
+                    btnExpandAll.setText("Expand All");
+                    
                     QueryPlanTreeNode node = treeObjects.get(cell);
                     List<String[]> sampleData = connector.getSampleData(node.getNewTableName());
-                    System.out.println("Clicked on Vertex with new table name: "+treeObjects.get(cell).getNewTableName());
-                    System.out.println(sampleData);
-                    
                     
                     model.setColumnIdentifiers(node.getOutputAttrs().substring(1, node.getOutputAttrs().length()-1).split(","));
                     model.setRowCount(0);
                     for (String[] row: sampleData){
-                        System.out.println(row);
                         model.addRow(row);
                     }
                                  
-                    model.fireTableDataChanged();
-                    
-                }
+                    model.fireTableDataChanged();                    
+                } 
                 
             }
 
@@ -502,11 +555,67 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         JLabel lblPleaseEnter = new JLabel("Please enter a query for the node selected in the plan tree:");
         
-        JTextPane textPane_1 = new JTextPane();
+        subQueryPane = new JTextPane();
         
-        JButton button = new JButton("Submit");
+        btnSubQuerySubmit = new JButton("Submit");
+        btnSubQuerySubmit.addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (btnQuerySubmit.getText() == "Submit"){
+                    // submit query to connector and receive tree
+                    btnQuerySubmit.setText("Edit"); 
+                    btnQueryCancel.setEnabled(false);
+                    
+                    // delete tree below
+                    try
+                    {
+                        connector.dropAllTmpTables();
+                        tree = connector.executeTestQuery(subQueryPane.getText());
+);
+                    } catch (Exception e)
+                    {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    
+                    if (tree!= null) {
+                        drawPlanTree();
+                    }
+                } else if (btnQuerySubmit.getText() == "Edit") {
+                    queryPane.setEnabled(true);
+                    btnQuerySubmit.setText("Submit");
+                    btnQueryCancel.setEnabled(true);
+                }                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });
         
-        JButton button_1 = new JButton("Cancel");
+        JButton btnSubQueryCancel = new JButton("Cancel");
         GroupLayout gl_panel_2 = new GroupLayout(panel_2);
         gl_panel_2.setHorizontalGroup(
             gl_panel_2.createParallelGroup(Alignment.LEADING)
@@ -517,12 +626,12 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                             .addComponent(lblPleaseEnter))
                         .addGroup(gl_panel_2.createSequentialGroup()
                             .addGap(12)
-                            .addComponent(textPane_1, GroupLayout.PREFERRED_SIZE, 381, GroupLayout.PREFERRED_SIZE))
+                            .addComponent(subQueryPane, GroupLayout.PREFERRED_SIZE, 381, GroupLayout.PREFERRED_SIZE))
                         .addGroup(gl_panel_2.createSequentialGroup()
                             .addGap(202)
-                            .addComponent(button, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnSubQuerySubmit, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(ComponentPlacement.UNRELATED)
-                            .addComponent(button_1, GroupLayout.PREFERRED_SIZE, 76, GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(btnSubQueryCancel, GroupLayout.PREFERRED_SIZE, 76, GroupLayout.PREFERRED_SIZE)))
                     .addContainerGap(9, Short.MAX_VALUE))
         );
         gl_panel_2.setVerticalGroup(
@@ -531,11 +640,11 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     .addContainerGap()
                     .addComponent(lblPleaseEnter)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(textPane_1, GroupLayout.PREFERRED_SIZE, 234, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(subQueryPane, GroupLayout.PREFERRED_SIZE, 234, GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.UNRELATED)
                     .addGroup(gl_panel_2.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(button)
-                        .addComponent(button_1))
+                        .addComponent(btnSubQuerySubmit)
+                        .addComponent(btnSubQueryCancel))
                     .addContainerGap(121, Short.MAX_VALUE))
         );
         panel_2.setLayout(gl_panel_2);
