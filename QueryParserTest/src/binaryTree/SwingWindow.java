@@ -60,7 +60,7 @@ public class SwingWindow {
         */
         
         // create a connector to backend
-        FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "1academic");
+        FrontEndConnector UIConnector = new FrontEndConnector("127.0.0.1", "eecs584", "postgres", "pwd");
         // start SQL connection
 		String rst = UIConnector.initializeSQLConnection();
 		if(rst.isEmpty())
