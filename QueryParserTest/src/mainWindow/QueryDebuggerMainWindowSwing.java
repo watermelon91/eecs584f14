@@ -70,6 +70,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
     final int gridwidth = 150, gridheight = 150;
     private JTextField queryFrom;
+    
+    private LoggingUtilities logger;
 
     /**
      * Launch the application.
@@ -102,6 +104,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
      * Initialize the contents of the frame.
      */
     private void initialize() {
+        logger = new LoggingUtilities();
+        
         setBounds(100, 100, 960, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
@@ -426,7 +430,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 if (btnExpandAll.getText() == "Expand All"){
                     //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
                     if (queryFrom.getText().equals("Subquery"))
-                        samplePair = connector.executeTestQueryAll("select * from tmp0 order by user_id");  
+                        samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");  
                     else if (queryFrom.getText().equals("Plan Tree Node"))
                         samplePair = connector.getAllSampleData(treeObjects.get(graph.getSelectionCell()).newTableName);
                     
@@ -434,7 +438,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 } else {
                     //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
                     if (queryFrom.getText().equals("Subquery"))
-                        samplePair = connector.executeTestQuery("select * from tmp0 order by user_id");  
+                        samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");  
                     else if (queryFrom.getText().equals("Plan Tree Node"))
                         samplePair = connector.getSampleData(treeObjects.get(graph.getSelectionCell()).newTableName);               
                     btnExpandAll.setText("Expand All");
@@ -442,7 +446,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
                 model.setRowCount(0);
                 if (samplePair != null) {
-                    model.setColumnIdentifiers(samplePair.attribtues);
+                    model.setColumnIdentifiers(samplePair.attributes);
                     for (String[] row: samplePair.data){
                         model.addRow(row);
                     }             
@@ -542,7 +546,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     QueryPlanTreeNode node = treeObjects.get(cell);
                     Pair samplePair = connector.getSampleData(node.getNewTableName());
                     
-                    model.setColumnIdentifiers(samplePair.attribtues);
+                    model.setColumnIdentifiers(samplePair.attributes);
                     model.setRowCount(0);
                     for (String[] row: samplePair.data){
                         model.addRow(row);
@@ -597,9 +601,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     btnExpandAll.setText("Expand All");
                     queryFrom.setText("Subquery");
               
-                    Pair samplePair = connector.executeTestQuery("select * from tmp0 order by u_user_id");  
+                    Pair samplePair = connector.executeTestQuery("select * from tmp0 order by user_id");  
 
-                    model.setColumnIdentifiers(samplePair.attribtues);
+                    model.setColumnIdentifiers(samplePair.attributes);
                     model.setRowCount(0);
                     for (String[] row: samplePair.data){
                         model.addRow(row);
