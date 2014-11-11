@@ -70,7 +70,6 @@ public class DataPlanTreeNode {
 			 }
 			 nodeFormattedStr = nodeFormattedStr + SPLITTER;
 		 }
-		 
 		 return nodeFormattedStr;
 	 }
 }

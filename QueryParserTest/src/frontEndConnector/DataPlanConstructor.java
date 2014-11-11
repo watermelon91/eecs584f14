@@ -48,7 +48,7 @@ public class DataPlanConstructor {
 		if(rootPlanNode.getRight() != null)
 		{
 			LinkedBinaryTreeNode<DataPlanTreeNode> right = createDataNode((LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getRight());
-			root.setLeft(right);
+			root.setRight(right);
 		}
 		
 		return root;
@@ -95,6 +95,7 @@ public class DataPlanConstructor {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		LinkedBinaryTreeNode<DataPlanTreeNode> treeNode = new LinkedBinaryTreeNode<DataPlanTreeNode>(dataNode);
 		return treeNode;
 	}

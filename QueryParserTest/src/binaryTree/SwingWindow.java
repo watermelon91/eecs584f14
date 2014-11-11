@@ -93,6 +93,9 @@ public class SwingWindow {
 	        
 	        // get data plan
 	        dataRoot = UIConnector.solveWhyIsHere(root, "h_user_id", "6");
+	        System.out.println(dataRoot.getData().toString());
+	        System.out.println(dataRoot.getLeft().getData().toString());
+	        System.out.println(dataRoot.getRight().getData().toString());
 	        
 	        panel = new BinaryTreePanel(dataRoot, 100, 100);
 	        panel.setLocation(10, 10);
