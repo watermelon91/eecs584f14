@@ -2,6 +2,8 @@ package frontEndConnector;
 
 import java.sql.SQLException;
 import java.util.List;
+
+import queryParser.QueryProcessingUtilities;
 import databaseConnector.PostgresDBConnector;
 import frontEndConnector.DataPlanTreeNode.BlankAttributesException;
 import frontEndConnector.DataPlanTreeNode.NonMatchingAttrCountAndValueCountException;
@@ -58,7 +60,7 @@ public class DataPlanConstructor {
 	private LinkedBinaryTreeNode<DataPlanTreeNode> createDataNode(LinkedBinaryTreeNode<QueryPlanTreeNode> planNode)
 	{
 		QueryPlanTreeNode node = planNode.getData();
-		String attributeStr = node.getOutputAttrs();
+		String attributeStr = QueryProcessingUtilities.removeSquareParenthesis(node.getOutputAttrs());
 		String[] attributes = attributeStr.split(",");
 		
 		List<String[]> values = null;

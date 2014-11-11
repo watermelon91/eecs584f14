@@ -22,6 +22,29 @@ public class QueryProcessingUtilities {
 		}
 	}
 	
+	public static String removeSquareParenthesis(String inStr)
+	{
+		if((inStr.length() >= 2) && inStr.charAt(0) == '[' && inStr.charAt(inStr.length()-1) == ']')
+		{
+			return inStr.substring(1, inStr.length()-1);
+		}
+		else
+		{
+			return inStr;
+		}
+	}
+	
+	public static String removeQuotes(String inStr)
+	{
+		if((inStr.length() >= 2) && inStr.charAt(0) == '"' && inStr.charAt(inStr.length()-1) == '"')
+		{
+			return inStr.substring(1, inStr.length()-1);
+		}
+		else
+		{
+			return inStr;
+		}
+	}
 	
 	public static JSONArray concatArrays(JSONArray a1, JSONArray a2) {
 		JSONArray newAr = new JSONArray();

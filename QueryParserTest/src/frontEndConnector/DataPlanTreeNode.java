@@ -2,6 +2,10 @@ package frontEndConnector;
 
 import java.util.List;
 
+import queryParser.QueryProcessingUtilities;
+
+import com.sun.xml.internal.ws.util.StringUtils;
+
 import binaryTree.LinkedBinaryTreeNode;
 
 public class DataPlanTreeNode {
@@ -48,11 +52,17 @@ public class DataPlanTreeNode {
 	
 	 @Override public String toString() {
 		 final String SPLITTER = "\n";
-		
+		 
+		 String[] formats = new String[attrs.length];
+		 for(int i = 0; i < attrs.length; i++)
+		 {
+			 formats[i] = "%-" + attrs[i].length() + "s";
+		 }
+				 
 		 String nodeFormattedStr = "";
 		 for(int i = 0; i < attrs.length; i++)
 		 {
-			 nodeFormattedStr = nodeFormattedStr + " | " + attrs[i];
+			 nodeFormattedStr = nodeFormattedStr + " | " + String.format(formats[i], QueryProcessingUtilities.removeQuotes(attrs[i]));
 		 }
 		 nodeFormattedStr = nodeFormattedStr + SPLITTER;
 		 
@@ -66,7 +76,7 @@ public class DataPlanTreeNode {
 			 String[] vals = values.get(i);
 			 for(int j = 0; j < attrs.length; j++)
 			 {
-				 nodeFormattedStr = nodeFormattedStr + " | " + vals[j];
+				 nodeFormattedStr = nodeFormattedStr + " | " + String.format(formats[j], vals[j]);
 			 }
 			 nodeFormattedStr = nodeFormattedStr + SPLITTER;
 		 }
