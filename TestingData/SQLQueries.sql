@@ -53,3 +53,7 @@ explain (VERBOSE TRUE, FORMAT JSON) select h.age, avg(h.weight) from hrecords h 
 explain (VERBOSE TRUE, FORMAT JSON) select max(h.age) from (select h.age, avg(h.weight) from hrecords h group by h.age) AS h; // QueryPlan4_nested
 
 explain (VERBOSE TRUE, FORMAT JSON) select max(h2.age), h2.avg_weight from (select h.age, avg(h.weight) AS avg_weight from hrecords h group by h.age) AS h2 group by h2.avg_weight; // QueryPlan45_nested2
+
+explain (VERBOSE TRUE, FORMAT JSON) select user_id, first_name from users t
+where t.user_id = (select user_id from users t2
+where t2.first_name = t.first_name and t.user_id = t2.user_id);
