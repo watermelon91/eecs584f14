@@ -97,7 +97,7 @@ public class QueryPlanTreeNode {
 			str = str + type;
 		}
 		
-		return str;
+		return str.toUpperCase();
 	}
 	
 	public String getType()
