@@ -86,6 +86,17 @@ public class FrontEndConnector {
 		return root;
 	}
 	
+	public LinkedBinaryTreeNode<DataPlanTreeNode> solveWhyNotHere(
+			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
+			String columnName,
+			String columnValue
+			)
+	{
+		DataPlanConstructor constructor = new DataPlanConstructor(planNode, columnName, columnValue, pdbConnector);
+		LinkedBinaryTreeNode<DataPlanTreeNode> root = constructor.build();
+		return root;
+	}
+	
 	/*
 	 * Input: The table name a user wants to retrieve data from.
 	 *        This table needs to be one of the tables that appears in one 
