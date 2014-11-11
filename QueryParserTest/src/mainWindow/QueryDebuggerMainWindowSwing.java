@@ -28,6 +28,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.JButton;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JTable;
 import javax.swing.JPasswordField;
@@ -123,6 +125,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent arg0) {
                 textUsername.setText("");
                 textPassword.setText("");  
+                
+                logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "log in cancel");
             }
 
             @Override
@@ -169,6 +173,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     btnDbCancel.setEnabled(false);
                     btnDbSubmit.setText("Disconnect");
                     btnDbSubmit.setSize(30, btnDbSubmit.getHeight());
+                    
+                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "log in submit");
                 } else if (btnDbSubmit.getText() == "Disconnect") {
                     connector.closeDBConnection();
                     
@@ -176,6 +182,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     textPassword.setEnabled(true);
                     btnDbCancel.setEnabled(true);
                     btnDbSubmit.setText("Submit");
+                    
+                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "log in disconnect");
                 }
             }
 
@@ -244,7 +252,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         JPanel panel_1 = new JPanel();
         panel_1.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Query Box", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        
+
         
         JLabel lblPleaseEbterA = new JLabel("Please enter a query to execute:");
         queryPane = new JTextPane();
@@ -274,11 +282,15 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     
                     if (tree!= null) {
                         drawPlanTree();
+                        
+                        logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");
                     }
                 } else if (btnQuerySubmit.getText() == "Edit") {
                     queryPane.setEnabled(true);
                     btnQuerySubmit.setText("Submit");
                     btnQueryCancel.setEnabled(true);
+                    
+                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query edit");
                 }
             }
 
@@ -311,6 +323,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent e) {
                 // TODO Auto-generated method stub
                 queryPane.setText("");
+                
+                logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query cancel");
             }
 
             @Override
