@@ -77,14 +77,6 @@ public class QueryPlanTreeNode {
 			}
 			str = str + joinCondition;
 		}
-		if(!inputTable.isEmpty())
-		{
-			if(!str.isEmpty())
-			{
-				str = str + "; ";
-			}
-			str = str + inputTable;
-		}
 		
 		return str;
 	}
@@ -96,8 +88,18 @@ public class QueryPlanTreeNode {
 		{
 			str = str + type;
 		}
+		str = str.toUpperCase();
 		
-		return str.toUpperCase();
+		if(!inputTable.isEmpty())
+		{
+			if(!str.isEmpty())
+			{
+				str = str + " ";
+			}
+			str = str + inputTable;
+		}
+		
+		return str;
 	}
 	
 	public String getType()

@@ -22,7 +22,7 @@ public class DataPlanTreeNode {
 		
 		if(_values != null)
 		{
-			if(_attrs.length != _values.get(0).length)
+			if((_values.size() > 0) && (_attrs.length != _values.get(0).length))
 			{
 				throw new NonMatchingAttrCountAndValueCountException();
 			}
