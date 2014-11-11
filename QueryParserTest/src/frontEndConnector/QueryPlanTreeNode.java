@@ -68,7 +68,7 @@ public class QueryPlanTreeNode {
 		}
 		if(!joinCondition.isEmpty())
 		{
-			if(str.isEmpty())
+			if(!str.isEmpty())
 			{
 				str = str + "; ";
 			}
@@ -87,7 +87,7 @@ public class QueryPlanTreeNode {
 		}
 		if(!inputTable.isEmpty())
 		{
-			if(str.isEmpty())
+			if(!str.isEmpty())
 			{
 				str = str + "; ";
 			}
