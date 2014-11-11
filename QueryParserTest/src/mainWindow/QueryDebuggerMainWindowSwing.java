@@ -2,6 +2,7 @@ package mainWindow;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FontMetrics;
@@ -35,6 +36,7 @@ import javax.swing.JTable;
 import javax.swing.JPasswordField;
 
 import com.mxgraph.swing.mxGraphComponent;
+import com.mxgraph.util.mxConstants;
 import com.mxgraph.util.mxRectangle;
 import com.mxgraph.view.mxGraph;
 
@@ -446,7 +448,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     if (queryFrom.getText().equals("Subquery"))
                         samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");  
                     else if (queryFrom.getText().equals("Plan Tree Node"))
-                        samplePair = connector.getAllSampleData(treeObjects.get(graph.getSelectionCell()).newTableName);
+                        samplePair = connector.getAllSampleData(treeObjects.get(graph.getSelectionCell()).getNewTableName());
                     
                     btnExpandAll.setText("Collapse sample");
                 } else {
@@ -454,7 +456,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     if (queryFrom.getText().equals("Subquery"))
                         samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");  
                     else if (queryFrom.getText().equals("Plan Tree Node"))
-                        samplePair = connector.getSampleData(treeObjects.get(graph.getSelectionCell()).newTableName);               
+                        samplePair = connector.getSampleData(treeObjects.get(graph.getSelectionCell()).getNewTableName());               
                     btnExpandAll.setText("Expand All");
                 }
 
@@ -762,9 +764,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
         tree.traversePreorder(new BinaryTreeNode.Visitor() {
             public void visit(BinaryTreeNode node) {
-                String data = node.getData().toString();
+                QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                planTreeNode.obj = graph.insertVertex(parent, null, data, planTreeNode.point.x-maxshift, planTreeNode.point.y, 260, 100);
+                planTreeNode.obj = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 150, 50);
                 treeObjects.put(planTreeNode.obj, (QueryPlanTreeNode) node.getData());
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
