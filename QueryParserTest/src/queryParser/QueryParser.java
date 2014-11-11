@@ -262,6 +262,28 @@ public class QueryParser {
 		return rst.toString();
 	}
 	
+	public String getStrategy(JSONObject currentNode)
+	{
+		// return the total cost of this node
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.STRATEGY));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
+	public String getSubplanName(JSONObject currentNode)
+	{
+		// return the total cost of this node
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SUBPLAN_NAME));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
 	public String getTotalCost(JSONObject currentNode)
 	{
 		// return the total cost of this node
@@ -318,6 +340,8 @@ public class QueryParser {
 		SCHEMA,
 		SCAN_DIRECTION,
 		STARTUP_COST,
+		STRATEGY,
+		SUBPLAN_NAME,
 		TOTAL_COST
 		};
 	// mapping between enum and the actual returned string for all attributes EXPLAIN can return
@@ -345,6 +369,8 @@ public class QueryParser {
 		 map.put(QUERY_PLAN_ATTRS.SCAN_DIRECTION, "Scan Direction");
 		 map.put(QUERY_PLAN_ATTRS.SCHEMA, "Schema");
 		 map.put(QUERY_PLAN_ATTRS.STARTUP_COST, "Startup Cost");
+		 map.put(QUERY_PLAN_ATTRS.STRATEGY, "Strategy");
+		 map.put(QUERY_PLAN_ATTRS.SUBPLAN_NAME, "Subplan Name");
 		 map.put(QUERY_PLAN_ATTRS.TOTAL_COST, "Total Cost");
 		 return Collections.unmodifiableMap(map);
 	}
