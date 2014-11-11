@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
+import frontEndConnector.DataPlanTreeNode;
 import frontEndConnector.FrontEndConnector;
 import frontEndConnector.FrontEndConnector.Pair;
 import frontEndConnector.QueryPlanTreeNode;
@@ -73,13 +74,27 @@ public class SwingWindow {
 		}
 		
         LinkedBinaryTreeNode<QueryPlanTreeNode> root;
+        LinkedBinaryTreeNode<DataPlanTreeNode> dataRoot;
 		try {
 			// get parsed query plan returned in the root of LinkedBinaryTree
 			System.out.println("\nTEST: generate query plan tree & tmp tables...");
 			root = UIConnector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
 			
 			// draw the query plan
+			/*
 	        panel = new BinaryTreePanel(root, 100, 100);
+	        panel.setLocation(10, 10);
+	        panel.setSize(1000, 1000);
+	        panel.setOpaque(true);
+	       
+	        frame.getContentPane().add(panel);
+	        frame.pack();
+	        */
+	        
+	        // get data plan
+	        dataRoot = UIConnector.solveWhyIsHere(root, "h_user_id", "6");
+	        
+	        panel = new BinaryTreePanel(dataRoot, 100, 100);
 	        panel.setLocation(10, 10);
 	        panel.setSize(1000, 1000);
 	        panel.setOpaque(true);
@@ -88,6 +103,7 @@ public class SwingWindow {
 	        frame.pack();
 	        
 	        // get sample data
+	        /*
 	        System.out.println("\nTEST: get sample data...");
 	        Pair sampleRstPair = UIConnector.getSampleData("tmp1");
 	        List<String[]> sampleDataRst = sampleRstPair.data;
@@ -106,7 +122,7 @@ public class SwingWindow {
 				System.out.print(sampleDataAttrs[i] + " ");
 			}
 			System.out.println("Attrs");
-			
+			*/
 	        
 			// execute test query
 			/*
