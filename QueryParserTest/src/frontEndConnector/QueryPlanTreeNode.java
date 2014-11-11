@@ -52,12 +52,15 @@ public class QueryPlanTreeNode {
 		outputAttrs = _outputAttrs;
 		
 		abbrTreeNode = new AbbreviatedTreeNode(constructLargeFontString(), constructSmallFontString());
+		
+		System.out.println(getAbbreviatedTreeNode().getLargeFontStr());
+		System.out.println(getAbbreviatedTreeNode().getSmallFontStr());
 	}
 	
 	/*
 	 * - only type, filter, inputTable, joinCondition matter in the abbreviated version
-	 * - large font: type, inputTable
-	 * - small font: filter, joinCondition
+	 * - large font: type
+	 * - small font: filter, joinCondition, inputTable
 	 */
 	private String constructSmallFontString()
 	{
@@ -74,6 +77,14 @@ public class QueryPlanTreeNode {
 			}
 			str = str + joinCondition;
 		}
+		if(!inputTable.isEmpty())
+		{
+			if(!str.isEmpty())
+			{
+				str = str + "; ";
+			}
+			str = str + inputTable;
+		}
 		
 		return str;
 	}
@@ -84,14 +95,6 @@ public class QueryPlanTreeNode {
 		if(!type.isEmpty())
 		{
 			str = str + type;
-		}
-		if(!inputTable.isEmpty())
-		{
-			if(!str.isEmpty())
-			{
-				str = str + "; ";
-			}
-			str = str + inputTable;
 		}
 		
 		return str;
