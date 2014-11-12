@@ -641,6 +641,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 // Double Click to track tuple
                 if (e.getClickCount() == 2){
                     tabbedPane.setSelectedIndex(1);
+                    
                 }
                 
             }
