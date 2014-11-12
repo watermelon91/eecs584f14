@@ -12,6 +12,7 @@ import queryParser.QueryParser;
 import queryReconstructor.PlanReducer;
 import queryReconstructor.QueryReconstructor;
 import databaseConnector.PostgresDBConnector;
+import frontEndConnector.DataPlanConstructor.rowDataAndAttributeMismatchException;
 
 public class FrontEndConnector {
 	
@@ -77,24 +78,49 @@ public class FrontEndConnector {
 	
 	public LinkedBinaryTreeNode<DataPlanTreeNode> solveWhyIsHere(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
-			String columnName,
-			String columnValue
+			String[] rowData
 			)
 	{
-		DataPlanConstructor constructor = new DataPlanConstructor(planNode, columnName, columnValue, pdbConnector);
-		LinkedBinaryTreeNode<DataPlanTreeNode> root = constructor.build();
-		return root;
+		DataPlanConstructor constructor = null;
+		try {
+			constructor = new DataPlanConstructor(planNode, rowData, pdbConnector);
+		} catch (rowDataAndAttributeMismatchException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if(constructor != null)
+		{
+			LinkedBinaryTreeNode<DataPlanTreeNode> root = constructor.build();
+			return root;
+		}
+		else
+		{
+			return null;
+		}
 	}
 	
 	public LinkedBinaryTreeNode<DataPlanTreeNode> solveWhyNotHere(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
-			String columnName,
-			String columnValue
+			String[] rowData
 			)
 	{
-		DataPlanConstructor constructor = new DataPlanConstructor(planNode, columnName, columnValue, pdbConnector);
-		LinkedBinaryTreeNode<DataPlanTreeNode> root = constructor.build();
-		return root;
+		DataPlanConstructor constructor = null;
+		try {
+			constructor = new DataPlanConstructor(planNode, rowData, pdbConnector);
+		} catch (rowDataAndAttributeMismatchException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(constructor != null)
+		{
+			LinkedBinaryTreeNode<DataPlanTreeNode> root = constructor.build();
+			return root;
+		}
+		else
+		{
+			return null;
+		}
 	}
 	
 	/*
