@@ -31,6 +31,8 @@ import javax.swing.JButton;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JTable;
 import javax.swing.JPasswordField;
@@ -42,11 +44,16 @@ import com.mxgraph.view.mxGraph;
 
 import binaryTree.BinaryTreeNode;
 import binaryTree.LinkedBinaryTreeNode;
+import frontEndConnector.DataPlanTreeNode;
 import frontEndConnector.FrontEndConnector;
 import frontEndConnector.FrontEndConnector.Pair;
 import frontEndConnector.QueryPlanTreeNode;
 
 import java.awt.event.ActionEvent;
+import javax.swing.JTabbedPane;
+import java.awt.Component;
+import javax.swing.ScrollPaneConstants;
+import java.awt.FlowLayout;
 
 public class QueryDebuggerMainWindowSwing extends JFrame{
     private JTextField textUsername;
@@ -62,20 +69,29 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private JButton btnSubQuerySubmit;
     private JButton btnSubQueryCancel;
     
-    private mxGraph graph;
+    private mxGraph graph_sampleData;
+    private mxGraph graph_trackTuple;
+
 
     private FrontEndConnector connector;
     
-    private LinkedBinaryTreeNode<QueryPlanTreeNode> tree;
+    private LinkedBinaryTreeNode<QueryPlanTreeNode> tree_sampleData;
     
     private Map<Object, QueryPlanTreeNode> treeObjects;
     
-    private DefaultTableModel model;
+    private DefaultTableModel model_sampleData;
+    private DefaultTableModel model_trackTuple;
+
     
-    final int gridwidth = 150, gridheight = 150;
-    private JTextField queryFrom;
+    final int gridwidth = 120, gridheight = 150;
+    private JTextField queryFrom_sampleData;
     
     private LoggingUtilities logger;
+    
+    private Pair samplePair;
+    private JLabel lblPleaseEnter;
+    private JButton btnExpandAll_sampleData;
+    private JTextField queryFrom_trackTuple;
 
     /**
      * Launch the application.
@@ -110,9 +126,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private void initialize() {
         logger = new LoggingUtilities();
         
-        setBounds(100, 100, 960, 800);
+        setBounds(100, 100, 1278, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
+        // DB Login
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Database Log In", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
@@ -215,8 +232,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             
         });
         
-        textUsername = new JTextField();
-        
+        textUsername = new JTextField();         
         textPassword = new JPasswordField();
 
         GroupLayout gl_panel = new GroupLayout(panel);
@@ -251,406 +267,201 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         panel.setLayout(gl_panel);
+                   
         
-        JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Query Box", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-        
-        JLabel lblPleaseEbterA = new JLabel("Please enter a query to execute:");
-        queryPane = new JTextPane();
-        JScrollPane queryscrollPane = new JScrollPane(queryPane);
-        
-        btnQuerySubmit = new JButton("Submit");
-        btnQuerySubmit.addMouseListener(new MouseListener(){
-
-            @Override
-            public void mouseClicked(MouseEvent arg0) {
-                if (btnQuerySubmit.getText() == "Submit"){
-                    // submit query to connector and receive tree
-                    queryPane.setEnabled(false);
-                    btnQuerySubmit.setText("Edit"); 
-                    btnQueryCancel.setEnabled(false);
+        JPanel panel_5 = new JPanel();
+        {
+            // Query Box   
+            JPanel panel_1 = new JPanel();
+            panel_5.add(panel_1);
+            panel_1.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Query Box", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+            
                     
-                    // delete tree below
-                    try
-                    {
-                        connector.dropAllTmpTables();
-                        tree = connector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
-                    } catch (Exception e)
-                    {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
+                    JLabel lblPleaseEbterA = new JLabel("Please enter a query to execute:");
+                    queryPane = new JTextPane();
+                    JScrollPane queryscrollPane = new JScrollPane(queryPane);
                     
-                    if (tree!= null) {
-                        drawPlanTree();
+                    btnQuerySubmit = new JButton("Submit");
+                    btnQuerySubmit.addMouseListener(new MouseListener(){
+    
+                        @Override
+                        public void mouseClicked(MouseEvent arg0) {
+                            if (btnQuerySubmit.getText() == "Submit"){
+                                // submit query to connector and receive tree
+                                queryPane.setEnabled(false);
+                                btnQuerySubmit.setText("Edit"); 
+                                btnQueryCancel.setEnabled(false);
+                                
+                                // delete tree below
+                                try
+                                {
+                                    connector.dropAllTmpTables();
+                                    tree_sampleData = connector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
+                                } catch (Exception e)
+                                {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
+                                
+                                if (tree_sampleData!= null) {
+                                    drawPlanTree();
+                                    
+                                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");
+                                }
+                            } else if (btnQuerySubmit.getText() == "Edit") {
+                                queryPane.setEnabled(true);
+                                btnQuerySubmit.setText("Submit");
+                                btnQueryCancel.setEnabled(true);
+                                
+                                logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query edit");
+                            }
+                        }
+    
+                        @Override
+                        public void mouseEntered(MouseEvent arg0) {
+                            
+                        }
+    
+                        @Override
+                        public void mouseExited(MouseEvent arg0) {
+                            
+                        }
+    
+                        @Override
+                        public void mousePressed(MouseEvent arg0) {
+                            
+                        }
+    
+                        @Override
+                        public void mouseReleased(MouseEvent arg0) {
+                            
+                        }
                         
-                        logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");
-                    }
-                } else if (btnQuerySubmit.getText() == "Edit") {
-                    queryPane.setEnabled(true);
-                    btnQuerySubmit.setText("Submit");
-                    btnQueryCancel.setEnabled(true);
+                    });
                     
-                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query edit");
-                }
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent arg0) {
-                
-            }
-
-            @Override
-            public void mouseExited(MouseEvent arg0) {
-                
-            }
-
-            @Override
-            public void mousePressed(MouseEvent arg0) {
-                
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent arg0) {
-                
-            }
-            
-        });
-        
-        btnQueryCancel = new JButton("Cancel");
-        btnQueryCancel.addMouseListener(new MouseListener(){
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // TODO Auto-generated method stub
-                queryPane.setText("");
-                
-                logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query cancel");
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-            
-        });
-        GroupLayout gl_panel_1 = new GroupLayout(panel_1);
-        gl_panel_1.setHorizontalGroup(
-            gl_panel_1.createParallelGroup(Alignment.LEADING)
-                .addGroup(gl_panel_1.createSequentialGroup()
-                    .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(gl_panel_1.createParallelGroup(Alignment.LEADING)
-                        .addGroup(gl_panel_1.createSequentialGroup()
-                            .addGap(6)
-                            .addComponent(queryscrollPane, GroupLayout.PREFERRED_SIZE, 381, GroupLayout.PREFERRED_SIZE))
-                        .addComponent(lblPleaseEbterA))
-                    .addGap(377))
-                .addGroup(gl_panel_1.createSequentialGroup()
-                    .addGap(204)
-                    .addComponent(btnQuerySubmit)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(btnQueryCancel, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(384, Short.MAX_VALUE))
-        );
-        gl_panel_1.setVerticalGroup(
-            gl_panel_1.createParallelGroup(Alignment.LEADING)
-                .addGroup(gl_panel_1.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(lblPleaseEbterA)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(queryscrollPane, GroupLayout.PREFERRED_SIZE, 244, GroupLayout.PREFERRED_SIZE)
-                    .addGap(12)
-                    .addGroup(gl_panel_1.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(btnQuerySubmit)
-                        .addComponent(btnQueryCancel))
-                    .addGap(51))
-        );
-        panel_1.setLayout(gl_panel_1);
-        
+                    btnQueryCancel = new JButton("Cancel");
+                    btnQueryCancel.addMouseListener(new MouseListener(){
+    
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            // TODO Auto-generated method stub
+                            queryPane.setText("");
+                            
+                            logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query cancel");
+                        }
+    
+                        @Override
+                        public void mouseEntered(MouseEvent e) {
+                            // TODO Auto-generated method stub
+                            
+                        }
+    
+                        @Override
+                        public void mouseExited(MouseEvent e) {
+                            // TODO Auto-generated method stub
+                            
+                        }
+    
+                        @Override
+                        public void mousePressed(MouseEvent e) {
+                            // TODO Auto-generated method stub
+                            
+                        }
+    
+                        @Override
+                        public void mouseReleased(MouseEvent e) {
+                            // TODO Auto-generated method stub
+                            
+                        }
+                        
+                    });
+                    GroupLayout gl_panel_1 = new GroupLayout(panel_1);
+                    gl_panel_1.setHorizontalGroup(
+                        gl_panel_1.createParallelGroup(Alignment.LEADING)
+                            .addGroup(gl_panel_1.createSequentialGroup()
+                                .addGap(6)
+                                .addComponent(lblPleaseEbterA))
+                            .addGroup(gl_panel_1.createSequentialGroup()
+                                .addGap(85)
+                                .addComponent(btnQuerySubmit)
+                                .addPreferredGap(ComponentPlacement.RELATED)
+                                .addComponent(btnQueryCancel))
+                            .addGroup(gl_panel_1.createSequentialGroup()
+                                .addGap(12)
+                                .addComponent(queryscrollPane, GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
+                                .addContainerGap())
+                    );
+                    gl_panel_1.setVerticalGroup(
+                        gl_panel_1.createParallelGroup(Alignment.LEADING)
+                            .addGroup(gl_panel_1.createSequentialGroup()
+                                .addGap(6)
+                                .addComponent(lblPleaseEbterA)
+                                .addPreferredGap(ComponentPlacement.RELATED)
+                                .addComponent(queryscrollPane, GroupLayout.PREFERRED_SIZE, 244, GroupLayout.PREFERRED_SIZE)
+                                .addGap(12)
+                                .addGroup(gl_panel_1.createParallelGroup(Alignment.BASELINE)
+                                    .addComponent(btnQueryCancel)
+                                    .addComponent(btnQuerySubmit))
+                                .addContainerGap())
+                    );
+                    panel_1.setLayout(gl_panel_1);
+        }
+        // SubQuery Box
         JPanel panel_2 = new JPanel();
+        panel_5.add(panel_2);
         panel_2.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Subquery Box", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
-        JPanel panel_3 = new JPanel();
-        panel_3.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        
-        final JPanel panel_4 = new JPanel();
-        panel_4.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Subquery Partial Result", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        GroupLayout groupLayout = new GroupLayout(getContentPane());
-        groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.TRAILING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-                        .addComponent(panel, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 943, Short.MAX_VALUE)
-                        .addGroup(groupLayout.createSequentialGroup()
-                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                                .addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 414, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 414, GroupLayout.PREFERRED_SIZE))
-                            .addGap(18)
-                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                                .addComponent(panel_4, GroupLayout.DEFAULT_SIZE, 511, Short.MAX_VALUE)
-                                .addComponent(panel_3, GroupLayout.DEFAULT_SIZE, 511, Short.MAX_VALUE))))
-                    .addGap(11))
-        );
-        groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addComponent(panel, GroupLayout.PREFERRED_SIZE, 62, Short.MAX_VALUE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(panel_3, GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
-                        .addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 340, Short.MAX_VALUE))
-                    .addGap(18)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addComponent(panel_4, GroupLayout.DEFAULT_SIZE, 335, Short.MAX_VALUE))
-                    .addGap(17))
-        );
-        
-        model = new DefaultTableModel() {
-            public boolean isCellEditable(int rowIndex, int mColIndex) {
-                return false;
-              }
-            }; 
-        JTable table = new JTable(model);
-        JScrollPane pane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                                           JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        
-        final JButton btnExpandAll = new JButton("Expand All");
-        btnExpandAll.addMouseListener(new MouseListener(){
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                
-                Pair samplePair = null;
-                if (btnExpandAll.getText() == "Expand All"){
-                    //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
-                    if (queryFrom.getText().equals("Subquery"))
-                        samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");  
-                    else if (queryFrom.getText().equals("Plan Tree Node"))
-                        samplePair = connector.getAllSampleData(treeObjects.get(graph.getSelectionCell()).getNewTableName());
-                    
-                    btnExpandAll.setText("Collapse sample");
-                } else {
-                    //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
-                    if (queryFrom.getText().equals("Subquery"))
-                        samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");  
-                    else if (queryFrom.getText().equals("Plan Tree Node"))
-                        samplePair = connector.getSampleData(treeObjects.get(graph.getSelectionCell()).getNewTableName());               
-                    btnExpandAll.setText("Expand All");
-                }
-
-                model.setRowCount(0);
-                if (samplePair != null) {
-                    model.setColumnIdentifiers(samplePair.attributes);
-                    for (String[] row: samplePair.data){
-                        model.addRow(row);
-                    }             
-                    model.addRow(new String[]{"123", "123", "123"});
-                }
-
-                model.fireTableDataChanged();
-                
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-            
-        });
-        
-        JLabel lblTableName = new JLabel("Query For:");
-        
-        queryFrom = new JTextField();
-        queryFrom.setEditable(false);
-        
-        GroupLayout gl_panel_4 = new GroupLayout(panel_4);
-        gl_panel_4.setHorizontalGroup(
-            gl_panel_4.createParallelGroup(Alignment.TRAILING)
-                .addGroup(gl_panel_4.createSequentialGroup()
-                    .addContainerGap(349, Short.MAX_VALUE)
-                    .addComponent(btnExpandAll, GroupLayout.PREFERRED_SIZE, 120, GroupLayout.PREFERRED_SIZE)
-                    .addGap(30))
-                .addGroup(Alignment.LEADING, gl_panel_4.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(lblTableName, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(queryFrom, GroupLayout.PREFERRED_SIZE, 272, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(126, Short.MAX_VALUE))
-                .addGroup(Alignment.LEADING, gl_panel_4.createSequentialGroup()
-                    .addGap(15)
-                    .addComponent(pane, GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)
-                    .addGap(14))
-        );
-        gl_panel_4.setVerticalGroup(
-            gl_panel_4.createParallelGroup(Alignment.LEADING)
-                .addGroup(gl_panel_4.createSequentialGroup()
-                    .addGroup(gl_panel_4.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(lblTableName)
-                        .addComponent(queryFrom, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(pane, GroupLayout.PREFERRED_SIZE, 229, GroupLayout.PREFERRED_SIZE)
-                    .addGap(18)
-                    .addComponent(btnExpandAll)
-                    .addContainerGap(9, Short.MAX_VALUE))
-        );
-        panel_4.setLayout(gl_panel_4);
-        
-        treeObjects = new HashMap<Object, QueryPlanTreeNode>();
-        
-        graph = new mxGraph();
-        graph.setCellsEditable(false);
-        graph.setAllowDanglingEdges(false);
-        
-        final mxGraphComponent graphComponent = new mxGraphComponent(graph);
-        graphComponent.setPreferredSize(new Dimension(500, 300));
-        graphComponent.setAutoExtend(true);
-        graphComponent.getViewport().setOpaque(true);
-        graphComponent.getViewport().setBackground(panel_3.getBackground());
-        graphComponent.setBorder(null);
-        graphComponent.setConnectable(false);
-        graphComponent.getGraphControl().addMouseListener(new MouseListener(){
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // TODO Auto-generated method stub
-                Object cell = graphComponent.getCellAt(e.getX(), e.getY());
-                if (treeObjects.containsKey(cell)){
-                    btnExpandAll.setText("Expand All");
-                    queryFrom.setText("Plan Tree Node");
-                    
-                    QueryPlanTreeNode node = treeObjects.get(cell);
-                    Pair samplePair = connector.getSampleData(node.getNewTableName());
-                    
-                    model.setColumnIdentifiers(samplePair.attributes);
-                    model.setRowCount(0);
-                    for (String[] row: samplePair.data){
-                        model.addRow(row);
-                    }
-                                 
-                    model.fireTableDataChanged();                    
-                } 
-                
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                // TODO Auto-generated method stub
-                
-            }
-            
-        });
-        
-        panel_3.add(graphComponent);
-        
-        JLabel lblPleaseEnter = new JLabel("Please enter a query for the node selected in the plan tree:");
+        lblPleaseEnter = new JLabel("Please enter a query for plan tree node:");
         
         subQueryPane = new JTextPane();
         
         btnSubQuerySubmit = new JButton("Submit");
         btnSubQuerySubmit.addMouseListener(new MouseListener(){
-
+    
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (btnSubQuerySubmit.getText() == "Submit"){
                     // submit query to connector and receive tree
                     btnSubQuerySubmit.setText("Edit"); 
                     btnSubQueryCancel.setEnabled(false);
-                    btnExpandAll.setText("Expand All");
-                    queryFrom.setText("Subquery");
+                    btnExpandAll_sampleData.setText("Expand All");
+                    queryFrom_sampleData.setText("Subquery");
               
-                    Pair samplePair = connector.executeTestQuery("select * from tmp0 order by user_id");  
-
-                    model.setColumnIdentifiers(samplePair.attributes);
-                    model.setRowCount(0);
+                    samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");  
+    
+                    model_sampleData.setColumnIdentifiers(samplePair.attributes);
+                    model_sampleData.setRowCount(0);
                     for (String[] row: samplePair.data){
-                        model.addRow(row);
+                        model_sampleData.addRow(row);
                     }                              
-
-                    model.fireTableDataChanged();
+    
+                    model_sampleData.fireTableDataChanged();
+                    
                 } else if (btnSubQuerySubmit.getText() == "Edit") {
                     subQueryPane.setEnabled(true);
                     btnSubQuerySubmit.setText("Submit");
                     btnSubQueryCancel.setEnabled(true);
                 }                
             }
-
+    
             @Override
             public void mousePressed(MouseEvent e) {
                 // TODO Auto-generated method stub
                 
             }
-
+    
             @Override
             public void mouseReleased(MouseEvent e) {
                 // TODO Auto-generated method stub
                 
             }
-
+    
             @Override
             public void mouseEntered(MouseEvent e) {
                 // TODO Auto-generated method stub
                 
             }
-
+    
             @Override
             public void mouseExited(MouseEvent e) {
                 // TODO Auto-generated method stub
@@ -693,41 +504,406 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             }
             
         });
-        
-        JButton btnSubQueryCancel = new JButton("Cancel");
         GroupLayout gl_panel_2 = new GroupLayout(panel_2);
         gl_panel_2.setHorizontalGroup(
             gl_panel_2.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panel_2.createSequentialGroup()
-                    .addGroup(gl_panel_2.createParallelGroup(Alignment.LEADING)
-                        .addGroup(gl_panel_2.createSequentialGroup()
-                            .addContainerGap()
-                            .addComponent(lblPleaseEnter))
-                        .addGroup(gl_panel_2.createSequentialGroup()
-                            .addGap(12)
-                            .addComponent(subQueryPane, GroupLayout.PREFERRED_SIZE, 381, GroupLayout.PREFERRED_SIZE))
-                        .addGroup(gl_panel_2.createSequentialGroup()
-                            .addGap(202)
-                            .addComponent(btnSubQuerySubmit, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.UNRELATED)
-                            .addComponent(btnSubQueryCancel, GroupLayout.PREFERRED_SIZE, 76, GroupLayout.PREFERRED_SIZE)))
-                    .addContainerGap(9, Short.MAX_VALUE))
+                    .addGap(6)
+                    .addComponent(lblPleaseEnter))
+                .addGroup(gl_panel_2.createSequentialGroup()
+                    .addGap(87)
+                    .addComponent(btnSubQuerySubmit)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(btnSubQueryCancel, GroupLayout.PREFERRED_SIZE, 82, Short.MAX_VALUE)
+                    .addContainerGap())
+                .addGroup(gl_panel_2.createSequentialGroup()
+                    .addGap(12)
+                    .addComponent(subQueryPane, GroupLayout.DEFAULT_SIZE, 239, Short.MAX_VALUE)
+                    .addContainerGap())
         );
         gl_panel_2.setVerticalGroup(
-            gl_panel_2.createParallelGroup(Alignment.TRAILING)
+            gl_panel_2.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panel_2.createSequentialGroup()
-                    .addContainerGap()
+                    .addGap(6)
                     .addComponent(lblPleaseEnter)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(subQueryPane, GroupLayout.PREFERRED_SIZE, 234, GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addPreferredGap(ComponentPlacement.RELATED)
                     .addGroup(gl_panel_2.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(btnSubQuerySubmit)
-                        .addComponent(btnSubQueryCancel))
-                    .addContainerGap(121, Short.MAX_VALUE))
+                        .addComponent(btnSubQueryCancel)
+                        .addComponent(btnSubQuerySubmit)))
         );
+        gl_panel_2.setAutoCreateGaps(true);
+        gl_panel_2.setAutoCreateContainerGaps(true);
         panel_2.setLayout(gl_panel_2);
+                
+        //Tabbed Pane
+        final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        
+        // Sample Data Tab
+        JPanel tabSampleData = new JPanel();
+        tabbedPane.addTab("Sample Data", null, tabSampleData, null);
+        tabbedPane.setEnabledAt(0, true);
+        
+
+        // Sample Data Plan Tree
+        JPanel panel_sampleDataPlanTree = new JPanel();
+        panel_sampleDataPlanTree.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        treeObjects = new HashMap<Object, QueryPlanTreeNode>();
+        
+        graph_sampleData = new mxGraph();
+        graph_sampleData.setCellsEditable(false);
+        graph_sampleData.setAllowDanglingEdges(false);
+        
+        final mxGraphComponent graphComponent_sampleData = new mxGraphComponent(graph_sampleData);
+        graphComponent_sampleData.setPreferredSize(new Dimension(450, 300));
+        graphComponent_sampleData.setAutoExtend(true);
+        graphComponent_sampleData.getViewport().setOpaque(true);
+        graphComponent_sampleData.setBorder(null);
+        graphComponent_sampleData.setConnectable(false);
+        graphComponent_sampleData.getViewport().setBackground(panel_sampleDataPlanTree.getBackground());
+        graphComponent_sampleData.getGraphControl().addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // TODO Auto-generated method stub
+                Object cell = graphComponent_sampleData.getCellAt(e.getX(), e.getY());
+                if (treeObjects.containsKey(cell)){
+                    btnExpandAll_sampleData.setText("Expand All");
+                    queryFrom_sampleData.setText("Plan Tree Node");
+                    
+                    QueryPlanTreeNode node = treeObjects.get(cell);
+                    samplePair = connector.getSampleData(node.getNewTableName());
+                    
+                    if (tabbedPane.getSelectedIndex() == 0){
+                        System.out.println("here");
+                        model_sampleData.setColumnIdentifiers(samplePair.attributes);
+                        model_sampleData.setRowCount(0);
+                        for (String[] row: samplePair.data){
+                            model_sampleData.addRow(row);
+                        }
+                                     
+                        model_sampleData.fireTableDataChanged(); 
+                    }
+                } 
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });                
+        panel_sampleDataPlanTree.add(graphComponent_sampleData);
+        
+        
+        //Sample Data Pane
+        JPanel panel_sampleDataTable = new JPanel();
+        panel_sampleDataTable.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Record Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        
+        JLabel lblQueryFor_sampleData = new JLabel("Query For:");
+        
+        queryFrom_sampleData = new JTextField();
+        queryFrom_sampleData.setEditable(false);
+        
+        model_sampleData = new DefaultTableModel() {
+            public boolean isCellEditable(int rowIndex, int mColIndex) {
+                return false;
+              }
+            };
+            
+        final JTable table_sampleData = new JTable(model_sampleData);
+        table_sampleData.setFocusable(false);
+        table_sampleData.addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Double Click to track tuple
+                if (e.getClickCount() == 2){
+                    tabbedPane.setSelectedIndex(1);
+                }
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });
+        JScrollPane pane_sampleData = new JScrollPane(table_sampleData, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                           JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        
+        btnExpandAll_sampleData = new JButton("Expand All");
+        btnExpandAll_sampleData.addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                
+                samplePair = null;
+                if (btnExpandAll_sampleData.getText() == "Expand All"){
+                    //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
+                    if (queryFrom_sampleData.getText().equals("Subquery"))
+                        samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");  
+                    else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
+                        samplePair = connector.getAllSampleData(treeObjects.get(graph_sampleData.getSelectionCell()).getNewTableName());
+                    
+                    btnExpandAll_sampleData.setText("Collapse sample");
+                } else {
+                    //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
+                    if (queryFrom_sampleData.getText().equals("Subquery"))
+                        samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");  
+                    else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
+                        samplePair = connector.getSampleData(treeObjects.get(graph_sampleData.getSelectionCell()).getNewTableName());               
+                    btnExpandAll_sampleData.setText("Expand All");
+                }
+
+                model_sampleData.setRowCount(0);
+                if (samplePair != null) {
+                    model_sampleData.setColumnIdentifiers(samplePair.attributes);
+                    for (String[] row: samplePair.data){
+                        model_sampleData.addRow(row);
+                    }             
+                }
+
+                model_sampleData.fireTableDataChanged();  
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });
+        
+        GroupLayout gl_panel_sampleDataTable = new GroupLayout(panel_sampleDataTable);
+        gl_panel_sampleDataTable.setHorizontalGroup(
+            gl_panel_sampleDataTable.createParallelGroup(Alignment.TRAILING)
+                .addGroup(gl_panel_sampleDataTable.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(gl_panel_sampleDataTable.createParallelGroup(Alignment.LEADING)
+                        .addGroup(gl_panel_sampleDataTable.createSequentialGroup()
+                            .addComponent(lblQueryFor_sampleData)
+                            .addPreferredGap(ComponentPlacement.UNRELATED)
+                            .addComponent(queryFrom_sampleData, GroupLayout.DEFAULT_SIZE, 318, Short.MAX_VALUE))
+                        .addGroup(gl_panel_sampleDataTable.createSequentialGroup()
+                            .addGap(6)
+                            .addComponent(pane_sampleData, GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE))
+                        .addComponent(btnExpandAll_sampleData, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE))
+                    .addGap(15))
+        );
+        gl_panel_sampleDataTable.setVerticalGroup(
+            gl_panel_sampleDataTable.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_panel_sampleDataTable.createSequentialGroup()
+                    .addGap(5)
+                    .addGroup(gl_panel_sampleDataTable.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(queryFrom_sampleData, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblQueryFor_sampleData))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(pane_sampleData, GroupLayout.PREFERRED_SIZE, 543, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addComponent(btnExpandAll_sampleData)
+                    .addGap(12))
+        );
+        panel_sampleDataTable.setLayout(gl_panel_sampleDataTable);
+        GroupLayout gl_tabSampleData = new GroupLayout(tabSampleData);
+        gl_tabSampleData.setHorizontalGroup(
+            gl_tabSampleData.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_tabSampleData.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(panel_sampleDataPlanTree, GroupLayout.PREFERRED_SIZE, 480, GroupLayout.PREFERRED_SIZE)
+                    .addGap(15)
+                    .addComponent(panel_sampleDataTable, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap())
+        );
+        gl_tabSampleData.setVerticalGroup(
+            gl_tabSampleData.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_tabSampleData.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(gl_tabSampleData.createParallelGroup(Alignment.LEADING)
+                        .addComponent(panel_sampleDataPlanTree, GroupLayout.PREFERRED_SIZE, 640, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(panel_sampleDataTable, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addContainerGap())
+        );
+        panel_sampleDataPlanTree.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        tabSampleData.setLayout(gl_tabSampleData);
+        
+        
+        // Track Tuple Tab
+        JPanel tabTrackTuple = new JPanel();
+        tabbedPane.addTab("Track Tuple", null, tabTrackTuple, null);
+        
+        JPanel panel_trackTuplePlanTree = new JPanel();
+        panel_trackTuplePlanTree.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        GroupLayout gl_panel_trackTuplePlanTree = new GroupLayout(panel_trackTuplePlanTree);
+        gl_panel_trackTuplePlanTree.setHorizontalGroup(
+            gl_panel_trackTuplePlanTree.createParallelGroup(Alignment.LEADING)
+                .addGap(0, 480, Short.MAX_VALUE)
+                .addGap(0, 468, Short.MAX_VALUE)
+        );
+        gl_panel_trackTuplePlanTree.setVerticalGroup(
+            gl_panel_trackTuplePlanTree.createParallelGroup(Alignment.LEADING)
+                .addGap(0, 640, Short.MAX_VALUE)
+                .addGap(0, 612, Short.MAX_VALUE)
+        );
+        panel_trackTuplePlanTree.setLayout(gl_panel_trackTuplePlanTree);
+        
+        JPanel panel_trackTupleTable = new JPanel();
+        panel_trackTupleTable.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Record Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        
+        JLabel lblQueryFor_trackTuple = new JLabel("Tracking Down:");
+        
+        queryFrom_trackTuple = new JTextField();
+        queryFrom_trackTuple.setEditable(false);
+        
+        JScrollPane pane_trackTuple = new JScrollPane((Component) null, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        
+        JButton btnExpandAll_trackTuple = new JButton("Expand All");
+        GroupLayout gl_panel_trackTupleTable = new GroupLayout(panel_trackTupleTable);
+        gl_panel_trackTupleTable.setHorizontalGroup(
+            gl_panel_trackTupleTable.createParallelGroup(Alignment.TRAILING)
+                .addGroup(gl_panel_trackTupleTable.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(gl_panel_trackTupleTable.createParallelGroup(Alignment.LEADING)
+                        .addComponent(btnExpandAll_trackTuple, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE)
+                        .addGroup(gl_panel_trackTupleTable.createParallelGroup(Alignment.TRAILING, false)
+                            .addGroup(gl_panel_trackTupleTable.createSequentialGroup()
+                                .addComponent(lblQueryFor_trackTuple)
+                                .addPreferredGap(ComponentPlacement.UNRELATED)
+                                .addComponent(queryFrom_trackTuple))
+                            .addGroup(Alignment.LEADING, gl_panel_trackTupleTable.createSequentialGroup()
+                                .addGap(6)
+                                .addComponent(pane_trackTuple, GroupLayout.PREFERRED_SIZE, 396, GroupLayout.PREFERRED_SIZE))))
+                    .addGap(15))
+        );
+        gl_panel_trackTupleTable.setVerticalGroup(
+            gl_panel_trackTupleTable.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_panel_trackTupleTable.createSequentialGroup()
+                    .addGap(5)
+                    .addGroup(gl_panel_trackTupleTable.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(queryFrom_trackTuple, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblQueryFor_trackTuple))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(pane_trackTuple, GroupLayout.PREFERRED_SIZE, 543, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addComponent(btnExpandAll_trackTuple)
+                    .addGap(12))
+        );
+        panel_trackTupleTable.setLayout(gl_panel_trackTupleTable);
+        GroupLayout gl_tabTrackTuple = new GroupLayout(tabTrackTuple);
+        gl_tabTrackTuple.setHorizontalGroup(
+            gl_tabTrackTuple.createParallelGroup(Alignment.LEADING)
+                .addGap(0, 924, Short.MAX_VALUE)
+                .addGroup(gl_tabTrackTuple.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(panel_trackTuplePlanTree, GroupLayout.PREFERRED_SIZE, 480, GroupLayout.PREFERRED_SIZE)
+                    .addGap(15)
+                    .addComponent(panel_trackTupleTable, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap())
+        );
+        gl_tabTrackTuple.setVerticalGroup(
+            gl_tabTrackTuple.createParallelGroup(Alignment.LEADING)
+                .addGap(0, 659, Short.MAX_VALUE)
+                .addGroup(gl_tabTrackTuple.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(gl_tabTrackTuple.createParallelGroup(Alignment.LEADING)
+                        .addComponent(panel_trackTuplePlanTree, GroupLayout.PREFERRED_SIZE, 640, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(panel_trackTupleTable, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addContainerGap())
+        );
+        tabTrackTuple.setLayout(gl_tabTrackTuple);
+      
+        
+        model_trackTuple = new DefaultTableModel() {
+            public boolean isCellEditable(int rowIndex, int mColIndex) {
+                return false;
+              }
+            };
+            
+            
+            
+        GroupLayout groupLayout = new GroupLayout(getContentPane());
+        groupLayout.setHorizontalGroup(
+            groupLayout.createParallelGroup(Alignment.TRAILING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(panel, GroupLayout.PREFERRED_SIZE, 2004, Short.MAX_VALUE)
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addComponent(panel_5, GroupLayout.PREFERRED_SIZE, 308, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 945, GroupLayout.PREFERRED_SIZE)))
+                    .addGap(11))
+        );
+        groupLayout.setVerticalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addComponent(panel, GroupLayout.PREFERRED_SIZE, 67, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(panel_5, GroupLayout.PREFERRED_SIZE, 691, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 705, GroupLayout.PREFERRED_SIZE)))
+        );
         getContentPane().setLayout(groupLayout);
+       
     }
     
     private class PlanTreeNode{
@@ -755,27 +931,26 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         }
     }
     private void drawPlanTree(){
-        final Object parent = graph.getDefaultParent();
+        final Object parent = graph_sampleData.getDefaultParent();
 
-        graph.getModel().beginUpdate();
+        graph_sampleData.getModel().beginUpdate();
         
         final Map<BinaryTreeNode<?>, PlanTreeNode> coordinates = new HashMap<BinaryTreeNode<?>, PlanTreeNode>();
-        final int maxshift = traverse(tree, 0, coordinates);
+        final int maxshift = traverse(tree_sampleData, 0, coordinates);
 
-        tree.traversePreorder(new BinaryTreeNode.Visitor() {
+        tree_sampleData.traversePreorder(new BinaryTreeNode.Visitor() {
             public void visit(BinaryTreeNode node) {
                 QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                planTreeNode.obj = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 150, 50);
+                planTreeNode.obj = graph_sampleData.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, 50);
                 treeObjects.put(planTreeNode.obj, (QueryPlanTreeNode) node.getData());
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
-                    graph.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
+                    graph_sampleData.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
                 }
             }
-        });
+        });      
         
-        
-        graph.getModel().endUpdate();
+        graph_sampleData.getModel().endUpdate();
     }
 }
