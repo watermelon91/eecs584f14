@@ -89,7 +89,7 @@ public class DataPlanConstructor {
 		if(rootPlanNode != null && rootPairList != null)
 		{
 			insertDataNode(rootPlanNode, rootPairList);
-			return rootPlanNode;
+			return completePlanTreeRoot;
 		}
 		else{
 			return null;
