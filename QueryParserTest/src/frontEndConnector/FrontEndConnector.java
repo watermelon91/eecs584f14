@@ -76,7 +76,7 @@ public class FrontEndConnector {
 		return treeRoot;
 	}
 	
-	public LinkedBinaryTreeNode<QueryPlanTreeNode> solveWhyIsHere(
+	public LinkedBinaryTreeNode<QueryPlanTreeNode> updateTreeWhyIsHere(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot,
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
@@ -101,7 +101,7 @@ public class FrontEndConnector {
 		}
 	}
 	
-	public LinkedBinaryTreeNode<QueryPlanTreeNode> solveWhyNotHere(
+	public LinkedBinaryTreeNode<QueryPlanTreeNode> updateTreeWhyNotHere(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot,
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
