@@ -54,6 +54,7 @@ public class DataPlanConstructor {
 			throw new rowDataAndAttributeMismatchException();
 		}
 		
+		// DEBUG ONLY
 		for(int i = 0; i < dataTypes.size(); i++)
 		{
 			System.out.println("TYPE: " + dataTypes.get(i)[0] + " " + dataTypes.get(i)[1] + " " + _rootAttributes[i]);
@@ -66,50 +67,6 @@ public class DataPlanConstructor {
 			String type = getType(_rootAttributes[i], dataTypes);
 			rootPairList.add(createPair(_rootAttributes[i], _rowData[i], needsQuote(type)));
 			
-		}
-	}
-	
-	private String getType(String attr, List<String[]> dataTypes)
-	{
-		for(int i = 0; i < dataTypes.size(); i++)
-		{
-			if(attr.contains(dataTypes.get(i)[0]))
-			{
-				return dataTypes.get(i)[1];
-			}
-		}
-		return "";
-	}
-	
-	private boolean needsQuote(String attrType)
-	{
-		if(attrType.equals("bigint") ||
-				attrType.equals( "bigserial") ||
-				attrType.equals( "boolean") ||
-				attrType.equals( "double precision") ||
-				attrType.equals( "integer") ||
-				attrType.equals( "numeric") ||
-				attrType.equals( "real") ||
-				attrType.equals( "smallint") ||
-				attrType.equals( "smallserial") ||
-				attrType.equals( "serial") ||
-				attrType.equals( "int8") ||
-				attrType.equals( "serial8") ||
-				attrType.equals( "bool") ||
-				attrType.equals( "float8") ||
-				attrType.equals( "int") ||
-				attrType.equals( "int4") ||
-				attrType.equals( "decimal") ||
-				attrType.equals( "float4") ||
-				attrType.equals( "int2") ||
-				attrType.equals( "serial2") ||
-				attrType.equals( "serial4"))
-		{
-			return false;
-		}
-		else
-		{
-			return true;
 		}
 	}
 	
@@ -297,5 +254,49 @@ public class DataPlanConstructor {
 		
 		LinkedBinaryTreeNode<DataPlanTreeNode> treeNode = new LinkedBinaryTreeNode<DataPlanTreeNode>(dataNode);
 		return treeNode;
+	}
+	
+	private String getType(String attr, List<String[]> dataTypes)
+	{
+		for(int i = 0; i < dataTypes.size(); i++)
+		{
+			if(attr.contains(dataTypes.get(i)[0]))
+			{
+				return dataTypes.get(i)[1];
+			}
+		}
+		return "";
+	}
+	
+	private boolean needsQuote(String attrType)
+	{
+		if(attrType.equals("bigint") ||
+				attrType.equals( "bigserial") ||
+				attrType.equals( "boolean") ||
+				attrType.equals( "double precision") ||
+				attrType.equals( "integer") ||
+				attrType.equals( "numeric") ||
+				attrType.equals( "real") ||
+				attrType.equals( "smallint") ||
+				attrType.equals( "smallserial") ||
+				attrType.equals( "serial") ||
+				attrType.equals( "int8") ||
+				attrType.equals( "serial8") ||
+				attrType.equals( "bool") ||
+				attrType.equals( "float8") ||
+				attrType.equals( "int") ||
+				attrType.equals( "int4") ||
+				attrType.equals( "decimal") ||
+				attrType.equals( "float4") ||
+				attrType.equals( "int2") ||
+				attrType.equals( "serial2") ||
+				attrType.equals( "serial4"))
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
 	}
 }
