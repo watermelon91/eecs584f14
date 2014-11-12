@@ -123,6 +123,7 @@ public class DataPlanConstructor {
 		
 		System.out.println(Arrays.asList(curNodeAttributes).toString());
 		
+		// find the attributes in the node that also exist in this node 
 		List<Pair> newPairList = new ArrayList<Pair>();
 		for(int i = 0; i < rootPairList.size(); i++)
 		{
@@ -194,7 +195,6 @@ public class DataPlanConstructor {
 	{
 		QueryPlanTreeNode node = planNode.getData();
 		
-		// find the attributes in the node that also exist in this node 
 		String[] curAttributes = new String[curPairList.size()];
 		String whereClause = "";
 		for(int i = 0; i < curPairList.size(); i++)
