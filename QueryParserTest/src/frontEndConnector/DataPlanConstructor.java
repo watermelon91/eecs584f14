@@ -251,7 +251,14 @@ public class DataPlanConstructor {
 				String query = "SELECT * FROM " + node.getNewTableName() + " WHERE " + whereClause; 
 				System.out.println("Query: " + query);
 				values = pgConnector.executeQuerySeparateResult(query);
-				System.out.println("VALUES: " + Arrays.asList(values.get(0)).toString());
+				if(values.size() == 0)
+				{
+					System.out.println("VALUES: NON-MATCHING");
+				}
+				else
+				{
+					System.out.println("VALUES: " + Arrays.asList(values.get(0)).toString());
+				}
 			}
 			else
 			{
