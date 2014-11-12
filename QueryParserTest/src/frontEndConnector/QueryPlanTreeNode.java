@@ -11,6 +11,7 @@ public class QueryPlanTreeNode {
 	private String joinCondition;
 	private String outputAttrs;
 	private AbbreviatedTreeNode abbrTreeNode;
+	private DataPlanTreeNode dataNode;
 	
 	public class AbbreviatedTreeNode{
 		private String LargeFontStr;
@@ -52,6 +53,7 @@ public class QueryPlanTreeNode {
 		outputAttrs = _outputAttrs;
 		
 		abbrTreeNode = new AbbreviatedTreeNode(constructLargeFontString(), constructSmallFontString());
+		dataNode = null;
 		
 		System.out.println(getAbbreviatedTreeNode().getLargeFontStr());
 		System.out.println(getAbbreviatedTreeNode().getSmallFontStr());
@@ -140,6 +142,16 @@ public class QueryPlanTreeNode {
 	public AbbreviatedTreeNode getAbbreviatedTreeNode()
 	{
 		return abbrTreeNode;
+	}
+	
+	public DataPlanTreeNode getDataNode()
+	{
+		return dataNode;
+	}
+	
+	public void setDataNode(DataPlanTreeNode _inNode)
+	{
+		dataNode = _inNode;
 	}
 	
 	 @Override public String toString() {

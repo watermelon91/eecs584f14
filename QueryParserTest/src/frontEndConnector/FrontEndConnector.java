@@ -76,7 +76,7 @@ public class FrontEndConnector {
 		return treeRoot;
 	}
 	
-	public LinkedBinaryTreeNode<DataPlanTreeNode> solveWhyIsHere(
+	public LinkedBinaryTreeNode<QueryPlanTreeNode> solveWhyIsHere(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
 			)
@@ -91,7 +91,7 @@ public class FrontEndConnector {
 		
 		if(constructor != null)
 		{
-			LinkedBinaryTreeNode<DataPlanTreeNode> root = constructor.build();
+			LinkedBinaryTreeNode<QueryPlanTreeNode> root = constructor.build();
 			return root;
 		}
 		else
@@ -100,7 +100,7 @@ public class FrontEndConnector {
 		}
 	}
 	
-	public LinkedBinaryTreeNode<DataPlanTreeNode> solveWhyNotHere(
+	public LinkedBinaryTreeNode<QueryPlanTreeNode> solveWhyNotHere(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
 			)
@@ -114,7 +114,7 @@ public class FrontEndConnector {
 		}
 		if(constructor != null)
 		{
-			LinkedBinaryTreeNode<DataPlanTreeNode> root = constructor.build();
+			LinkedBinaryTreeNode<QueryPlanTreeNode> root = constructor.build();
 			return root;
 		}
 		else

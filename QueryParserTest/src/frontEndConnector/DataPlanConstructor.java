@@ -70,47 +70,46 @@ public class DataPlanConstructor {
 		}
 	}
 	
-	public LinkedBinaryTreeNode<DataPlanTreeNode> build()
+	public LinkedBinaryTreeNode<QueryPlanTreeNode> build()
 	{
 		if(rootPlanNode != null && rootPairList != null)
 		{
-			LinkedBinaryTreeNode<DataPlanTreeNode> dataRoot = constructTree(rootPlanNode, rootPairList);
-			return dataRoot;
+			LinkedBinaryTreeNode<QueryPlanTreeNode> treeRoot = constructTree(rootPlanNode, rootPairList);
+			return treeRoot;
 		}
 		else{
 			return null;
 		}
 	}
 	
-	private LinkedBinaryTreeNode<DataPlanTreeNode> constructTree(
+	private LinkedBinaryTreeNode<QueryPlanTreeNode> constructTree(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rootPlanNode,
 			List<Pair> rootPairList
 			)
 	{
-		LinkedBinaryTreeNode<DataPlanTreeNode> root = createDataNode(rootPlanNode, rootPairList);
+		DataPlanTreeNode root = createDataNode(rootPlanNode, rootPairList);
+		rootPlanNode.getData().setDataNode(root);
 
 		if(rootPlanNode.getLeft() != null)
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> leftNode = (LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getLeft();
 			List<Pair> leftPairList = updateAttrNames(leftNode, rootPairList);
-			LinkedBinaryTreeNode<DataPlanTreeNode> left = constructTree(
+			LinkedBinaryTreeNode<QueryPlanTreeNode> left = constructTree(
 					leftNode,
 					leftPairList
 					);
-			root.setLeft(left);
 		}
 		if(rootPlanNode.getRight() != null)
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rightNode = (LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getRight();
 			List<Pair> rightPairList = updateAttrNames(rightNode, rootPairList);
-			LinkedBinaryTreeNode<DataPlanTreeNode> right = constructTree(
+			LinkedBinaryTreeNode<QueryPlanTreeNode> right = constructTree(
 					rightNode,
 					rightPairList
 					);
-			root.setRight(right);
 		}
 		
-		return root;
+		return rootPlanNode;
 	}
 	
 	private List<Pair> updateAttrNames(
@@ -174,6 +173,7 @@ public class DataPlanConstructor {
 			aliasAttr = removeAlias(originalAttr);
 		}
 
+		//System.out.println("CREATED: original " + shortOriginalAttr + "; alias " + aliasAttr);
 		return new Pair(aliasAttr, val, shortOriginalAttr, needQuotes);
 	}
 	
@@ -188,7 +188,7 @@ public class DataPlanConstructor {
 	}
 	
 	// create a new LinkedBinaryTreeNode
-	private LinkedBinaryTreeNode<DataPlanTreeNode> createDataNode(
+	private DataPlanTreeNode createDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode,
 			List<Pair> curPairList
 			)
@@ -252,8 +252,7 @@ public class DataPlanConstructor {
 			e.printStackTrace();
 		}
 		
-		LinkedBinaryTreeNode<DataPlanTreeNode> treeNode = new LinkedBinaryTreeNode<DataPlanTreeNode>(dataNode);
-		return treeNode;
+		return dataNode;
 	}
 	
 	private String getType(String attr, List<String[]> dataTypes)
