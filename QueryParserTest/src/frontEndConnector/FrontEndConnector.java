@@ -77,13 +77,14 @@ public class FrontEndConnector {
 	}
 	
 	public LinkedBinaryTreeNode<QueryPlanTreeNode> solveWhyIsHere(
+			LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot,
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
 			)
 	{
 		DataPlanConstructor constructor = null;
 		try {
-			constructor = new DataPlanConstructor(planNode, rowData, pdbConnector);
+			constructor = new DataPlanConstructor(completePlanTreeRoot, planNode, rowData, pdbConnector);
 		} catch (rowDataAndAttributeMismatchException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -101,13 +102,14 @@ public class FrontEndConnector {
 	}
 	
 	public LinkedBinaryTreeNode<QueryPlanTreeNode> solveWhyNotHere(
+			LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot,
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
 			)
 	{
 		DataPlanConstructor constructor = null;
 		try {
-			constructor = new DataPlanConstructor(planNode, rowData, pdbConnector);
+			constructor = new DataPlanConstructor(completePlanTreeRoot, planNode, rowData, pdbConnector);
 		} catch (rowDataAndAttributeMismatchException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

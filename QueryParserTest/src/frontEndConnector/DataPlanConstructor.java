@@ -12,6 +12,7 @@ import frontEndConnector.DataPlanTreeNode.NonMatchingAttrCountAndValueCountExcep
 import binaryTree.LinkedBinaryTreeNode;
 
 public class DataPlanConstructor {
+	private LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot;
 	private LinkedBinaryTreeNode<QueryPlanTreeNode> rootPlanNode;
 	private List<Pair> rootPairList;
 	private PostgresDBConnector pgConnector;
@@ -33,10 +34,13 @@ public class DataPlanConstructor {
 	
 	public class rowDataAndAttributeMismatchException extends Exception{};
 	
-	public DataPlanConstructor(LinkedBinaryTreeNode<QueryPlanTreeNode> _planNode, 
+	public DataPlanConstructor(
+			LinkedBinaryTreeNode<QueryPlanTreeNode> _completePlanTreeRoot,
+			LinkedBinaryTreeNode<QueryPlanTreeNode> _planNode, 
 			String[] _rowData,
 			PostgresDBConnector _pgConnector) throws rowDataAndAttributeMismatchException
 	{
+		completePlanTreeRoot = _completePlanTreeRoot;
 		rootPlanNode = _planNode;
 		pgConnector = _pgConnector;
 		String[] _rootAttributes = QueryProcessingUtilities.removeSquareParenthesis(rootPlanNode.getData().getOutputAttrs()).split(",");
@@ -60,29 +64,52 @@ public class DataPlanConstructor {
 			System.out.println("TYPE: " + dataTypes.get(i)[0] + " " + dataTypes.get(i)[1] + " " + _rootAttributes[i]);
 		}
 		
+		// build original attr-value pair list
 		rootPairList = new ArrayList<Pair>();
 		for(int i = 0; i < _rowData.length; i++)
 		{
 			_rootAttributes[i] = QueryProcessingUtilities.removeQuotes(_rootAttributes[i]);
 			String type = getType(_rootAttributes[i], dataTypes);
-			rootPairList.add(createPair(_rootAttributes[i], _rowData[i], needsQuote(type)));
-			
+			rootPairList.add(createPair(_rootAttributes[i], _rowData[i], needsQuote(type)));			
 		}
 	}
 	
 	public LinkedBinaryTreeNode<QueryPlanTreeNode> build()
 	{
+		if(completePlanTreeRoot != null)
+		{
+			// clean up data stored from previous runs
+			cleanupOldTreeData(completePlanTreeRoot); 
+		}
+		else
+		{
+			return null;
+		}
+		
 		if(rootPlanNode != null && rootPairList != null)
 		{
-			LinkedBinaryTreeNode<QueryPlanTreeNode> treeRoot = constructTree(rootPlanNode, rootPairList);
-			return treeRoot;
+			insertDataNode(rootPlanNode, rootPairList);
+			return rootPlanNode;
 		}
 		else{
 			return null;
 		}
 	}
 	
-	private LinkedBinaryTreeNode<QueryPlanTreeNode> constructTree(
+	private void cleanupOldTreeData(LinkedBinaryTreeNode<QueryPlanTreeNode> root)
+	{
+		root.getData().setDataNode(null);
+		if(root.getLeft() != null)
+		{
+			cleanupOldTreeData((LinkedBinaryTreeNode<QueryPlanTreeNode>) root.getLeft());
+		}
+		if(root.getRight() != null)
+		{
+			cleanupOldTreeData((LinkedBinaryTreeNode<QueryPlanTreeNode>) root.getRight());
+		}
+	}
+	
+	private void insertDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rootPlanNode,
 			List<Pair> rootPairList
 			)
@@ -94,7 +121,7 @@ public class DataPlanConstructor {
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> leftNode = (LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getLeft();
 			List<Pair> leftPairList = updateAttrNames(leftNode, rootPairList);
-			LinkedBinaryTreeNode<QueryPlanTreeNode> left = constructTree(
+			insertDataNode(
 					leftNode,
 					leftPairList
 					);
@@ -103,13 +130,13 @@ public class DataPlanConstructor {
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rightNode = (LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getRight();
 			List<Pair> rightPairList = updateAttrNames(rightNode, rootPairList);
-			LinkedBinaryTreeNode<QueryPlanTreeNode> right = constructTree(
+			insertDataNode(
 					rightNode,
 					rightPairList
 					);
 		}
 		
-		return rootPlanNode;
+		
 	}
 	
 	private List<Pair> updateAttrNames(
