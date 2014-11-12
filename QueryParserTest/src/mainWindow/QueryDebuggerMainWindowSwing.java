@@ -12,10 +12,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.Struct;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -50,9 +52,13 @@ import frontEndConnector.FrontEndConnector.Pair;
 import frontEndConnector.QueryPlanTreeNode;
 
 import java.awt.event.ActionEvent;
+
 import javax.swing.JTabbedPane;
+
 import java.awt.Component;
+
 import javax.swing.ScrollPaneConstants;
+
 import java.awt.FlowLayout;
 
 public class QueryDebuggerMainWindowSwing extends JFrame{
@@ -76,8 +82,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private FrontEndConnector connector;
     
     private LinkedBinaryTreeNode<QueryPlanTreeNode> tree_sampleData;
+    private LinkedBinaryTreeNode<QueryPlanTreeNode> tree_trackTuple;
     
-    private Map<Object, QueryPlanTreeNode> treeObjects;
+    private Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects_sampleData;
+    private Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects_trackTuple;
     
     private DefaultTableModel model_sampleData;
     private DefaultTableModel model_trackTuple;
@@ -91,6 +99,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private Pair samplePair;
     private JLabel lblPleaseEnter;
     private JButton btnExpandAll_sampleData;
+    private JButton btnExpandAll_trackTuple;
+
     private JTextField queryFrom_trackTuple;
 
     /**
@@ -296,7 +306,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 try
                                 {
                                     connector.dropAllTmpTables();
-                                    tree_sampleData = connector.debugQuery("select * from hrecords h, users u where h.user_id = u.user_id;");
+                                    tree_sampleData = connector.debugQuery("select * from hrecords h, users u, (select user_id from users u2) as t where h.user_id = u.user_id and u.user_id = t.user_id;");
                                 } catch (Exception e)
                                 {
                                     // TODO Auto-generated catch block
@@ -304,7 +314,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 }
                                 
                                 if (tree_sampleData!= null) {
-                                    drawPlanTree();
+                                    drawPlanTree(graph_sampleData, tree_sampleData, treeObjects_sampleData);
                                     
                                     logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");
                                 }
@@ -549,7 +559,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         // Sample Data Plan Tree
         JPanel panel_sampleDataPlanTree = new JPanel();
         panel_sampleDataPlanTree.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        treeObjects = new HashMap<Object, QueryPlanTreeNode>();
+        treeObjects_sampleData = new HashMap<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>>();
         
         graph_sampleData = new mxGraph();
         graph_sampleData.setCellsEditable(false);
@@ -568,23 +578,20 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent e) {
                 // TODO Auto-generated method stub
                 Object cell = graphComponent_sampleData.getCellAt(e.getX(), e.getY());
-                if (treeObjects.containsKey(cell)){
+                if (treeObjects_sampleData.containsKey(cell)){
                     btnExpandAll_sampleData.setText("Expand All");
                     queryFrom_sampleData.setText("Plan Tree Node");
                     
-                    QueryPlanTreeNode node = treeObjects.get(cell);
+                    QueryPlanTreeNode node = treeObjects_sampleData.get(cell).getData();
                     samplePair = connector.getSampleData(node.getNewTableName());
                     
-                    if (tabbedPane.getSelectedIndex() == 0){
-                        System.out.println("here");
-                        model_sampleData.setColumnIdentifiers(samplePair.attributes);
-                        model_sampleData.setRowCount(0);
-                        for (String[] row: samplePair.data){
-                            model_sampleData.addRow(row);
-                        }
-                                     
-                        model_sampleData.fireTableDataChanged(); 
+                    model_sampleData.setColumnIdentifiers(samplePair.attributes);
+                    model_sampleData.setRowCount(0);
+                    for (String[] row: samplePair.data){
+                        model_sampleData.addRow(row);
                     }
+                                 
+                    model_sampleData.fireTableDataChanged(); 
                 } 
                 
             }
@@ -642,6 +649,17 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 if (e.getClickCount() == 2){
                     tabbedPane.setSelectedIndex(1);
                     
+                    String[] row = new String[table_sampleData.getColumnCount()];
+                    for (int i = 0; i < table_sampleData.getColumnCount(); i++)
+                        row[i] = table_sampleData.getModel().getValueAt(table_sampleData.getSelectedRow(), i).toString();           
+                    
+                    tree_trackTuple = connector.updateTreeWhyIsHere(tree_sampleData, 
+                                                                    treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
+                                                                    row);
+                    
+                    drawPlanTree(graph_trackTuple, tree_trackTuple, treeObjects_trackTuple);
+                    
+                    System.out.println(tree_trackTuple.toString());
                 }
                 
             }
@@ -686,7 +704,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     if (queryFrom_sampleData.getText().equals("Subquery"))
                         samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");  
                     else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
-                        samplePair = connector.getAllSampleData(treeObjects.get(graph_sampleData.getSelectionCell()).getNewTableName());
+                        samplePair = connector.getAllSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());
                     
                     btnExpandAll_sampleData.setText("Collapse sample");
                 } else {
@@ -694,7 +712,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     if (queryFrom_sampleData.getText().equals("Subquery"))
                         samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");  
                     else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
-                        samplePair = connector.getSampleData(treeObjects.get(graph_sampleData.getSelectionCell()).getNewTableName());               
+                        samplePair = connector.getSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());               
                     btnExpandAll_sampleData.setText("Expand All");
                 }
 
@@ -794,18 +812,74 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         JPanel panel_trackTuplePlanTree = new JPanel();
         panel_trackTuplePlanTree.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        GroupLayout gl_panel_trackTuplePlanTree = new GroupLayout(panel_trackTuplePlanTree);
-        gl_panel_trackTuplePlanTree.setHorizontalGroup(
-            gl_panel_trackTuplePlanTree.createParallelGroup(Alignment.LEADING)
-                .addGap(0, 480, Short.MAX_VALUE)
-                .addGap(0, 468, Short.MAX_VALUE)
-        );
-        gl_panel_trackTuplePlanTree.setVerticalGroup(
-            gl_panel_trackTuplePlanTree.createParallelGroup(Alignment.LEADING)
-                .addGap(0, 640, Short.MAX_VALUE)
-                .addGap(0, 612, Short.MAX_VALUE)
-        );
-        panel_trackTuplePlanTree.setLayout(gl_panel_trackTuplePlanTree);
+        
+        treeObjects_trackTuple = new HashMap<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>>();
+        
+        graph_trackTuple = new mxGraph();
+        graph_trackTuple.setCellsEditable(false);
+        graph_trackTuple.setAllowDanglingEdges(false);
+        
+        final mxGraphComponent graphComponent_trackTuple = new mxGraphComponent(graph_trackTuple);
+        graphComponent_trackTuple.setPreferredSize(new Dimension(450, 300));
+        graphComponent_trackTuple.setAutoExtend(true);
+        graphComponent_trackTuple.getViewport().setOpaque(true);
+        graphComponent_trackTuple.setBorder(null);
+        graphComponent_trackTuple.setConnectable(false);
+        graphComponent_trackTuple.getViewport().setBackground(panel_trackTuplePlanTree.getBackground());
+        graphComponent_trackTuple.getGraphControl().addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // TODO Auto-generated method stub
+                Object cell = graphComponent_trackTuple.getCellAt(e.getX(), e.getY());
+                if (treeObjects_trackTuple.containsKey(cell)){
+                    btnExpandAll_trackTuple.setText("Expand All");
+                    queryFrom_trackTuple.setText("Plan Tree Node");
+                    
+                    QueryPlanTreeNode node = treeObjects_trackTuple.get(cell).getData();
+                    
+                    model_trackTuple.setRowCount(0);
+                    model_trackTuple.setColumnIdentifiers(new Vector());
+
+                    if (node.getDataNode() != null) {
+                        model_trackTuple.setColumnIdentifiers(node.getDataNode().getAttributes());
+                        for (String[] row: node.getDataNode().getValues()){
+                            model_trackTuple.addRow(row);
+                        }                                     
+                    } 
+                    
+                    model_trackTuple.fireTableDataChanged();
+                } 
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });    
+        panel_trackTuplePlanTree.add(graphComponent_trackTuple);
+        
         
         JPanel panel_trackTupleTable = new JPanel();
         panel_trackTupleTable.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Record Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -815,9 +889,16 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         queryFrom_trackTuple = new JTextField();
         queryFrom_trackTuple.setEditable(false);
         
-        JScrollPane pane_trackTuple = new JScrollPane((Component) null, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        
-        JButton btnExpandAll_trackTuple = new JButton("Expand All");
+        model_trackTuple = new DefaultTableModel() {
+            public boolean isCellEditable(int rowIndex, int mColIndex) {
+                return false;
+              }
+            };
+        final JTable table_trackTuple = new JTable(model_trackTuple);
+        table_trackTuple.setFocusable(false);
+        JScrollPane pane_trackTuple = new JScrollPane((Component) table_trackTuple, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);      
+       
+        btnExpandAll_trackTuple = new JButton("Expand All");
         GroupLayout gl_panel_trackTupleTable = new GroupLayout(panel_trackTupleTable);
         gl_panel_trackTupleTable.setHorizontalGroup(
             gl_panel_trackTupleTable.createParallelGroup(Alignment.TRAILING)
@@ -870,17 +951,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         .addComponent(panel_trackTupleTable, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                     .addContainerGap())
         );
+        panel_trackTuplePlanTree.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
         tabTrackTuple.setLayout(gl_tabTrackTuple);
       
         
-        model_trackTuple = new DefaultTableModel() {
-            public boolean isCellEditable(int rowIndex, int mColIndex) {
-                return false;
-              }
-            };
-            
-            
-            
         GroupLayout groupLayout = new GroupLayout(getContentPane());
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
@@ -931,27 +1005,34 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             return traverse(root.getLeft(), x-gridwidth, coordinates);
         }
     }
-    private void drawPlanTree(){
-        final Object parent = graph_sampleData.getDefaultParent();
+    
+    private void drawPlanTree(final mxGraph graph, LinkedBinaryTreeNode<QueryPlanTreeNode> tree, final Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects){
+        final Object parent = graph.getDefaultParent();
 
-        graph_sampleData.getModel().beginUpdate();
+        graph.getModel().beginUpdate();
         
         final Map<BinaryTreeNode<?>, PlanTreeNode> coordinates = new HashMap<BinaryTreeNode<?>, PlanTreeNode>();
-        final int maxshift = traverse(tree_sampleData, 0, coordinates);
+        final int maxshift = traverse(tree, 0, coordinates);
 
-        tree_sampleData.traversePreorder(new BinaryTreeNode.Visitor() {
+        tree.traversePreorder(new BinaryTreeNode.Visitor() {
             public void visit(BinaryTreeNode node) {
                 QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                planTreeNode.obj = graph_sampleData.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, 50);
-                treeObjects.put(planTreeNode.obj, (QueryPlanTreeNode) node.getData());
+                planTreeNode.obj = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, 50);
+               System.out.println(treeNode.getNewTableName());
+                
+                if (treeNode.getDataNode() != null) {
+                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
+                    System.out.println(treeNode.getDataNode().toString());
+                }
+                treeObjects.put(planTreeNode.obj,  (LinkedBinaryTreeNode<QueryPlanTreeNode>) node);
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
-                    graph_sampleData.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
+                    graph.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
                 }
             }
         });      
         
-        graph_sampleData.getModel().endUpdate();
+        graph.getModel().endUpdate();
     }
 }
