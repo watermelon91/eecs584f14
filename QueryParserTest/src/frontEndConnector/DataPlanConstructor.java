@@ -13,8 +13,8 @@ import binaryTree.LinkedBinaryTreeNode;
 
 public class DataPlanConstructor {
 	private LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot;
-	private LinkedBinaryTreeNode<QueryPlanTreeNode> rootPlanNode;
-	private List<Pair> rootPairList;
+	private LinkedBinaryTreeNode<QueryPlanTreeNode> selectedPlanNode;
+	private List<Pair> selectedNodePairList;
 	private PostgresDBConnector pgConnector;
 	
 	private class Pair{
@@ -41,13 +41,13 @@ public class DataPlanConstructor {
 			PostgresDBConnector _pgConnector) throws rowDataAndAttributeMismatchException
 	{
 		completePlanTreeRoot = _completePlanTreeRoot;
-		rootPlanNode = _planNode;
+		selectedPlanNode = _planNode;
 		pgConnector = _pgConnector;
-		String[] _rootAttributes = QueryProcessingUtilities.removeSquareParenthesis(rootPlanNode.getData().getOutputAttrs()).split(",");
+		String[] _rootAttributes = QueryProcessingUtilities.removeSquareParenthesis(selectedPlanNode.getData().getOutputAttrs()).split(",");
 		List<String[]> dataTypes = null;
 		try {
 			// get column types of the attributes
-			dataTypes = pgConnector.executeQuerySeparateResult(" select column_name, data_type from information_schema.columns where table_name = '" + rootPlanNode.getData().getNewTableName() + "'");
+			dataTypes = pgConnector.executeQuerySeparateResult(" select column_name, data_type from information_schema.columns where table_name = '" + selectedPlanNode.getData().getNewTableName() + "'");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -65,12 +65,12 @@ public class DataPlanConstructor {
 		}
 		
 		// build original attr-value pair list
-		rootPairList = new ArrayList<Pair>();
+		selectedNodePairList = new ArrayList<Pair>();
 		for(int i = 0; i < _rowData.length; i++)
 		{
 			_rootAttributes[i] = QueryProcessingUtilities.removeQuotes(_rootAttributes[i]);
 			String type = getType(_rootAttributes[i], dataTypes);
-			rootPairList.add(createPair(_rootAttributes[i], _rowData[i], needsQuote(type)));			
+			selectedNodePairList.add(createPair(_rootAttributes[i], _rowData[i], needsQuote(type)));			
 		}
 	}
 	
@@ -86,9 +86,9 @@ public class DataPlanConstructor {
 			return null;
 		}
 		
-		if(rootPlanNode != null && rootPairList != null)
+		if(selectedPlanNode != null && selectedNodePairList != null)
 		{
-			insertDataNode(rootPlanNode, rootPairList);
+			downwardInsertDataNode(selectedPlanNode, selectedNodePairList);
 			return completePlanTreeRoot;
 		}
 		else{
@@ -109,7 +109,7 @@ public class DataPlanConstructor {
 		}
 	}
 	
-	private void insertDataNode(
+	private void downwardInsertDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rootPlanNode,
 			List<Pair> rootPairList
 			)
@@ -121,7 +121,7 @@ public class DataPlanConstructor {
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> leftNode = (LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getLeft();
 			List<Pair> leftPairList = updateAttrNames(leftNode, rootPairList);
-			insertDataNode(
+			downwardInsertDataNode(
 					leftNode,
 					leftPairList
 					);
@@ -130,7 +130,7 @@ public class DataPlanConstructor {
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rightNode = (LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getRight();
 			List<Pair> rightPairList = updateAttrNames(rightNode, rootPairList);
-			insertDataNode(
+			downwardInsertDataNode(
 					rightNode,
 					rightPairList
 					);
