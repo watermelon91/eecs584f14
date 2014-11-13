@@ -62,7 +62,7 @@ public class DataPlanConstructor {
 		}
 	}
 	
-	public LinkedBinaryTreeNode<QueryPlanTreeNode> build()
+	public LinkedBinaryTreeNode<QueryPlanTreeNode> build() throws SQLException
 	{
 		if(completePlanTreeRoot != null)
 		{
@@ -100,7 +100,7 @@ public class DataPlanConstructor {
 	private void downwardInsertDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rootPlanNode,
 			List<Pair> rootPairList
-			)
+			) throws SQLException
 	{
 		DataPlanTreeNode root = createDataNode(rootPlanNode, rootPairList);
 		rootPlanNode.getData().setDataNode(root);
@@ -204,7 +204,7 @@ public class DataPlanConstructor {
 	private DataPlanTreeNode createDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode,
 			List<Pair> curPairList
-			)
+			) throws SQLException
 	{
 		QueryPlanTreeNode node = planNode.getData();
 		
@@ -247,10 +247,7 @@ public class DataPlanConstructor {
 				values = null;
 			}
 		} 
-		catch (SQLException e) 
-		{
-			e.printStackTrace();
-		} catch (InputQueryNotSELECTALL e) {
+		catch (InputQueryNotSELECTALL e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (QueryAttrNumNotMatch e) {

@@ -94,7 +94,13 @@ public class FrontEndConnector {
 		
 		if(constructor != null)
 		{
-			LinkedBinaryTreeNode<QueryPlanTreeNode> root = constructor.build();
+			LinkedBinaryTreeNode<QueryPlanTreeNode> root = null;
+			try {
+				root = constructor.build();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			return root;
 		}
 		else
@@ -107,7 +113,7 @@ public class FrontEndConnector {
 			LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot,
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
-			)
+			) throws SQLException
 	{
 		DataPlanConstructor constructor = null;
 		try {
