@@ -12,6 +12,8 @@ import java.util.List;
 public class PostgresDBConnector {
 
 	Connection connection = null;
+	public class InputQueryNotSELECTALL extends Exception{}
+	public class QueryAttrNumNotMatch extends Exception{}
 	
 	/*
 	 * Example input: IP: 127.0.0.1
@@ -106,39 +108,91 @@ public class PostgresDBConnector {
 		return queryResult;
 	}
 	
-	
-	public List<String[]> executeQuerySeparateResult(String query) throws SQLException
+	public List<String[]> executeQuerySeparateResult(String query, int LIMIT, String tableName) throws SQLException, InputQueryNotSELECTALL, QueryAttrNumNotMatch
 	{
-		Statement stmt = null;
-		ResultSet rst = null;
-	
-		stmt = connection.createStatement();
-		rst = stmt.executeQuery(query);
-		ResultSetMetaData metadata = rst.getMetaData();
-		
-		int numCol = metadata.getColumnCount();
-		List<String[]> queryResult = new ArrayList<String[]>(); 
-		
-		while(rst.next())
+		// the input query has to start with "SELECT * FROM", otherwise difficulty to track attr types
+		if(!query.startsWith("SELECT * FROM"))
 		{
-			String[] curRow = new String[numCol];
-			for(int idx = 1; idx <= numCol; idx++)
+			throw new InputQueryNotSELECTALL();
+		}
+		
+		// get query result
+		List<String[]> results = executeQuerySeparateResult(query, LIMIT);
+		
+		if(results.size() == 0)
+		{
+			return results;
+		}
+		
+		// get column types of the attributes
+		List<String[]> dataTypes = null;
+		try 
+		{
+			dataTypes = executeQuerySeparateResult(" select data_type from information_schema.columns where table_name = '" + tableName + "'", Integer.MAX_VALUE);
+		} 
+		catch (SQLException e) 
+		{
+			e.printStackTrace();
+		}
+		int numColumn = results.get(0).length;
+		if(numColumn != dataTypes.size())
+		{
+			throw new QueryAttrNumNotMatch();
+		}
+		// flatten column types
+		String[] columnTypes = new String[numColumn];
+		for(int i = 0; i < dataTypes.size(); i++)
+		{
+			columnTypes[i] = dataTypes.get(i)[0];
+		}
+		
+		// add '' to non-numeric types
+		for(int i = 0; i < results.size(); i++)
+		{
+			String[] curRow = results.get(i);
+			for(int j = 0; j < curRow.length; j++)
 			{
-				curRow[idx-1] = rst.getString(idx);
+				if(needsQuote(columnTypes[j]))
+				{
+					curRow[j] = "'" + curRow[j] + "'";
+				}
 			}
-			queryResult.add(curRow);
+			results.set(i, curRow);
 		}
 		
-		if (stmt != null)
+		return results;
+	}
+	
+	private boolean needsQuote(String attrType)
+	{
+		if(attrType.equals("bigint") ||
+				attrType.equals( "bigserial") ||
+				attrType.equals( "boolean") ||
+				attrType.equals( "double precision") ||
+				attrType.equals( "integer") ||
+				attrType.equals( "numeric") ||
+				attrType.equals( "real") ||
+				attrType.equals( "smallint") ||
+				attrType.equals( "smallserial") ||
+				attrType.equals( "serial") ||
+				attrType.equals( "int8") ||
+				attrType.equals( "serial8") ||
+				attrType.equals( "bool") ||
+				attrType.equals( "float8") ||
+				attrType.equals( "int") ||
+				attrType.equals( "int4") ||
+				attrType.equals( "decimal") ||
+				attrType.equals( "float4") ||
+				attrType.equals( "int2") ||
+				attrType.equals( "serial2") ||
+				attrType.equals( "serial4"))
 		{
-			stmt.close();
+			return false;
 		}
-		if (rst != null)
+		else
 		{
-			rst.close();
+			return true;
 		}
-		
-		return queryResult;
 	}
 	
 	public List<String[]> executeQuerySeparateResult(String query, int LIMIT) throws SQLException

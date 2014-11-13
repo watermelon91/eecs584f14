@@ -7,6 +7,8 @@ import java.util.List;
 
 import queryParser.QueryProcessingUtilities;
 import databaseConnector.PostgresDBConnector;
+import databaseConnector.PostgresDBConnector.InputQueryNotSELECTALL;
+import databaseConnector.PostgresDBConnector.QueryAttrNumNotMatch;
 import frontEndConnector.DataPlanTreeNode.BlankAttributesException;
 import frontEndConnector.DataPlanTreeNode.NonMatchingAttrCountAndValueCountException;
 import binaryTree.LinkedBinaryTreeNode;
@@ -21,14 +23,12 @@ public class DataPlanConstructor {
 		public String aliasAttr;
 		public String val;
 		public String originalAttr;
-		public boolean needQuotes;
 		
-		public Pair(String _aliasAttr, String _val, String _originalAttr, boolean _needQuotes)
+		public Pair(String _aliasAttr, String _val, String _originalAttr)
 		{
 			aliasAttr = _aliasAttr;
 			val = _val;
 			originalAttr = _originalAttr;
-			needQuotes = _needQuotes;
 		}
 	}
 	
@@ -47,7 +47,7 @@ public class DataPlanConstructor {
 		List<String[]> dataTypes = null;
 		try {
 			// get column types of the attributes
-			dataTypes = pgConnector.executeQuerySeparateResult(" select column_name, data_type from information_schema.columns where table_name = '" + selectedPlanNode.getData().getNewTableName() + "'");
+			dataTypes = pgConnector.executeQuerySeparateResult(" select column_name, data_type from information_schema.columns where table_name = '" + selectedPlanNode.getData().getNewTableName() + "'", Integer.MAX_VALUE);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -68,9 +68,11 @@ public class DataPlanConstructor {
 		selectedNodePairList = new ArrayList<Pair>();
 		for(int i = 0; i < _rowData.length; i++)
 		{
-			_rootAttributes[i] = QueryProcessingUtilities.removeQuotes(_rootAttributes[i]);
-			String type = getType(_rootAttributes[i], dataTypes);
-			selectedNodePairList.add(createPair(_rootAttributes[i], _rowData[i], needsQuote(type)));			
+			if(!_rowData[i].equals(""))
+			{
+				_rootAttributes[i] = QueryProcessingUtilities.removeQuotes(_rootAttributes[i]);
+				selectedNodePairList.add(createPair(_rootAttributes[i], _rowData[i]));
+			}
 		}
 	}
 	
@@ -135,8 +137,6 @@ public class DataPlanConstructor {
 					rightPairList
 					);
 		}
-		
-		
 	}
 	
 	private List<Pair> updateAttrNames(
@@ -165,7 +165,7 @@ public class DataPlanConstructor {
 			String matchedAttr = searchMatchingAttr(curNodeAttributes, oldAttr);
 			if(!matchedAttr.equals(""))
 			{
-				newPairList.add(createPair(matchedAttr, rootPairList.get(i).val, rootPairList.get(i).needQuotes));
+				newPairList.add(createPair(matchedAttr, rootPairList.get(i).val));
 			}
 			
 		}
@@ -185,7 +185,7 @@ public class DataPlanConstructor {
 		return "";
 	}
 	
-	private Pair createPair(String originalAttr, String val, boolean needQuotes)
+	private Pair createPair(String originalAttr, String val)
 	{
 		String shortOriginalAttr = "";
 		String aliasAttr = "";
@@ -201,7 +201,7 @@ public class DataPlanConstructor {
 		}
 
 		//System.out.println("CREATED: original " + shortOriginalAttr + "; alias " + aliasAttr);
-		return new Pair(aliasAttr, val, shortOriginalAttr, needQuotes);
+		return new Pair(aliasAttr, val, shortOriginalAttr);
 	}
 	
 	private String removeAlias(String inAttr)
@@ -231,14 +231,7 @@ public class DataPlanConstructor {
 				whereClause = whereClause + " AND ";
 			}
 			Pair curPair = curPairList.get(i);
-			if(curPair.needQuotes)
-			{
-				whereClause = whereClause + curPairList.get(i).aliasAttr + " = '" + QueryProcessingUtilities.removeQuotes(curPair.val) + "' ";
-			}
-			else
-			{
-				whereClause = whereClause + curPairList.get(i).aliasAttr + " = " + QueryProcessingUtilities.removeQuotes(curPair.val) + " ";
-			}
+			whereClause = whereClause + curPairList.get(i).aliasAttr + " = " + QueryProcessingUtilities.removeQuotes(curPair.val) + " ";
 			curAttributes[i] = curPairList.get(i).aliasAttr;
 		}
 		System.out.println("WHERE: " + whereClause);
@@ -250,7 +243,7 @@ public class DataPlanConstructor {
 			{
 				String query = "SELECT * FROM " + node.getNewTableName() + " WHERE " + whereClause; 
 				System.out.println("Query: " + query);
-				values = pgConnector.executeQuerySeparateResult(query);
+				values = pgConnector.executeQuerySeparateResult(query, Integer.MAX_VALUE, node.getNewTableName());
 				if(values.size() == 0)
 				{
 					System.out.println("VALUES: NON-MATCHING");
@@ -267,6 +260,12 @@ public class DataPlanConstructor {
 		} 
 		catch (SQLException e) 
 		{
+			e.printStackTrace();
+		} catch (InputQueryNotSELECTALL e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (QueryAttrNumNotMatch e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -289,47 +288,5 @@ public class DataPlanConstructor {
 		return dataNode;
 	}
 	
-	private String getType(String attr, List<String[]> dataTypes)
-	{
-		for(int i = 0; i < dataTypes.size(); i++)
-		{
-			if(attr.contains(dataTypes.get(i)[0]))
-			{
-				return dataTypes.get(i)[1];
-			}
-		}
-		return "";
-	}
 	
-	private boolean needsQuote(String attrType)
-	{
-		if(attrType.equals("bigint") ||
-				attrType.equals( "bigserial") ||
-				attrType.equals( "boolean") ||
-				attrType.equals( "double precision") ||
-				attrType.equals( "integer") ||
-				attrType.equals( "numeric") ||
-				attrType.equals( "real") ||
-				attrType.equals( "smallint") ||
-				attrType.equals( "smallserial") ||
-				attrType.equals( "serial") ||
-				attrType.equals( "int8") ||
-				attrType.equals( "serial8") ||
-				attrType.equals( "bool") ||
-				attrType.equals( "float8") ||
-				attrType.equals( "int") ||
-				attrType.equals( "int4") ||
-				attrType.equals( "decimal") ||
-				attrType.equals( "float4") ||
-				attrType.equals( "int2") ||
-				attrType.equals( "serial2") ||
-				attrType.equals( "serial4"))
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
 }

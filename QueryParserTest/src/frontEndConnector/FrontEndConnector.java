@@ -12,6 +12,8 @@ import queryParser.QueryParser;
 import queryReconstructor.PlanReducer;
 import queryReconstructor.QueryReconstructor;
 import databaseConnector.PostgresDBConnector;
+import databaseConnector.PostgresDBConnector.InputQueryNotSELECTALL;
+import databaseConnector.PostgresDBConnector.QueryAttrNumNotMatch;
 import frontEndConnector.DataPlanConstructor.rowDataAndAttributeMismatchException;
 
 public class FrontEndConnector {
@@ -133,12 +135,31 @@ public class FrontEndConnector {
 	 */
 	public Pair getSampleData(String tableName)
 	{
-		return executeTestQuery("SELECT * FROM " + tableName + " LIMIT 10");	
+		try {
+			return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName + " LIMIT 10", 10, tableName);
+		} catch (InputQueryNotSELECTALL e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (QueryAttrNumNotMatch e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public Pair getAllSampleData(String tableName)
 	{
-		return executeTestQueryAll("SELECT * FROM " + tableName);
+		try {
+			return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName, Integer.MAX_VALUE, tableName);
+		} catch (InputQueryNotSELECTALL e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (QueryAttrNumNotMatch e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	/*
@@ -152,22 +173,7 @@ public class FrontEndConnector {
 	 */
 	public Pair executeTestQuery(String query)
 	{
-		int LIMIT = 10;
-		
-		try 
-		{
-			List<String[]> result = pdbConnector.executeQuerySeparateResult(query, LIMIT);
-			String[] attrs = getReturnedAttr(query);
-			
-			Pair rstPair = new Pair(attrs, result);			
-			return rstPair;
-		} 
-		catch (SQLException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}		
+		return executeQuerySeparateResult(query, 10);
 	}
 	
 	/*
@@ -181,9 +187,14 @@ public class FrontEndConnector {
 	 */
 	public Pair executeTestQueryAll(String query)
 	{
+		return executeQuerySeparateResult(query, Integer.MAX_VALUE);
+	}
+		
+	private Pair executeQuerySeparateResultAddQuotes(String query, int LIMIT, String tableName) throws InputQueryNotSELECTALL, QueryAttrNumNotMatch
+	{
 		try 
 		{
-			List<String[]> result = pdbConnector.executeQuerySeparateResult(query);
+			List<String[]> result = pdbConnector.executeQuerySeparateResult(query, LIMIT, tableName);
 			String[] attrs = getReturnedAttr(query);
 			
 			Pair rstPair = new Pair(attrs, result);			
@@ -194,7 +205,22 @@ public class FrontEndConnector {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
-		}		
+		}	
+	}
+	
+	private Pair executeQuerySeparateResult(String query, int LIMIT)
+	{
+		try {
+			return executeQuerySeparateResultAddQuotes(query, LIMIT, "");
+		} catch (InputQueryNotSELECTALL e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (QueryAttrNumNotMatch e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	private String[] getReturnedAttr(String query)
