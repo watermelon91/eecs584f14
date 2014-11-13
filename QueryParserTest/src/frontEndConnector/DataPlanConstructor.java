@@ -43,36 +43,22 @@ public class DataPlanConstructor {
 		completePlanTreeRoot = _completePlanTreeRoot;
 		selectedPlanNode = _planNode;
 		pgConnector = _pgConnector;
-		String[] _rootAttributes = QueryProcessingUtilities.removeSquareParenthesis(selectedPlanNode.getData().getOutputAttrs()).split(",");
-		List<String[]> dataTypes = null;
-		try {
-			// get column types of the attributes
-			dataTypes = pgConnector.executeQuerySeparateResult(" select column_name, data_type from information_schema.columns where table_name = '" + selectedPlanNode.getData().getNewTableName() + "'", Integer.MAX_VALUE);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		String[] _selectedNodeAttributes = QueryProcessingUtilities.removeSquareParenthesis(selectedPlanNode.getData().getOutputAttrs()).split(",");
 		
-		if(_rootAttributes.length != _rowData.length || dataTypes == null || (dataTypes != null && dataTypes.size() != _rowData.length))
+		System.out.println(Arrays.asList(_selectedNodeAttributes).toString());
+		System.out.println(Arrays.asList(_rowData).toString());
+		
+		if(_selectedNodeAttributes.length != _rowData.length)
 		{
 			throw new rowDataAndAttributeMismatchException();
 		}
-		
-		// DEBUG ONLY
-		for(int i = 0; i < dataTypes.size(); i++)
-		{
-			System.out.println("TYPE: " + dataTypes.get(i)[0] + " " + dataTypes.get(i)[1] + " " + _rootAttributes[i]);
-		}
-		
+
 		// build original attr-value pair list
 		selectedNodePairList = new ArrayList<Pair>();
 		for(int i = 0; i < _rowData.length; i++)
 		{
-			if(!_rowData[i].equals(""))
-			{
-				_rootAttributes[i] = QueryProcessingUtilities.removeQuotes(_rootAttributes[i]);
-				selectedNodePairList.add(createPair(_rootAttributes[i], _rowData[i]));
-			}
+			_selectedNodeAttributes[i] = QueryProcessingUtilities.removeQuotes(_selectedNodeAttributes[i]);
+			selectedNodePairList.add(createPair(_selectedNodeAttributes[i], _rowData[i]));
 		}
 	}
 	
@@ -226,12 +212,15 @@ public class DataPlanConstructor {
 		String whereClause = "";
 		for(int i = 0; i < curPairList.size(); i++)
 		{
-			if(whereClause != "")
-			{
-				whereClause = whereClause + " AND ";
-			}
 			Pair curPair = curPairList.get(i);
-			whereClause = whereClause + curPairList.get(i).aliasAttr + " = " + QueryProcessingUtilities.removeQuotes(curPair.val) + " ";
+			if(!curPair.val.equals(""))
+			{
+				if(!whereClause.equals(""))
+				{
+					whereClause = whereClause + " AND ";
+				}
+				whereClause = whereClause + curPairList.get(i).aliasAttr + " = " + QueryProcessingUtilities.removeQuotes(curPair.val) + " ";
+			}
 			curAttributes[i] = curPairList.get(i).aliasAttr;
 		}
 		System.out.println("WHERE: " + whereClause);
@@ -239,7 +228,7 @@ public class DataPlanConstructor {
 		List<String[]> values = null;
 		try 
 		{
-			if(whereClause != "")
+			if(!whereClause.equals(""))
 			{
 				String query = "SELECT * FROM " + node.getNewTableName() + " WHERE " + whereClause; 
 				System.out.println("Query: " + query);
