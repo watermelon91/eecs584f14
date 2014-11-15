@@ -73,5 +73,40 @@ public class QueryProcessingUtilities {
 		return false;
 	}
 
-
+	public static JSONArray getFinalColumnNames(JSONArray columns) {
+		JSONArray finalColNames = new JSONArray();
+		
+		Iterator<String> it = columns.iterator();
+		while (it.hasNext()) {
+			finalColNames.add(getFinalColumnName(it.next()));
+		}
+		
+		return finalColNames;
+	}
+	
+	public static String getFinalColumnName(String origColName) {
+		String finalCol = "";
+		if (origColName.contains(" as ")) {
+			String[] ar = origColName.split(" as ");
+			finalCol = ar[1];
+		} else {
+			finalCol = origColName;
+		}
+		
+		return finalCol;
+	}
+	
+	public static String combineAndConditions(String cond1, String cond2) {
+		String finalCond = "";
+		
+		if (!cond1.equals("")) {
+			finalCond = cond1;
+			if (!cond2.equals("")) {
+				finalCond = finalCond + " and " + cond2;
+			}
+		} else {
+			finalCond = cond2;
+		}
+		return finalCond;
+	}
 }
