@@ -146,7 +146,15 @@ public class QueryPlanTreeNode {
 	
 	public DataPlanTreeNode getDataNode()
 	{
-		return dataNode;
+		if(dataNode != null && dataNode.getValues() != null && dataNode.getValues().size() == 0)
+		{
+			// return null if no row of data selected
+			return null;
+		}
+		else
+		{
+			return dataNode;
+		}
 	}
 	
 	public void setDataNode(DataPlanTreeNode _inNode)
