@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
+import javax.swing.DefaultCellEditor;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -26,7 +28,10 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.Border;
+import javax.swing.border.MatteBorder;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.JButton;
@@ -35,6 +40,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JTable;
 import javax.swing.JPasswordField;
@@ -77,21 +83,29 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
     private mxGraph graph_sampleData;
     private mxGraph graph_trackTuple;
+    private mxGraph graph_findMissing;
 
 
     private FrontEndConnector connector;
     
     private LinkedBinaryTreeNode<QueryPlanTreeNode> tree_sampleData;
     private LinkedBinaryTreeNode<QueryPlanTreeNode> tree_trackTuple;
+    private LinkedBinaryTreeNode<QueryPlanTreeNode> tree_findMissing;
+
     
     private Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects_sampleData;
     private Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects_trackTuple;
+    private Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects_findMissing;
     
     private DefaultTableModel model_sampleData;
     private DefaultTableModel model_trackTuple;
-
+    private DefaultTableModel model_findMissing;
+    private DefaultTableModel model_searchMissing;
     
-    final int gridwidth = 120, gridheight = 150;
+    private JTable table_searchMissing;
+    private DefaultTableCellRenderer renderer;
+    
+    final int gridwidth = 110, gridheight = 120;
     private JTextField queryFrom_sampleData;
     
     private LoggingUtilities logger;
@@ -100,8 +114,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private JLabel lblPleaseEnter;
     private JButton btnExpandAll_sampleData;
     private JButton btnExpandAll_trackTuple;
+    private JButton btnExpandAll_findMissing;
 
     private JTextField queryFrom_trackTuple;
+    private JTextField queryFrom_findMissing;
 
     /**
      * Launch the application.
@@ -441,6 +457,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
                     model_sampleData.setColumnIdentifiers(samplePair.attributes);
                     model_sampleData.setRowCount(0);
+                    
                     for (String[] row: samplePair.data){
                         model_sampleData.addRow(row);
                     }                              
@@ -552,7 +569,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         // Sample Data Tab
         JPanel tabSampleData = new JPanel();
-        tabbedPane.addTab("Sample Data", null, tabSampleData, null);
+        tabbedPane.addTab("Sample Intermediate Data", null, tabSampleData, null);
         tabbedPane.setEnabledAt(0, true);
         
 
@@ -566,7 +583,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graph_sampleData.setAllowDanglingEdges(false);
         
         final mxGraphComponent graphComponent_sampleData = new mxGraphComponent(graph_sampleData);
-        graphComponent_sampleData.setPreferredSize(new Dimension(450, 300));
+        graphComponent_sampleData.setPreferredSize(new Dimension(450, 600));
         graphComponent_sampleData.setAutoExtend(true);
         graphComponent_sampleData.getViewport().setOpaque(true);
         graphComponent_sampleData.setBorder(null);
@@ -586,12 +603,18 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     samplePair = connector.getSampleData(node.getNewTableName());
                     
                     model_sampleData.setColumnIdentifiers(samplePair.attributes);
+                    model_searchMissing.setColumnIdentifiers(samplePair.attributes);
+
                     model_sampleData.setRowCount(0);
+                    model_searchMissing.setRowCount(1);
+                    
                     for (String[] row: samplePair.data){
                         model_sampleData.addRow(row);
                     }
                                  
                     model_sampleData.fireTableDataChanged(); 
+                    model_searchMissing.fireTableDataChanged(); 
+                   
                 } 
                 
             }
@@ -648,7 +671,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 // Double Click to track tuple
                 if (e.getClickCount() == 2){
                     tabbedPane.setSelectedIndex(1);
-                    
+
                     String[] row = new String[table_sampleData.getColumnCount()];
                     for (int i = 0; i < table_sampleData.getColumnCount(); i++)
                         row[i] = table_sampleData.getModel().getValueAt(table_sampleData.getSelectedRow(), i).toString();           
@@ -659,7 +682,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     
                     drawPlanTree(graph_trackTuple, tree_trackTuple, treeObjects_trackTuple);
                     
-                    System.out.println(tree_trackTuple.toString());
                 }
                 
             }
@@ -753,20 +775,95 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             
         });
         
+        // Search Missing 
+        model_searchMissing = new DefaultTableModel();
+        
+        renderer = new DefaultTableCellRenderer();
+        renderer.setBorder(BorderFactory.createLineBorder(Color.black));
+            
+        table_searchMissing = new JTable(model_searchMissing);
+        table_searchMissing.setRowSelectionAllowed(false);
+
+        JScrollPane pane_searchTuple = new JScrollPane((Component) table_searchMissing, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        
+        JLabel lblSearchForMissing = new JLabel("Search for missing tuple in the node selected:");
+        
+        JButton btnCancelSearchForMissing = new JButton("Cancel");
+        
+        JButton btnSearchForMissing = new JButton("Search");
+        btnSearchForMissing.addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                tabbedPane.setSelectedIndex(2);
+
+                
+                String[] row = new String[table_searchMissing.getColumnCount()];
+                for (int i = 0; i < table_searchMissing.getColumnCount(); i++){
+                    table_searchMissing.getCellEditor(0, i).stopCellEditing();
+                    row[i] = table_searchMissing.getModel().getValueAt(0, i).toString(); 
+                }
+                
+                tree_findMissing = connector.updateTreeWhyNotHere(tree_sampleData, 
+                                                                treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
+                                                                row);
+                
+                drawPlanTree(graph_findMissing, tree_findMissing, treeObjects_findMissing);
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });
+        
+        
         GroupLayout gl_panel_sampleDataTable = new GroupLayout(panel_sampleDataTable);
         gl_panel_sampleDataTable.setHorizontalGroup(
             gl_panel_sampleDataTable.createParallelGroup(Alignment.TRAILING)
                 .addGroup(gl_panel_sampleDataTable.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(gl_panel_sampleDataTable.createParallelGroup(Alignment.LEADING)
+                    .addGroup(gl_panel_sampleDataTable.createParallelGroup(Alignment.TRAILING)
+                        .addGroup(Alignment.LEADING, gl_panel_sampleDataTable.createSequentialGroup()
+                            .addGap(12)
+                            .addComponent(pane_sampleData, GroupLayout.DEFAULT_SIZE, 415, Short.MAX_VALUE))
                         .addGroup(gl_panel_sampleDataTable.createSequentialGroup()
+                            .addContainerGap()
+                            .addComponent(btnSearchForMissing)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(btnCancelSearchForMissing))
+                        .addGroup(gl_panel_sampleDataTable.createSequentialGroup()
+                            .addContainerGap()
                             .addComponent(lblQueryFor_sampleData)
                             .addPreferredGap(ComponentPlacement.UNRELATED)
-                            .addComponent(queryFrom_sampleData, GroupLayout.DEFAULT_SIZE, 318, Short.MAX_VALUE))
+                            .addComponent(queryFrom_sampleData, GroupLayout.DEFAULT_SIZE, 344, Short.MAX_VALUE))
                         .addGroup(gl_panel_sampleDataTable.createSequentialGroup()
-                            .addGap(6)
-                            .addComponent(pane_sampleData, GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE))
-                        .addComponent(btnExpandAll_sampleData, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE))
+                            .addContainerGap()
+                            .addGroup(gl_panel_sampleDataTable.createParallelGroup(Alignment.LEADING)
+                                .addComponent(lblSearchForMissing, GroupLayout.PREFERRED_SIZE, 308, GroupLayout.PREFERRED_SIZE)
+                                .addGroup(gl_panel_sampleDataTable.createParallelGroup(Alignment.TRAILING)
+                                    .addComponent(btnExpandAll_sampleData, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(pane_searchTuple, GroupLayout.PREFERRED_SIZE, 374, GroupLayout.PREFERRED_SIZE)))))
                     .addGap(15))
         );
         gl_panel_sampleDataTable.setVerticalGroup(
@@ -777,10 +874,18 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         .addComponent(queryFrom_sampleData, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addComponent(lblQueryFor_sampleData))
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(pane_sampleData, GroupLayout.PREFERRED_SIZE, 543, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(pane_sampleData, GroupLayout.PREFERRED_SIZE, 384, GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.UNRELATED)
                     .addComponent(btnExpandAll_sampleData)
-                    .addGap(12))
+                    .addGap(18)
+                    .addComponent(lblSearchForMissing)
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addComponent(pane_searchTuple, GroupLayout.PREFERRED_SIZE, 55, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addGroup(gl_panel_sampleDataTable.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(btnCancelSearchForMissing)
+                        .addComponent(btnSearchForMissing))
+                    .addContainerGap())
         );
         panel_sampleDataTable.setLayout(gl_panel_sampleDataTable);
         GroupLayout gl_tabSampleData = new GroupLayout(tabSampleData);
@@ -790,17 +895,17 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     .addContainerGap()
                     .addComponent(panel_sampleDataPlanTree, GroupLayout.PREFERRED_SIZE, 480, GroupLayout.PREFERRED_SIZE)
                     .addGap(15)
-                    .addComponent(panel_sampleDataTable, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap())
+                    .addComponent(panel_sampleDataTable, GroupLayout.PREFERRED_SIZE, 413, GroupLayout.PREFERRED_SIZE)
+                    .addGap(10))
         );
         gl_tabSampleData.setVerticalGroup(
             gl_tabSampleData.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_tabSampleData.createSequentialGroup()
                     .addContainerGap()
-                    .addGroup(gl_tabSampleData.createParallelGroup(Alignment.LEADING)
-                        .addComponent(panel_sampleDataPlanTree, GroupLayout.PREFERRED_SIZE, 640, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(panel_sampleDataTable, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                    .addContainerGap())
+                    .addGroup(gl_tabSampleData.createParallelGroup(Alignment.TRAILING, false)
+                        .addComponent(panel_sampleDataTable, Alignment.LEADING, 0, 0, Short.MAX_VALUE)
+                        .addComponent(panel_sampleDataPlanTree, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 640, Short.MAX_VALUE))
+                    .addGap(23))
         );
         panel_sampleDataPlanTree.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
         tabSampleData.setLayout(gl_tabSampleData);
@@ -808,7 +913,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         // Track Tuple Tab
         JPanel tabTrackTuple = new JPanel();
-        tabbedPane.addTab("Track Tuple", null, tabTrackTuple, null);
+        tabbedPane.addTab("Track Existing Tuple", null, tabTrackTuple, null);
         
         JPanel panel_trackTuplePlanTree = new JPanel();
         panel_trackTuplePlanTree.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -820,7 +925,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graph_trackTuple.setAllowDanglingEdges(false);
         
         final mxGraphComponent graphComponent_trackTuple = new mxGraphComponent(graph_trackTuple);
-        graphComponent_trackTuple.setPreferredSize(new Dimension(450, 300));
+        //graphComponent_trackTuple.setPreferredSize(new Dimension(450, 600));
         graphComponent_trackTuple.setAutoExtend(true);
         graphComponent_trackTuple.getViewport().setOpaque(true);
         graphComponent_trackTuple.setBorder(null);
@@ -878,7 +983,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             }
             
         });    
-        panel_trackTuplePlanTree.add(graphComponent_trackTuple);
+        panel_trackTuplePlanTree.add(graphComponent_trackTuple, BorderLayout.CENTER);
         
         
         JPanel panel_trackTupleTable = new JPanel();
@@ -908,21 +1013,21 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         .addComponent(btnExpandAll_trackTuple, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE)
                         .addGroup(gl_panel_trackTupleTable.createParallelGroup(Alignment.TRAILING, false)
                             .addGroup(gl_panel_trackTupleTable.createSequentialGroup()
+                                .addGap(6)
+                                .addComponent(pane_trackTuple, 0, 0, Short.MAX_VALUE))
+                            .addGroup(Alignment.LEADING, gl_panel_trackTupleTable.createSequentialGroup()
                                 .addComponent(lblQueryFor_trackTuple)
                                 .addPreferredGap(ComponentPlacement.UNRELATED)
-                                .addComponent(queryFrom_trackTuple))
-                            .addGroup(Alignment.LEADING, gl_panel_trackTupleTable.createSequentialGroup()
-                                .addGap(6)
-                                .addComponent(pane_trackTuple, GroupLayout.PREFERRED_SIZE, 396, GroupLayout.PREFERRED_SIZE))))
-                    .addGap(15))
+                                .addComponent(queryFrom_trackTuple, GroupLayout.PREFERRED_SIZE, 281, GroupLayout.PREFERRED_SIZE))))
+                    .addContainerGap())
         );
         gl_panel_trackTupleTable.setVerticalGroup(
             gl_panel_trackTupleTable.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_panel_trackTupleTable.createSequentialGroup()
                     .addGap(5)
                     .addGroup(gl_panel_trackTupleTable.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(queryFrom_trackTuple, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(lblQueryFor_trackTuple))
+                        .addComponent(lblQueryFor_trackTuple)
+                        .addComponent(queryFrom_trackTuple, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(pane_trackTuple, GroupLayout.PREFERRED_SIZE, 543, GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -955,6 +1060,145 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         tabTrackTuple.setLayout(gl_tabTrackTuple);
       
         
+        //Find missing tab
+        JPanel tabFindMissing = new JPanel();
+        tabbedPane.addTab("Find Missing Tuple", null, tabFindMissing, null);
+        
+        JPanel panel_findMissingPlanTree = new JPanel();
+        panel_findMissingPlanTree.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Plan Tree", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel_findMissingPlanTree.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        
+        treeObjects_findMissing = new HashMap<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>>();
+        
+        graph_findMissing = new mxGraph();
+        graph_findMissing.setCellsEditable(false);
+        graph_findMissing.setAllowDanglingEdges(false);
+        
+        final mxGraphComponent graphComponent_findMissing = new mxGraphComponent(graph_findMissing);
+        graphComponent_findMissing.setAutoExtend(true);
+        graphComponent_findMissing.getViewport().setOpaque(true);
+        graphComponent_findMissing.setBorder(null);
+        graphComponent_findMissing.setConnectable(false);
+        graphComponent_findMissing.getViewport().setBackground(panel_findMissingPlanTree.getBackground());
+        graphComponent_findMissing.getGraphControl().addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // TODO Auto-generated method stub
+                Object cell = graphComponent_findMissing.getCellAt(e.getX(), e.getY());
+                if (treeObjects_findMissing.containsKey(cell)){
+                    btnExpandAll_findMissing.setText("Expand All");
+                    queryFrom_findMissing.setText("Plan Tree Node");
+                    
+                    QueryPlanTreeNode node = treeObjects_findMissing.get(cell).getData();
+                    
+                    model_findMissing.setRowCount(0);
+                    model_findMissing.setColumnIdentifiers(new Vector());
+
+                    if (node.getDataNode() != null) {
+                        model_findMissing.setColumnIdentifiers(node.getDataNode().getAttributes());
+                        for (String[] row: node.getDataNode().getValues()){
+                            model_findMissing.addRow(row);
+                        }                                     
+                    } 
+                    
+                    model_findMissing.fireTableDataChanged();
+                } 
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });    
+        panel_findMissingPlanTree.add(graphComponent_findMissing, BorderLayout.CENTER);
+  
+        
+        JPanel panel_findMissingTable = new JPanel();
+        panel_findMissingTable.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Record Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        
+        JButton btnExpandAll_findMissing = new JButton("Expand All");
+        
+        JLabel lblQueryFor_findMissing = new JLabel("Tracking Down:");
+        
+        queryFrom_findMissing = new JTextField();
+        queryFrom_findMissing.setEditable(false);
+        
+        JScrollPane pane_findMissing = new JScrollPane((Component) null, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        GroupLayout gl_panel_findMissingTable = new GroupLayout(panel_findMissingTable);
+        gl_panel_findMissingTable.setHorizontalGroup(
+            gl_panel_findMissingTable.createParallelGroup(Alignment.TRAILING)
+                .addGroup(gl_panel_findMissingTable.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(gl_panel_findMissingTable.createParallelGroup(Alignment.TRAILING, false)
+                        .addComponent(btnExpandAll_findMissing, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE)
+                        .addGroup(Alignment.LEADING, gl_panel_findMissingTable.createSequentialGroup()
+                            .addComponent(lblQueryFor_findMissing)
+                            .addPreferredGap(ComponentPlacement.UNRELATED)
+                            .addComponent(queryFrom_findMissing)
+                            .addPreferredGap(ComponentPlacement.RELATED))
+                        .addGroup(Alignment.LEADING, gl_panel_findMissingTable.createSequentialGroup()
+                            .addGap(6)
+                            .addComponent(pane_findMissing, GroupLayout.PREFERRED_SIZE, 383, GroupLayout.PREFERRED_SIZE)))
+                    .addGap(17))
+        );
+        gl_panel_findMissingTable.setVerticalGroup(
+            gl_panel_findMissingTable.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_panel_findMissingTable.createSequentialGroup()
+                    .addGap(5)
+                    .addGroup(gl_panel_findMissingTable.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(queryFrom_findMissing, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblQueryFor_findMissing))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(pane_findMissing, GroupLayout.PREFERRED_SIZE, 543, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addComponent(btnExpandAll_findMissing)
+                    .addGap(12))
+        );
+        panel_findMissingTable.setLayout(gl_panel_findMissingTable);
+        GroupLayout gl_tabFindMissing = new GroupLayout(tabFindMissing);
+        gl_tabFindMissing.setHorizontalGroup(
+            gl_tabFindMissing.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_tabFindMissing.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(panel_findMissingPlanTree, GroupLayout.PREFERRED_SIZE, 480, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(panel_findMissingTable, GroupLayout.PREFERRED_SIZE, 415, GroupLayout.PREFERRED_SIZE)
+                    .addGap(33))
+        );
+        gl_tabFindMissing.setVerticalGroup(
+            gl_tabFindMissing.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_tabFindMissing.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(gl_tabFindMissing.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(panel_findMissingPlanTree, GroupLayout.PREFERRED_SIZE, 640, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(panel_findMissingTable, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addGap(23))
+        );
+        tabFindMissing.setLayout(gl_tabFindMissing);
+        
+        //Window Layout
         GroupLayout groupLayout = new GroupLayout(getContentPane());
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
@@ -1023,7 +1267,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 
                 if (treeNode.getDataNode() != null) {
                     graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
-                    System.out.println(treeNode.getDataNode().toString());
                 }
                 treeObjects.put(planTreeNode.obj,  (LinkedBinaryTreeNode<QueryPlanTreeNode>) node);
                 if (node.getParent() != null) {
