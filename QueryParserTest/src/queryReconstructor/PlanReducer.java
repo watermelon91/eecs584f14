@@ -23,7 +23,11 @@ public class PlanReducer {
 	// it will eliminate unnecessary seq scan nodes
 	
 	
-	
+	// TODO list
+	// subquery scans
+	// subplan nodes
+	// aggregate naming
+	// 
 	
 	
 	QueryParser qParser;
@@ -338,7 +342,7 @@ public class PlanReducer {
 		// get names of child columns here
 		// what about those that are already aliased? 
 
-		reducedNode = makeScanNode(child, filter, tableName, alias, finalOutputAttrs);
+	//reducedNode = makeScanNode(child, filter, tableName, alias, finalOutputAttrs);
 		
 		/*
 		String filter = qParser.getFilter(curNode);
