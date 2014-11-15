@@ -178,7 +178,7 @@ public class DataPlanConstructor {
 		if(originalAttr.contains(" as "))
 		{
 			shortOriginalAttr = removeAlias(originalAttr.substring(0, originalAttr.indexOf(" ")));
-			aliasAttr = originalAttr.substring(originalAttr.indexOf("as ") + 3);
+			aliasAttr = originalAttr.substring(originalAttr.indexOf(" as ") + 4);
 		}
 		else
 		{

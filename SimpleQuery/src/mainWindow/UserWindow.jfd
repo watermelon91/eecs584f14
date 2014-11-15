@@ -1,0 +1,60 @@
+JFDML JFormDesigner: "5.2.0.3.124" Java: "1.7.0_45" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
+			"$columnSpecs": "default, labelcompgap, 150dlu, labelcompgap, 284dlu"
+			"$rowSpecs": "default, linegap, 94dlu, linegap, 18dlu, linegap, 169dlu"
+		} ) {
+			name: "window"
+			addEvent( new FormEvent( "java.awt.event.WindowListener", "windowClosing", "windowWindowClosing", true ) )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "queryEnterLabel"
+				"text": "text"
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 1
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "resultDisplayLabel"
+				"text": "text"
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 1
+			} )
+			add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+				name: "scrollPane1"
+				add( new FormComponent( "javax.swing.JTextPane" ) {
+					name: "queryEntertextPanel"
+					addEvent( new FormEvent( "java.awt.event.KeyListener", "keyTyped", "queryEntertextPanelKeyTyped", true ) )
+				} )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 2
+				"gridHeight": 2
+			} )
+			add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+				name: "scrollPane2"
+				add( new FormComponent( "javax.swing.JTable" ) {
+					name: "resultTable"
+				} )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 2
+				"gridHeight": 6
+			} )
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "submitButton"
+				"text": "text"
+				addEvent( new FormEvent( "java.awt.event.MouseListener", "mouseClicked", "submitButtonMouseClicked", true ) )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 5
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 10, 0 )
+			"size": new java.awt.Dimension( 795, 510 )
+		} )
+	}
+}
