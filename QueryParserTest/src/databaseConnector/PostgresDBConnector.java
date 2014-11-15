@@ -110,6 +110,8 @@ public class PostgresDBConnector {
 	
 	public List<String[]> executeQuerySeparateResult(String query, int LIMIT, String tableName) throws SQLException, InputQueryNotSELECTALL, QueryAttrNumNotMatch
 	{
+		query = query.toUpperCase();
+		
 		// the input query has to start with "SELECT * FROM", otherwise difficulty to track attr types
 		if(!query.startsWith("SELECT * FROM"))
 		{
