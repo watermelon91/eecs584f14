@@ -15,6 +15,16 @@ public class PostgresDBConnector {
 	public class InputQueryNotSELECTALL extends Exception{}
 	public class QueryAttrNumNotMatch extends Exception{}
 	
+	public class Pair{
+		public String[] attributes;
+		public List<String[]> data;
+		
+		public Pair(String[] _attr, List<String[]> _data){
+			attributes = _attr;
+			data = _data;
+		}
+	}
+	
 	/*
 	 * Example input: IP: 127.0.0.1
 	 * 				  dbName: eecs584
@@ -108,7 +118,7 @@ public class PostgresDBConnector {
 		return queryResult;
 	}
 
-	public List<String[]> executeQuerySeparateResult(String query, int LIMIT) throws SQLException
+	public Pair executeQuerySeparateResult(String query, int LIMIT) throws SQLException
 	{
 		Statement stmt = null;
 		ResultSet rst = null;
@@ -118,8 +128,13 @@ public class PostgresDBConnector {
 		ResultSetMetaData metadata = rst.getMetaData();
 		
 		int numCol = metadata.getColumnCount();
-		List<String[]> queryResult = new ArrayList<String[]>(); 
+		String[] attrs = new String[numCol];
+		for(int i = 1; i <= numCol; i++)
+		{
+			attrs[i-1] = metadata.getColumnLabel(i);
+		}
 		
+		List<String[]> queryResult = new ArrayList<String[]>(); 
 		int count = 0;
 		while(rst.next() && count < LIMIT)
 		{
@@ -140,8 +155,8 @@ public class PostgresDBConnector {
 		{
 			rst.close();
 		}
-		
-		return queryResult;
+
+		return new Pair(attrs, queryResult);
 	}
 	
 	public String closeConnector()

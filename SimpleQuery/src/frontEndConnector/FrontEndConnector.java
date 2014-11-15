@@ -1,11 +1,13 @@
 package frontEndConnector;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 import databaseConnector.PostgresDBConnector;
 import databaseConnector.PostgresDBConnector.InputQueryNotSELECTALL;
+import databaseConnector.PostgresDBConnector.Pair;
 import databaseConnector.PostgresDBConnector.QueryAttrNumNotMatch;
 
 public class FrontEndConnector {
@@ -16,16 +18,6 @@ public class FrontEndConnector {
 	private String password = "";
 	private PostgresDBConnector pdbConnector = null;
 	private List<String> tmpTableNames = null;
-	
-	public class Pair{
-		public String[] attributes;
-		public List<String[]> data;
-		
-		public Pair(String[] _attr, List<String[]> _data){
-			attributes = _attr;
-			data = _data;
-		}
-	}
 	
 	public FrontEndConnector(String _dbIP, String _dbName, String _userName, String _password)
 	{
@@ -50,10 +42,8 @@ public class FrontEndConnector {
 	{
 		try 
 		{
-			List<String[]> result = pdbConnector.executeQuerySeparateResult(query, LIMIT);
-			String[] attrs = getReturnedAttr(query);
+			Pair rstPair = pdbConnector.executeQuerySeparateResult(query, LIMIT);
 			
-			Pair rstPair = new Pair(attrs, result);			
 			return rstPair;
 		} 
 		catch (SQLException e) 
@@ -69,20 +59,5 @@ public class FrontEndConnector {
 	{
 		return pdbConnector.closeConnector();
 	}
-	
-	private String[] getReturnedAttr(String query)
-	{
-		query = query.toLowerCase();
-		String attrStr = query.substring(query.indexOf("select") + 6, query.indexOf("from"));
-		if(attrStr.contains("*"))
-		{
-			return null;
-		}
-		else
-		{
-			return attrStr.split(",");
-		}
-	}
-
 
 }
