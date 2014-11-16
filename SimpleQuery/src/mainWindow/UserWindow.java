@@ -27,11 +27,12 @@ public class UserWindow extends JFrame {
 	
 	private FrontEndConnector connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia", "eecs58414");
 	private DefaultTableModel tableModel = new DefaultTableModel();
-	LoggingUtilities logger = new LoggingUtilities();
+	LoggingUtilities logger = null;
 
-	public UserWindow() {
+	public UserWindow(LoggingUtilities _logger) {
 		super();
 		initComponents();
+		logger = _logger;
 		connector.initializeSQLConnection();
 	}
 
@@ -63,7 +64,7 @@ public class UserWindow extends JFrame {
 		finally
 		{
 			
-			logger.log(LOG_TYPES.BUTTON_CLICK, query);
+			logger.log(LOG_TYPES.QUERY_DB, query);
 		}
 	}
 
@@ -158,12 +159,9 @@ public class UserWindow extends JFrame {
 	        public void windowClosing(WindowEvent e) {
 	        	connector.closeDBConnection();
 	        	System.out.println("SQL Connection closed.");
-	        	JOptionPane.showMessageDialog(null, 
-	        			"Log being uploaded... This might take a minute. \nClick OK to dismiss message. \nThe application will exit upon upload completion.",
-	        			"Upload Log", 
-	        			JOptionPane.INFORMATION_MESSAGE);
-	        	logger.sendLog();
-	            System.exit(0);
+	        	
+	        	setVisible(false);
+	           // System.exit(0);
 	        }
 
 			@Override

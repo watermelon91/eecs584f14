@@ -9,8 +9,8 @@ public class Main {
 	            public void run() {
 	                try
 	                {
-	                	UserWindow mainWindow = new UserWindow();
-	            		mainWindow.setVisible(true);
+	                	SurveyWindow startWindow = new SurveyWindow();
+	                	startWindow.setVisible(true);
 	                } catch (Exception e)
 	                {
 	                    e.printStackTrace();

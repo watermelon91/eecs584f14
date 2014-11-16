@@ -15,7 +15,7 @@ import javax.mail.internet.*;
 
 public class LoggingUtilities {
 	
-	enum LOG_TYPES {BUTTON_CLICK, OTHER};
+	enum LOG_TYPES {QUERY_DB, INPUT_SOLUTION, START, END,  OTHER};
 
 	public LoggingUtilities ()
 	{
@@ -42,9 +42,27 @@ public class LoggingUtilities {
 		String logContent = "";
 		switch(logType)
 		{
-			case BUTTON_CLICK:
+			case QUERY_DB:
 			{
-				logContent = "BUTTON_CLICK ";
+				logContent = "QUERY_DB ";
+				break;
+			}
+			
+			case INPUT_SOLUTION:
+			{
+				logContent = "INPUT_SOLUTION ";
+				break;
+			}
+			
+			case START:
+			{
+				logContent = "START ";
+				break;
+			}
+
+			case END:
+			{
+				logContent = "END ";
 				break;
 			}
 
@@ -151,7 +169,7 @@ public class LoggingUtilities {
 	public static void main(String [] args)
 	{
 		LoggingUtilities logger = new LoggingUtilities();
-		logger.log(LOG_TYPES.BUTTON_CLICK, "action");
+		logger.log(LOG_TYPES.INPUT_SOLUTION, "action");
 		logger.sendLog();
 	}
 }
