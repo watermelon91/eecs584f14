@@ -15,14 +15,14 @@ import javax.mail.internet.*;
 
 public class LoggingUtilities {
 	
-	enum LOG_TYPES {BUTTON_CLICK, TEXT_ENTER, QUERY_PLAN_NODE_CLICK, OTHER};
+	enum LOG_TYPES {BUTTON_CLICK, OTHER};
 
 	public LoggingUtilities ()
 	{
 		String desktopPath = System.getProperty("user.home") + "/Desktop";
 		desktopPath = desktopPath.replace("\\", "/");
 		String timestamp = getCurrentTimestamp();
-		filename = desktopPath + "/584log_"+ timestamp +".txt";;
+		filename = desktopPath + "/584ControlledGroupLog_"+ timestamp +".txt";;
 		System.out.print(filename);
 		
 		try 
@@ -44,31 +44,19 @@ public class LoggingUtilities {
 		{
 			case BUTTON_CLICK:
 			{
-				logContent = logContent + "[BUTTON_CLICK] ";
+				logContent = "BUTTON_CLICK ";
 				break;
 			}
-			
-			case TEXT_ENTER:
-			{
-				logContent = logContent +  "[TEXT_ENTER] ";
-				break;
-			}
-			
-			case QUERY_PLAN_NODE_CLICK:
-			{
-				logContent = logContent +  "[NODE_CLICK] ";
-				break;
-			}
-			
+
 			case OTHER:
 			{
-				logContent = logContent +  "[OTHER] ";
+				logContent = "OTHER ";
 				break;
 			}
 		}
 		
-		logContent = logContent + "\t[" + getCurrentTimestampShort() + "]";
-		logContent = logContent + "\t[" + log + "]";
+		logContent = logContent + ", " + getCurrentTimestampShort() + "";
+		logContent = logContent + ", " + log + "";
 		writer.println(logContent);
 	}
 	
