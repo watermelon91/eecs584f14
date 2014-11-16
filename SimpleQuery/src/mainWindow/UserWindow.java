@@ -24,7 +24,7 @@ public class UserWindow extends JFrame {
 	
 	private FrontEndConnector connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia", "eecs58414");
 	private DefaultTableModel tableModel = new DefaultTableModel();
-	
+
 	public UserWindow() {
 		super();
 		initComponents();
@@ -49,32 +49,10 @@ public class UserWindow extends JFrame {
 		tableModel.fireTableDataChanged();
 	}
 
-	private void windowWindowClosing(WindowEvent e) {
-		// TODO add your code here
-		connector.closeDBConnection();
-		System.out.println("SQL connection closed.");
-	}
-
-	private void queryEntertextPanelKeyTyped(KeyEvent e) {
-		// TODO add your code here
-		
-	}
-
-	private void windowWindowClosed(WindowEvent e) {
-		// TODO add your code here
-		connector.closeDBConnection();
-		System.out.println("SQL connection closed.");
-	}
-
-
 	private void initComponents() {
 
-		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);		
 		Container myContainer = null;
-		// assign myContainer
-		// add table model
 		
 		// JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
 		// Generated using JFormDesigner Evaluation license - abc def
@@ -84,26 +62,15 @@ public class UserWindow extends JFrame {
 		scrollPane1 = new JScrollPane();
 		queryEntertextPanel = new JTextPane();
 		scrollPane2 = new JScrollPane();
-		resultTable = new JTable(tableModel);
+		resultTable = new JTable();
 		submitButton = new JButton();
 
 		//======== window ========
 		{
-			window.addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowClosed(WindowEvent e) {
-					windowWindowClosed(e);
-				}
-				@Override
-				public void windowClosing(WindowEvent e) {
-					windowWindowClosing(e);
-				}
-			});
 			Container windowContentPane = window.getContentPane();
 			windowContentPane.setLayout(new FormLayout(
 				"default, $lcgap, 150dlu, $lcgap, 284dlu",
 				"default, $lgap, 94dlu, $lgap, 18dlu, $lgap, 169dlu"));
-			myContainer = windowContentPane;
 
 			//---- queryEnterLabel ----
 			queryEnterLabel.setText("text");
@@ -115,14 +82,6 @@ public class UserWindow extends JFrame {
 
 			//======== scrollPane1 ========
 			{
-
-				//---- queryEntertextPanel ----
-				queryEntertextPanel.addKeyListener(new KeyAdapter() {
-					@Override
-					public void keyTyped(KeyEvent e) {
-						queryEntertextPanelKeyTyped(e);
-					}
-				});
 				scrollPane1.setViewportView(queryEntertextPanel);
 			}
 			windowContentPane.add(scrollPane1, CC.xywh(3, 2, 1, 2));
@@ -144,14 +103,63 @@ public class UserWindow extends JFrame {
 			windowContentPane.add(submitButton, CC.xy(3, 5));
 			window.pack();
 			window.setLocationRelativeTo(window.getOwner());
+			
+			myContainer = windowContentPane;
 		}
 		// JFormDesigner - End of component initialization  //GEN-END:initComponents
-		
+
+		//myContainer = windowContentPane;
 		queryEnterLabel.setText("Query to send");
 		resultDisplayLabel.setText("Query result");
 		submitButton.setText("Submit");
 		setSize(myContainer.getSize());
+		resultTable.setModel(tableModel);
 		add(myContainer);
+		
+		addWindowListener(new WindowListener() {
+	        @Override
+	        public void windowClosing(WindowEvent e) {
+	        	connector.closeDBConnection();
+	        	System.out.println("SQL Connection closed.");
+	            System.exit(0);
+	        }
+
+			@Override
+			public void windowOpened(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void windowClosed(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void windowIconified(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void windowActivated(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void windowDeactivated(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+	    });
 	}
 
 	// JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables
