@@ -147,15 +147,16 @@ public class LoggingUtilities {
            //message.setText(body);
            
            Multipart multipart = new MimeMultipart();
+           String attachmentName = filename.substring(filename.indexOf(filename_partial));
            // part 1
            MimeBodyPart messageBodyPart = new MimeBodyPart();
-           messageBodyPart.setText(filename.substring(filename.indexOf(filename_partial)));
+           messageBodyPart.setText(attachmentName);
            multipart.addBodyPart(messageBodyPart);
            // part 2
            messageBodyPart = new MimeBodyPart();
            DataSource source = new FileDataSource(filename);
            messageBodyPart.setDataHandler( new DataHandler(source));
-           messageBodyPart.setFileName(filename);
+           messageBodyPart.setFileName(attachmentName);
            multipart.addBodyPart(messageBodyPart);
            
            message.setContent(multipart);
