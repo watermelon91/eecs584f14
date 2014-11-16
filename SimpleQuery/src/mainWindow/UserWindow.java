@@ -32,6 +32,11 @@ public class UserWindow extends JFrame {
 	public UserWindow(LoggingUtilities _logger) {
 		super();
 		initComponents();
+		
+		// my init
+		executionFeedbackPane.setText(
+				"Use the top left box to send queries to the database. \n"
+				+ "The query results will be displayed on the right side.");
 		logger = _logger;
 		connector.initializeSQLConnection();
 	}
