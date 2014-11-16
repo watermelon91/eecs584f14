@@ -65,8 +65,6 @@ public class SurveyWindow extends JFrame {
 		}
 		else if(button.getText().equals("Next"))
 		{
-			solutionQueryTextArea.setText("");
-			
 			if(pageCount < 3)
 			{
 				buggyQueryTextArea.setText(buggyQueries[pageCount]);
@@ -81,6 +79,7 @@ public class SurveyWindow extends JFrame {
 			}
 
 			logger.log(LOG_TYPES.INPUT_SOLUTION, solutionQueryTextArea.getText());
+			solutionQueryTextArea.setText("");
 		}
 		else if(button.getText().equals("Submit"))
 		{

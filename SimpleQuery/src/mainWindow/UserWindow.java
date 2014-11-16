@@ -37,6 +37,7 @@ public class UserWindow extends JFrame {
 		executionFeedbackPane.setText(
 				"Use the top left box to send queries to the database. \n"
 				+ "The query results will be displayed on the right side.");
+		executionFeedbackPane.setForeground(new Color(255, 153, 51));
 		logger = _logger;
 		connector.initializeSQLConnection();
 	}

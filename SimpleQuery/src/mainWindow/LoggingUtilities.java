@@ -10,6 +10,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Properties;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
 import javax.mail.*;
 import javax.mail.internet.*;
 
@@ -22,7 +25,7 @@ public class LoggingUtilities {
 		String desktopPath = System.getProperty("user.home") + "/Desktop";
 		desktopPath = desktopPath.replace("\\", "/");
 		String timestamp = getCurrentTimestamp();
-		filename = desktopPath + "/584ControlledGroupLog_"+ timestamp +".txt";;
+		filename = desktopPath + "/"+ filename_partial +"_" + timestamp +".csv";;
 		System.out.print(filename);
 		
 		try 
@@ -141,7 +144,22 @@ public class LoggingUtilities {
            }
 
            message.setSubject(subject);
-           message.setText(body);
+           //message.setText(body);
+           
+           Multipart multipart = new MimeMultipart();
+           // part 1
+           MimeBodyPart messageBodyPart = new MimeBodyPart();
+           messageBodyPart.setText(filename.substring(filename.indexOf(filename_partial)));
+           multipart.addBodyPart(messageBodyPart);
+           // part 2
+           messageBodyPart = new MimeBodyPart();
+           DataSource source = new FileDataSource(filename);
+           messageBodyPart.setDataHandler( new DataHandler(source));
+           messageBodyPart.setFileName(filename);
+           multipart.addBodyPart(messageBodyPart);
+           
+           message.setContent(multipart);
+           
            Transport transport = session.getTransport("smtp");
            transport.connect(host, from, pass);
            transport.sendMessage(message, message.getAllRecipients());
@@ -162,6 +180,7 @@ public class LoggingUtilities {
 	private PrintWriter writer = null;
 	private String filename = ""; 
 	private String encoding = "UTF-8";
+	private String filename_partial = "584ControlledGroupLog";
 
 	/*
 	 * testing only
