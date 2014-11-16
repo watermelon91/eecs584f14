@@ -38,20 +38,10 @@ public class FrontEndConnector {
 		return pdbConnector.initalizeConnector(dbIP, dbName, userName, password);
 	}
 	
-	public Pair executeQuerySeparateResult(String query, int LIMIT)
+	public Pair executeQuerySeparateResult(String query, int LIMIT) throws SQLException
 	{
-		try 
-		{
-			Pair rstPair = pdbConnector.executeQuerySeparateResult(query, LIMIT);
-			
-			return rstPair;
-		} 
-		catch (SQLException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}	
+		Pair rstPair = pdbConnector.executeQuerySeparateResult(query, LIMIT);		
+		return rstPair;
 	}
 	
 	

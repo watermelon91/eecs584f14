@@ -4,8 +4,8 @@ new FormModel {
 	contentType: "form/swing"
 	root: new FormRoot {
 		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
-			"$columnSpecs": "default, labelcompgap, 150dlu, labelcompgap, 284dlu"
-			"$rowSpecs": "default, linegap, 94dlu, linegap, 18dlu, linegap, 169dlu"
+			"$columnSpecs": "default, labelcompgap, 150dlu, labelcompgap, 345dlu"
+			"$rowSpecs": "default, linegap, 94dlu, linegap, 18dlu, linegap, default, linegap, 169dlu"
 		} ) {
 			name: "window"
 			add( new FormComponent( "javax.swing.JLabel" ) {
@@ -40,7 +40,7 @@ new FormModel {
 			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
 				"gridX": 5
 				"gridY": 2
-				"gridHeight": 6
+				"gridHeight": 8
 			} )
 			add( new FormComponent( "javax.swing.JButton" ) {
 				name: "submitButton"
@@ -50,9 +50,27 @@ new FormModel {
 				"gridX": 3
 				"gridY": 5
 			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "statusLabel"
+				"text": "text"
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 7
+			} )
+			add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+				name: "scrollPane3"
+				add( new FormComponent( "javax.swing.JEditorPane" ) {
+					name: "executionFeedbackPane"
+					"editable": false
+				} )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 8
+				"gridHeight": 2
+			} )
 		}, new FormLayoutConstraints( null ) {
-			"location": new java.awt.Point( 10, 0 )
-			"size": new java.awt.Dimension( 795, 510 )
+			"location": new java.awt.Point( 10, 5 )
+			"size": new java.awt.Dimension( 985, 535 )
 		} )
 	}
 }
