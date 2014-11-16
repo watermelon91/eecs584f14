@@ -70,7 +70,7 @@ public class LoggingUtilities {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		sendFromGMail(sender, pwd, new String[] {receipt}, "584log", logs);
+		sendFromGMail(sender, pwd, new String[] {receipt}, "584log_controlledGroup", logs);
 		
 		System.out.println("\nlog sent");
 	}
