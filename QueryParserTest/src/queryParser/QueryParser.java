@@ -97,6 +97,11 @@ public class QueryParser {
 		return QueryProcessingUtilities.removeParenthesis(rst.toString());
 	}
 	
+	public void setFilter(JSONObject currentNode, Object val)
+	{
+		currentNode.put(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.FILTER), val);
+	}
+	
 	public String getHashCond(JSONObject currentNode)
 	{
 		// return the hash condition of this node
@@ -119,6 +124,11 @@ public class QueryParser {
 		}
 		
 		return QueryProcessingUtilities.removeParenthesis(rst.toString());
+	}
+	
+	public void setIndexCond(JSONObject currentNode, Object val)
+	{
+		currentNode.put(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.INDEX_COND), val);
 	}
 	
 	public String getIndexName(JSONObject currentNode)
@@ -151,6 +161,11 @@ public class QueryParser {
 			return EMPTY_STRING;
 		}
 		return QueryProcessingUtilities.removeParenthesis(rst.toString());
+	}
+	
+	public void setJoinFilter(JSONObject currentNode, Object val)
+	{
+		currentNode.put(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.JOIN_FILTER), val);
 	}
 	
 	public String getMergeCond(JSONObject currentNode)
