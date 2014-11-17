@@ -2,74 +2,51 @@ package mainWindow;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Container;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.FontMetrics;
+import java.awt.FlowLayout;
 import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.SQLException;
-import java.sql.Struct;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.JTextField;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.UIManager;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
-import javax.swing.border.MatteBorder;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
 import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.JTable;
-import javax.swing.JPasswordField;
-
-import com.mxgraph.model.mxCell;
-import com.mxgraph.model.mxGeometry;
-import com.mxgraph.swing.mxGraphComponent;
-import com.mxgraph.util.mxConstants;
-import com.mxgraph.util.mxRectangle;
-import com.mxgraph.view.mxGraph;
 
 import binaryTree.BinaryTreeNode;
 import binaryTree.LinkedBinaryTreeNode;
-import frontEndConnector.DataPlanTreeNode;
+
+import com.mxgraph.model.mxGeometry;
+import com.mxgraph.swing.mxGraphComponent;
+import com.mxgraph.util.mxConstants;
+import com.mxgraph.view.mxGraph;
+import com.sun.xml.internal.ws.util.StringUtils;
+
 import frontEndConnector.FrontEndConnector;
 import frontEndConnector.FrontEndConnector.Pair;
 import frontEndConnector.QueryPlanTreeNode;
-
-import java.awt.event.ActionEvent;
-
-import javax.swing.JTabbedPane;
-
-import java.awt.Component;
-
-import javax.swing.ScrollPaneConstants;
-
-import java.awt.FlowLayout;
 
 public class QueryDebuggerMainWindowSwing extends JFrame{
     private JTextField textUsername;
@@ -586,10 +563,12 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graph_sampleData = new mxGraph();
         graph_sampleData.setCellsEditable(false);
         graph_sampleData.setAllowDanglingEdges(false);
+        graph_sampleData.setCellsResizable(true);
+        graph_sampleData.setAutoSizeCells(true);
         
         final mxGraphComponent graphComponent_sampleData = new mxGraphComponent(graph_sampleData);
         graphComponent_sampleData.setPreferredSize(new Dimension(450, 600));
-        graphComponent_sampleData.setAutoExtend(true);
+        graphComponent_sampleData.setAutoExtend(false);
         graphComponent_sampleData.getViewport().setOpaque(true);
         graphComponent_sampleData.setBorder(null);
         graphComponent_sampleData.setConnectable(false);
@@ -631,6 +610,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     insertedVertex = graphComponent_sampleData.getGraph().insertVertex(graphComponent_sampleData.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+50, 200, 50);
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_ALIGN, "left", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{insertedVertex});
+                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
+                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
+                    mxConstants.
+                    graphComponent_sampleData.getGraph().updateCellSize(insertedVertex);
                     graphComponent_sampleData.refresh();
                     graphComponent_sampleData.getGraph().getModel().endUpdate();
                    
@@ -1293,7 +1276,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void visit(BinaryTreeNode node) {
                 QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                planTreeNode.obj = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr()+"\n Node table name: "+treeNode.getAbbreviatedTreeNode().getTmpTableStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, 50);
+                String label = treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr()+"\n Node table name: "+treeNode.getAbbreviatedTreeNode().getTmpTableStr();               
+                planTreeNode.obj = graph.insertVertex(parent, null, label, planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, label.split("\n").length*15);
 
                 if (treeNode.getDataNode() != null) {
                     graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
