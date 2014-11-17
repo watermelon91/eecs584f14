@@ -228,12 +228,12 @@ public class QueryPlanTreeNode {
 		 //String outputAttrFormatted = outputAttrs.substring(1, outputAttrs.indexOf(',')) + ", ...";
 		 String outputAttrFormatted = abbrOutputAttrs.substring(1, abbrOutputAttrs.length()-2);
 		 
-		 String nodeFormattedStr = constructString("Type", type, SPLITTER) 
-				 + constructString("Alias", abbrAliasSet, SPLITTER) 
-				 + constructString("Filter", abbrFilter, SPLITTER)
-				 + constructString("Input", abbrInputTable, SPLITTER)
-				 + constructString("TempTable", abbrNewTableName, SPLITTER)
-				 + constructString("JoinCond", abbrJoinCondition, SPLITTER)
+		 String nodeFormattedStr = //constructString("Type", type, SPLITTER) 
+				 constructString("Alias", abbrAliasSet, SPLITTER) 
+				 //+ constructString("Filter", abbrFilter, SPLITTER)
+				 //+ constructString("Input", abbrInputTable, SPLITTER)
+				 //+ constructString("TempTable", abbrNewTableName, SPLITTER)
+				 //+ constructString("JoinCond", abbrJoinCondition, SPLITTER)
 				 + constructString("Output", outputAttrFormatted, SPLITTER);
 
 		 return nodeFormattedStr;
