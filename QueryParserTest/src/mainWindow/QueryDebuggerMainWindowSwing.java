@@ -612,7 +612,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
-                    mxConstants.
                     graphComponent_sampleData.getGraph().updateCellSize(insertedVertex);
                     graphComponent_sampleData.refresh();
                     graphComponent_sampleData.getGraph().getModel().endUpdate();
