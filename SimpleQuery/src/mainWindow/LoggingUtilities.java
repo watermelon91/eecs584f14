@@ -174,8 +174,8 @@ public class LoggingUtilities {
        }
    }
 	
-	//private String receipt = "584debuggerlog@umich.edu";
-	private String receipt = "yjtang@umich.edu";
+	private String receipt = "584debuggerlog@umich.edu";
+	//private String receipt = "yjtang@umich.edu";
 	private String sender = "584logger@gmail.com";
 	private String pwd = "584loggerlogger";
 	private PrintWriter writer = null;
