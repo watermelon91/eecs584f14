@@ -629,7 +629,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = treeObjects_sampleData.get(cell);
                     mxGeometry geo = graphComponent_sampleData.getGraph().getCellGeometry(cell);
                     insertedVertex = graphComponent_sampleData.getGraph().insertVertex(graphComponent_sampleData.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+50, 200, 50);
-                    graphComponent_sampleData.getGraph().setCellStyle(mxConstants.ALIGN_LEFT, new Object[]{insertedVertex});
+                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_ALIGN, "left", new Object[]{insertedVertex});
+                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{insertedVertex});
+                    graphComponent_sampleData.refresh();
                     graphComponent_sampleData.getGraph().getModel().endUpdate();
                    
                 } 
