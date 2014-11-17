@@ -11,6 +11,7 @@ import java.awt.Rectangle;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.sql.SQLException;
 import java.sql.Struct;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.GroupLayout;
@@ -45,6 +47,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.JTable;
 import javax.swing.JPasswordField;
 
+import com.mxgraph.model.mxCell;
+import com.mxgraph.model.mxGeometry;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.util.mxConstants;
 import com.mxgraph.util.mxRectangle;
@@ -127,7 +131,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void run() {
                 try
                 {
-                    QueryDebuggerMainWindowSwing window = new QueryDebuggerMainWindowSwing();
+                    QueryDebuggerMainWindowSwing window = new QueryDebuggerMainWindowSwing(new LoggingUtilities());
                     window.setVisible(true);
                 } catch (Exception e)
                 {
@@ -140,9 +144,11 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     /**
      * Create the application.
      */
-    public QueryDebuggerMainWindowSwing()
+    public QueryDebuggerMainWindowSwing(LoggingUtilities slogger)
         {
             super();
+            
+            logger = slogger;
             initialize();
         }
 
@@ -150,7 +156,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
      * Initialize the contents of the frame.
      */
     private void initialize() {
-        logger = new LoggingUtilities();
         
         setBounds(100, 100, 1278, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -590,10 +595,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graphComponent_sampleData.setConnectable(false);
         graphComponent_sampleData.getViewport().setBackground(panel_sampleDataPlanTree.getBackground());
         graphComponent_sampleData.getGraphControl().addMouseListener(new MouseListener(){
+            private Object insertedVertex = null;
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                // TODO Auto-generated method stub
                 Object cell = graphComponent_sampleData.getCellAt(e.getX(), e.getY());
                 if (treeObjects_sampleData.containsKey(cell)){
                     btnExpandAll_sampleData.setText("Expand All");
@@ -606,6 +611,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     model_searchMissing.setColumnIdentifiers(samplePair.attributes);
 
                     model_sampleData.setRowCount(0);
+                    model_searchMissing.setRowCount(0);
                     model_searchMissing.setRowCount(1);
                     
                     for (String[] row: samplePair.data){
@@ -614,6 +620,16 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                  
                     model_sampleData.fireTableDataChanged(); 
                     model_searchMissing.fireTableDataChanged(); 
+                    
+                    graphComponent_sampleData.getGraph().getModel().beginUpdate();
+                    if (insertedVertex != null)
+                        graphComponent_sampleData.getGraph().removeCells(new Object[]{insertedVertex});
+
+                    LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = treeObjects_sampleData.get(cell);
+                    mxGeometry geo = graphComponent_sampleData.getGraph().getCellGeometry(cell);
+                    insertedVertex = graphComponent_sampleData.getGraph().insertVertex(graphComponent_sampleData.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+50, 200, 50);
+                    
+                    graphComponent_sampleData.getGraph().getModel().endUpdate();
                    
                 } 
                 
@@ -634,13 +650,12 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             @Override
             public void mouseEntered(MouseEvent e) {
                 // TODO Auto-generated method stub
-                
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
                 // TODO Auto-generated method stub
-                
+
             }
             
         });                
@@ -794,10 +809,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         btnSearchForMissing.addMouseListener(new MouseListener(){
 
             @Override
-            public void mouseClicked(MouseEvent e) {
-                tabbedPane.setSelectedIndex(2);
-
-                
+            public void mouseClicked(MouseEvent e) {               
                 String[] row = new String[table_searchMissing.getColumnCount()];
                 for (int i = 0; i < table_searchMissing.getColumnCount(); i++){
                     table_searchMissing.getCellEditor(0, i).stopCellEditing();
@@ -806,15 +818,26 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     if (temp != null)
                         row[i] = temp.toString(); 
                     
-                    System.out.println(row[i] + " ");
                 }
                 
-                tree_findMissing = connector.updateTreeWhyNotHere(tree_sampleData, 
-                                                                treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
-                                                                row);
-                
-                drawPlanTree(graph_findMissing, tree_findMissing, treeObjects_findMissing);
+                try
+                {
+                    tree_findMissing = connector.updateTreeWhyNotHere(tree_sampleData, 
+                                                                    treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
+                                                                    row);
+                    drawPlanTree(graph_findMissing, tree_findMissing, treeObjects_findMissing);
+                    
+                    tabbedPane.setSelectedIndex(2);
+                } catch (SQLException e1)
+                {
+                    JOptionPane.showMessageDialog(getParent(),                                                
+                                                  "Searching input is not valid. \nPlease check input data and format\n(e.g. whether you have single quotes surrounding strings).",
+                                                  "Input error",
+                                                  JOptionPane.ERROR_MESSAGE);
 
+                    e1.printStackTrace();
+                    
+                }                
             }
 
             @Override
@@ -1268,8 +1291,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
                 PlanTreeNode planTreeNode = coordinates.get(node);
                 planTreeNode.obj = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, 50);
-               System.out.println(treeNode.getNewTableName());
-                
+
                 if (treeNode.getDataNode() != null) {
                     graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
                 }
