@@ -9,6 +9,8 @@ import java.awt.FlowLayout;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -126,7 +128,11 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             super();
             
             logger = slogger;
+                
+           
             initialize();
+            
+            
         }
 
     /**
@@ -188,8 +194,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent e) {
                 // TODO Auto-generated method stub
                 if (btnDbSubmit.getText() == "Submit"){
-                    connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia" , "eecs58414");
+                    //connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia" , "eecs58414");
                     //connector = new FrontEndConnector("127.0.0.1","K" , textUsername.getText(), textPassword.getText());
+                    connector = new FrontEndConnector("127.0.0.1","postgres" , "K", "5432");
+
                     String rst = connector.initializeSQLConnection();
                     if(rst.isEmpty())
                         System.out.println("postgres connection established");
@@ -304,7 +312,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 try
                                 {
                                     connector.dropAllTmpTables();
-                                    tree_sampleData = connector.debugQuery("SELECT c1.customerid, c2.customerid, o1.totalamount, o2.totalamount, o1.orderdate,  o2.orderdate FROM cust_hist c1, cust_hist c2, orders o1, orders o2 WHERE c1.customerid > c2.customerid AND c1.prod_id = c2.prod_id AND o1.orderid = c1.orderid AND o2.orderid = c2.orderid AND o1.totalamount - o2.totalamount > 500 AND o1.orderdate - o2.orderdate = 0;");
+                                    //tree_sampleData = connector.debugQuery("SELECT c1.customerid, c2.customerid, o1.totalamount, o2.totalamount, o1.orderdate,  o2.orderdate FROM cust_hist c1, cust_hist c2, orders o1, orders o2 WHERE c1.customerid > c2.customerid AND c1.prod_id = c2.prod_id AND o1.orderid = c1.orderid AND o2.orderid = c2.orderid AND o1.totalamount - o2.totalamount > 500 AND o1.orderdate - o2.orderdate = 0;");
+                                    tree_sampleData = connector.debugQuery("select * from hrecords h, users u, (select user_id from users u2) as t where h.user_id = u.user_id and u.user_id = t.user_id;");
                                 } catch (Exception e)
                                 {
                                     // TODO Auto-generated catch block
@@ -607,7 +616,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
                     LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = treeObjects_sampleData.get(cell);
                     mxGeometry geo = graphComponent_sampleData.getGraph().getCellGeometry(cell);
-                    insertedVertex = graphComponent_sampleData.getGraph().insertVertex(graphComponent_sampleData.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+50, 200, 200);
+                    insertedVertex = graphComponent_sampleData.getGraph().insertVertex(graphComponent_sampleData.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+geo.getHeight(), 200, 200);
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_ALIGN, "left", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
@@ -938,7 +947,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graph_trackTuple.setAllowDanglingEdges(false);
         
         final mxGraphComponent graphComponent_trackTuple = new mxGraphComponent(graph_trackTuple);
-        //graphComponent_trackTuple.setPreferredSize(new Dimension(450, 600));
+        graphComponent_trackTuple.setPreferredSize(new Dimension(450, 600));
         graphComponent_trackTuple.setAutoExtend(true);
         graphComponent_trackTuple.getViewport().setOpaque(true);
         graphComponent_trackTuple.setBorder(null);
@@ -1088,6 +1097,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graph_findMissing.setAllowDanglingEdges(false);
         
         final mxGraphComponent graphComponent_findMissing = new mxGraphComponent(graph_findMissing);
+        graphComponent_findMissing.setPreferredSize(new Dimension(450, 600));
         graphComponent_findMissing.setAutoExtend(true);
         graphComponent_findMissing.getViewport().setOpaque(true);
         graphComponent_findMissing.setBorder(null);
@@ -1158,7 +1168,15 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         queryFrom_findMissing = new JTextField();
         queryFrom_findMissing.setEditable(false);
         
-        JScrollPane pane_findMissing = new JScrollPane((Component) null, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        model_trackTuple = new DefaultTableModel() {
+            public boolean isCellEditable(int rowIndex, int mColIndex) {
+                return false;
+              }
+            };
+        final JTable table_findMissing = new JTable(model_trackTuple);
+        table_findMissing.setFocusable(false);
+        JScrollPane pane_findMissing = new JScrollPane((Component) table_findMissing, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        
         GroupLayout gl_panel_findMissingTable = new GroupLayout(panel_findMissingTable);
         gl_panel_findMissingTable.setHorizontalGroup(
             gl_panel_findMissingTable.createParallelGroup(Alignment.TRAILING)
@@ -1235,7 +1253,53 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         .addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 705, GroupLayout.PREFERRED_SIZE)))
         );
         getContentPane().setLayout(groupLayout);
-       
+     
+        addWindowListener(new WindowListener(){
+
+            @Override
+            public void windowOpened(WindowEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // TODO Auto-generated method stub
+                connector.closeDBConnection();
+                System.out.println("close on exit");
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+        });
     }
     
     private class PlanTreeNode{
@@ -1291,4 +1355,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         graph.getModel().endUpdate();
     }
+    
+
 }
