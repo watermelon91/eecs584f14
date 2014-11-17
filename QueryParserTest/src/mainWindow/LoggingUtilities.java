@@ -10,6 +10,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Properties;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
 import javax.mail.*;
 import javax.mail.internet.*;
 
@@ -22,7 +25,7 @@ public class LoggingUtilities {
 		String desktopPath = System.getProperty("user.home") + "/Desktop";
 		desktopPath = desktopPath.replace("\\", "/");
 		String timestamp = getCurrentTimestamp();
-		filename = desktopPath + "/584log_"+ timestamp +".txt";;
+		filename = desktopPath + "/"+ filename_partial +"_"+ timestamp +".csv";;
 		System.out.print(filename);
 		
 		try 
@@ -67,8 +70,8 @@ public class LoggingUtilities {
 			}
 		}
 		
-		logContent = logContent + "\t[" + getCurrentTimestampShort() + "]";
-		logContent = logContent + "\t[" + log + "]";
+		logContent = logContent + ", " + getCurrentTimestampShort() + "";
+		logContent = logContent + ", " + log + "";
 		writer.println(logContent);
 	}
 	
@@ -135,7 +138,23 @@ public class LoggingUtilities {
            }
 
            message.setSubject(subject);
-           message.setText(body);
+           //message.setText(body);
+           
+           Multipart multipart = new MimeMultipart();
+           String attachmentName = filename.substring(filename.indexOf(filename_partial));
+           // part 1
+           MimeBodyPart messageBodyPart = new MimeBodyPart();
+           messageBodyPart.setText(attachmentName);
+           multipart.addBodyPart(messageBodyPart);
+           // part 2
+           messageBodyPart = new MimeBodyPart();
+           DataSource source = new FileDataSource(filename);
+           messageBodyPart.setDataHandler( new DataHandler(source));
+           messageBodyPart.setFileName(attachmentName);
+           multipart.addBodyPart(messageBodyPart);
+           
+           message.setContent(multipart);
+           
            Transport transport = session.getTransport("smtp");
            transport.connect(host, from, pass);
            transport.sendMessage(message, message.getAllRecipients());
@@ -149,12 +168,14 @@ public class LoggingUtilities {
        }
    }
 	
-	private String receipt = "584debuggerlog@umich.edu";
+	//private String receipt = "584debuggerlog@umich.edu";
+	private String receipt = "yjtang@umich.edu";
 	private String sender = "584logger@gmail.com";
 	private String pwd = "584loggerlogger";
 	private PrintWriter writer = null;
 	private String filename = ""; 
 	private String encoding = "UTF-8";
+	private String filename_partial = "584DebuggerLog";
 
 	/*
 	 * testing only
