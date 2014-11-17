@@ -689,7 +689,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                                                     treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
                                                                     row);
                     
-                    drawPlanTree(graph_trackTuple, tree_trackTuple, treeObjects_trackTuple);
+                    drawPlanTree(graph_trackTuple, tree_trackTuple, treeObjects_trackTuple);                    
                     
                 }
                 
@@ -1119,6 +1119,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     model_findMissing.setColumnIdentifiers(new Vector());
 
                     if (node.getDataNode() != null) {
+                        System.out.println(node.getDataNode().getAttributes());
                         model_findMissing.setColumnIdentifiers(node.getDataNode().getAttributes());
                         for (String[] row: node.getDataNode().getValues()){
                             model_findMissing.addRow(row);
@@ -1161,19 +1162,19 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         JPanel panel_findMissingTable = new JPanel();
         panel_findMissingTable.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Record Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
-        JButton btnExpandAll_findMissing = new JButton("Expand All");
+        btnExpandAll_findMissing = new JButton("Expand All");
         
         JLabel lblQueryFor_findMissing = new JLabel("Tracking Down:");
         
         queryFrom_findMissing = new JTextField();
         queryFrom_findMissing.setEditable(false);
         
-        model_trackTuple = new DefaultTableModel() {
+        model_findMissing = new DefaultTableModel() {
             public boolean isCellEditable(int rowIndex, int mColIndex) {
                 return false;
               }
             };
-        final JTable table_findMissing = new JTable(model_trackTuple);
+        final JTable table_findMissing = new JTable(model_findMissing);
         table_findMissing.setFocusable(false);
         JScrollPane pane_findMissing = new JScrollPane((Component) table_findMissing, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         
