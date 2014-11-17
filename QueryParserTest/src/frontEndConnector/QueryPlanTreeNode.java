@@ -1,6 +1,7 @@
 package frontEndConnector;
 
 import  java.lang.Math;
+import java.util.Arrays;
 
 public class QueryPlanTreeNode {
 	private String type;
@@ -16,11 +17,13 @@ public class QueryPlanTreeNode {
 	public class AbbreviatedTreeNode{
 		private String LargeFontStr;
 		private String SmallFontStr;
+		private String tmpTableName;
 		
-		public AbbreviatedTreeNode(String _Large, String _Small)
+		public AbbreviatedTreeNode(String _Large, String _Small, String _tmpTableName)
 		{
 			LargeFontStr = _Large;
 			SmallFontStr = _Small;
+			tmpTableName = _tmpTableName;
 		}
 		
 		public String getLargeFontStr()
@@ -31,6 +34,11 @@ public class QueryPlanTreeNode {
 		public String getSmallFontStr()
 		{
 			return SmallFontStr;
+		}
+		
+		public String getTmpTableStr()
+		{
+			return tmpTableName;
 		}
 	}
 	
@@ -52,11 +60,33 @@ public class QueryPlanTreeNode {
 		joinCondition = _joinCondition;
 		outputAttrs = _outputAttrs;
 		
-		abbrTreeNode = new AbbreviatedTreeNode(constructLargeFontString(), constructSmallFontString());
+		// make table names readable
+		String[] inTables = inputTable.split(",");
+		for(int i = 0; i < inTables.length; i++)
+		{
+			inTables[i] = getAbbrTmpTable(inTables[i]);	
+		}
+		inputTable = Arrays.asList(inTables).toString();
+		newTableName = getAbbrTmpTable(newTableName);
+		
+		// construct abbrevated node
+		abbrTreeNode = new AbbreviatedTreeNode(constructLargeFontString(), constructSmallFontString(), newTableName);
 		dataNode = null;
 		
 		System.out.println(getAbbreviatedTreeNode().getLargeFontStr());
 		System.out.println(getAbbreviatedTreeNode().getSmallFontStr());
+	}
+	
+	private String getAbbrTmpTable(String inName)
+	{
+		if(inName.contains("_"))
+		{
+			return inName.substring(0, inName.indexOf("_")-1);
+		}
+		else
+		{
+			return inName;
+		}
 	}
 	
 	/*

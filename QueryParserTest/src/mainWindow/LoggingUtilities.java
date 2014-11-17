@@ -18,7 +18,8 @@ import javax.mail.internet.*;
 
 public class LoggingUtilities {
 	
-	enum LOG_TYPES {BUTTON_CLICK, TEXT_ENTER, QUERY_PLAN_NODE_CLICK, OTHER};
+	enum LOG_TYPES {START, END, INPUT_SOLUTION, /*these are for the survey window only*/
+		BUTTON_CLICK, TEXT_ENTER, QUERY_PLAN_NODE_CLICK, OTHER};/*these are for the debugger window only*/
 
 	public LoggingUtilities ()
 	{
