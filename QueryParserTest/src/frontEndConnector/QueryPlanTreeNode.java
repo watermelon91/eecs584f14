@@ -259,7 +259,7 @@ public class QueryPlanTreeNode {
 	 
 	 private String cutOffLongString(String input)
 	 {
-		 int MAX_LEN = 45;
+		 int MAX_LEN = 30;
 		 if(input.length() <= MAX_LEN)
 		 {
 			 return input;
