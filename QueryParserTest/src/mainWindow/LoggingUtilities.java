@@ -64,6 +64,24 @@ public class LoggingUtilities {
 				break;
 			}
 			
+			case INPUT_SOLUTION:
+			{
+				logContent = "INPUT_SOLUTION ";
+				break;
+			}
+			
+			case START:
+			{
+				logContent = "START ";
+				break;
+			}
+
+			case END:
+			{
+				logContent = "END ";
+				break;
+			}
+			
 			case OTHER:
 			{
 				logContent = logContent +  "[OTHER] ";
