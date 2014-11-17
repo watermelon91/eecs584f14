@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.sun.xml.internal.ws.util.StringUtils;
+
 public class QueryPlanTreeNode {
 	private String type;
 	private String abbrAliasSet;
@@ -139,6 +141,8 @@ public class QueryPlanTreeNode {
 			str = str + abbrJoinCondition;
 		}
 		
+		str = cutOffLongString(str.toLowerCase(), "and");
+		
 		return str;
 	}
 	
@@ -253,25 +257,25 @@ public class QueryPlanTreeNode {
 		 }
 		 else
 		 {
-			 return cutOffLongString(nodeLabel + ": " + nodeAttr + SPLITTER);
+			 return cutOffLongString(nodeLabel + ": " + nodeAttr + SPLITTER, ",");
 		 }
 	 }
 	 
-	 private String cutOffLongString(String input)
+	 private String cutOffLongString(String input, String split)
 	 {
 		 int MAX_LEN = 30;
-		 String TAB = "    ";
+		 String TAB = "         ";
 		 if(input.length() <= MAX_LEN)
 		 {
 			 return input;
 		 }
 		 else
 		 {
-			 String[] multilines = input.split(",");
+			 String[] multilines = input.split(split);
 			 String multilineStr = multilines[0];
 			 for(int i = 1; i < multilines.length; i++)
 			 {
-				 multilineStr = multilineStr + "\n" + TAB + multilines[i];
+				 multilineStr = multilineStr + split.toUpperCase() + "\n" + TAB + multilines[i];
 			 }
 			 
 			 /*
