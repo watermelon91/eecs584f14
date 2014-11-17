@@ -3,6 +3,8 @@ package queryReconstructor;
 import java.util.Iterator;
 
 import queryParser.QueryParser;
+import queryParser.QueryProcessingUtilities;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -30,7 +32,7 @@ public class QueryReconstructor {
 		pr = p;
 		// this will take the topLevelNode JSONObject of the queryParser
 		// it will recursively generate queries for each level
-		generateTempQuery(pr.topLevelNode);
+		generateTempQuery(pr.topLevelNode, null);
 		// so, at the bottom level it will generate a query and name the resulting temp table
 		// then return to its parent
 		// once all children have been processed, the parent can use the child temp tables in its own query
@@ -40,30 +42,112 @@ public class QueryReconstructor {
 	// TODO: may want to separate the important logic from the rest
 	// we'll need to support subplans, which is why this is coming up
 	// fuck, actually, we'll need a separate one that does the same thing except recurses differently. damn
-	void generateTempQuery(JSONObject curNode)
+	String generateTempQuery(JSONObject curNode, JSONObject parentNode)
 	{
 		String tmpTableName = pr.getNewTableName(curNode);
 		String query = "create table " + tmpTableName + " as ";
-		JSONArray outputAttrs = pr.getOutputAttributes(curNode);
+/*		JSONArray outputAttrs = pr.getOutputAttributes(curNode);
 		String filter = pr.getFilter(curNode);
+	*/	
+		JSONArray childrenNodes = pr.getChildren(curNode);// qParser.getChildrenPlanNodes(curNode);
+		// iterate through all the children plans of the top level node
+		if (!pr.getSubplanName(curNode).equals("")) {
+			System.out.println("found subplan");
+			return generateTempQuerySubplan(curNode);
+		}
+		if (pr.getType(curNode).equals("scan")) {
+			// add output attributes to select statement
+			// check for subplan :'(
+			// processChildren should check to see if any children are subplans
+			// if children are subplans, replace name of subplan in filter with query from subplan child
+			String[] ar = processChildren(childrenNodes, curNode);
+			if (ar != null) {
+				System.out.println(QueryProcessingUtilities.replaceSubplanNameWithQuery(ar[1], pr.getFilter(curNode), ar[0]));
+				pr.setFilter(curNode, QueryProcessingUtilities.replaceSubplanNameWithQuery(ar[1], pr.getFilter(curNode), ar[0]));
+			}
+			query = query + generateQueryForScan(curNode);
+		} else if (pr.getType(curNode).equals("join")) {
+			String[] ar = processChildren(childrenNodes, curNode);
+			// TODO: can we guarantee there will be only one subplan?
+			if (ar != null) {
+				pr.setFilter(curNode, QueryProcessingUtilities.replaceSubplanNameWithQuery(ar[1], pr.getFilter(curNode), ar[0]));
+			}
+			query = query + generateQueryForJoin(curNode);
+		} else if (pr.getType(curNode).equals("aggregate")) { 
+			String[] ar = processChildren(childrenNodes, curNode);
+			if (ar != null) {
+				pr.setFilter(curNode, QueryProcessingUtilities.replaceSubplanNameWithQuery(ar[1], pr.getFilter(curNode), ar[0]));
+			}
+			query = query + generateQueryForAggregate(curNode);
+		} /*else if (pr.getType(curNode).equals("subplan")) {
+			processChildrenSubplan(childrenNodes, curNode);
+			query = query + generateQueryForSubplan(curNode);
+		}*/
 		
+		System.out.println(query);
+		curNode.put("query", query);
+		return query;
+	}
+	
+	String generateTempQuerySubplan(JSONObject curNode) {
+		String tmpTableName = pr.getNewTableName(curNode);
+		String query = "";
+/*		JSONArray outputAttrs = pr.getOutputAttributes(curNode);
+		String filter = pr.getFilter(curNode);
+	*/	
 		JSONArray childrenNodes = pr.getChildren(curNode);// qParser.getChildrenPlanNodes(curNode);
 		// iterate through all the children plans of the top level node
 		if (pr.getType(curNode).equals("scan")) {
 			// add output attributes to select statement
 			// check for subplan :'(
-			processChildren(childrenNodes);
+			// processChildren should check to see if any children are subplans
+			// if children are subplans, replace name of subplan in filter with query from subplan child
+			String[] ar = processChildrenSubplan(childrenNodes, curNode);
+			if (ar != null) {
+				pr.setFilter(curNode, QueryProcessingUtilities.replaceSubplanNameWithQuery(ar[1], pr.getFilter(curNode), ar[0]));
+			}
 			query = query + generateQueryForScan(curNode);
 		} else if (pr.getType(curNode).equals("join")) {
-			processChildren(childrenNodes);
+			processChildrenSubplan(childrenNodes, curNode);
 			query = query + generateQueryForJoin(curNode);
 		} else if (pr.getType(curNode).equals("aggregate")) { 
-			processChildren(childrenNodes);
+			processChildrenSubplan(childrenNodes, curNode);
 			query = query + generateQueryForAggregate(curNode);
-		}
+		} /*else if (pr.getType(curNode).equals("subplan")) {
+			query = query + generateQueryForSubplan(curNode);
+		}*/
 		
 		System.out.println(query);
 		curNode.put("query", query);
+		return query;
+		
+	}
+	
+	String[] processChildrenSubplan(JSONArray childrenNodes, JSONObject parent) {
+		String[] ar = null;
+		if (childrenNodes != null) {
+			Iterator<JSONObject> citerator = childrenNodes.iterator();	
+			while(citerator.hasNext())
+			{
+				JSONObject curChild = citerator.next();	
+				String tmp = generateTempQuerySubplan(curChild);
+				// if child is subplan, return the query generated by the child
+				if (pr.getType(curChild) == "subplan") {
+					ar = new String[2];
+					ar[0] = "(" + tmp + ")";
+					ar[1] = pr.getSubplanName(curChild);
+				}
+				// set tableName of parent to this new query
+				// this could either be inputTable name (for scans), or the
+				// newTableName of the child (aggregates and joins)
+				if (pr.getType(parent).equals("scan")) {
+					pr.setInputTable(parent, "(" + tmp + ")");
+				} else {
+					pr.setNewTableName(curChild,  "(" + tmp + ")");
+				}
+			}
+		}
+		return ar;		
 	}
 	
 	String generateQueryForScan(JSONObject curNode) {
@@ -91,6 +175,10 @@ public class QueryReconstructor {
 		}
 
 		return query;
+	}
+	
+	String generateQueryForSubplan(JSONObject curNode) {
+		
 	}
 	
 	String generateQueryForJoin(JSONObject curNode) {
@@ -169,22 +257,33 @@ public class QueryReconstructor {
 		return query;
 	}
 	
-	void processChildren(JSONArray childrenNodes) {
+	String[] processChildren(JSONArray childrenNodes, JSONObject parent) {
+		String[] ar = null;
 		if (childrenNodes != null) {
+		//		System.out.println(childrenNodes.toJSONString());
 			Iterator<JSONObject> citerator = childrenNodes.iterator();	
 			while(citerator.hasNext())
 			{
 				JSONObject curChild = citerator.next();	
-				generateTempQuery(curChild);				
+				String tmp = generateTempQuery(curChild, parent);
+				// if child is subplan, return the query generated by the child
+				
+				if (!pr.getSubplanName(curChild).equals("")) {
+					ar = new String[2];
+					ar[0] = "(" + tmp + ")";
+					ar[1] = pr.getSubplanName(curChild);
+				}
+				
 			}
 		}
+		return ar;
 	}
 	
 	public static void main(String [ ] args) throws Exception 
 	{
 		// input file containing the returned query plan
 	//	String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
-		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan5_nested2.txt";//QueryPlan4_nested.txt";//QueryPlan2_aggregation.txt";//QueryPlan3_groupby.txt";//QueryPlan1_verbose.txt";//
+		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan7_subplan.txt";//QueryPlan1_verbose.txt";//QueryPlan4_nested.txt";//QueryPlan2_aggregation.txt";//QueryPlan3_groupby.txt";//QueryPlan5_nested2.txt";//
 		
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	

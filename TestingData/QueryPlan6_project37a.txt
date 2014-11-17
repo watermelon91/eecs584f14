@@ -1,164 +1,164 @@
- [                                                                                                                        
-   {                                                                                                                      
-     "Plan": {                                                                                                            
-       "Node Type": "Sort",                                                                                               
-       "Startup Cost": 57.68,                                                                                             
-       "Total Cost": 57.69,                                                                                               
-       "Plan Rows": 1,                                                                                                    
-       "Plan Width": 130,                                                                                                 
+ [                                                 
+   {                                               
+     "Plan": {                                     
+       "Node Type": "Sort",                        
+       "Startup Cost": 57.68,                      
+       "Total Cost": 57.69,                        
+       "Plan Rows": 1,                             
+       "Plan Width": 130,                          
        "Output": ["ordercounts1.customerid", "ordercounts1.lastname", "ordercounts1.numorders"],                          
-       "Sort Key": ["ordercounts1.customerid"],                                                                           
-       "Plans": [                                                                                                         
-         {                                                                                                                
-           "Node Type": "Subquery Scan",                                                                                  
-           "Parent Relationship": "Outer",                                                                                
-           "Alias": "ordercounts1",                                                                                       
-           "Startup Cost": 28.80,                                                                                         
-           "Total Cost": 57.67,                                                                                           
-           "Plan Rows": 1,                                                                                                
-           "Plan Width": 130,                                                                                             
+       "Sort Key": ["ordercounts1.customerid"],    
+       "Plans": [                                  
+         {                                         
+           "Node Type": "Subquery Scan",           
+           "Parent Relationship": "Outer",         
+           "Alias": "ordercounts1",                
+           "Startup Cost": 28.80,                  
+           "Total Cost": 57.67,                    
+           "Plan Rows": 1,                         
+           "Plan Width": 130,                      
            "Output": ["ordercounts1.customerid", "ordercounts1.lastname", "ordercounts1.numorders"],                      
-           "Filter": "(5 >= (SubPlan 1))",                                                                                
-           "Plans": [                                                                                                     
-             {                                                                                                            
-               "Node Type": "Aggregate",                                                                                  
-               "Strategy": "Hashed",                                                                                      
-               "Parent Relationship": "Subquery",                                                                         
-               "Startup Cost": 28.80,                                                                                     
-               "Total Cost": 28.81,                                                                                       
-               "Plan Rows": 1,                                                                                            
-               "Plan Width": 122,                                                                                         
+           "Filter": "(5 >= (SubPlan 1))",         
+           "Plans": [                              
+             {                                     
+               "Node Type": "Aggregate",           
+               "Strategy": "Hashed",               
+               "Parent Relationship": "Subquery",  
+               "Startup Cost": 28.80,              
+               "Total Cost": 28.81,                
+               "Plan Rows": 1,                     
+               "Plan Width": 122,                  
                "Output": ["c.customerid", "c.lastname", "count(*)"],                                                      
-               "Plans": [                                                                                                 
-                 {                                                                                                        
-                   "Node Type": "Hash Join",                                                                              
-                   "Parent Relationship": "Outer",                                                                        
-                   "Join Type": "Inner",                                                                                  
-                   "Startup Cost": 10.64,                                                                                 
-                   "Total Cost": 28.78,                                                                                   
-                   "Plan Rows": 3,                                                                                        
-                   "Plan Width": 122,                                                                                     
+               "Plans": [                          
+                 {                                 
+                   "Node Type": "Hash Join",       
+                   "Parent Relationship": "Outer", 
+                   "Join Type": "Inner",           
+                   "Startup Cost": 10.64,          
+                   "Total Cost": 28.78,            
+                   "Plan Rows": 3,                 
+                   "Plan Width": 122,              
                    "Output": ["c.customerid", "c.lastname"],                                                              
                    "Hash Cond": "(o.customerid = c.customerid)",                                                          
-                   "Plans": [                                                                                             
-                     {                                                                                                    
-                       "Node Type": "Seq Scan",                                                                           
+                   "Plans": [                      
+                     {                             
+                       "Node Type": "Seq Scan",    
                        "Parent Relationship": "Outer",                                                                    
-                       "Relation Name": "orders",                                                                         
-                       "Schema": "public",                                                                                
-                       "Alias": "o",                                                                                      
-                       "Startup Cost": 0.00,                                                                              
-                       "Total Cost": 15.90,                                                                               
-                       "Plan Rows": 590,                                                                                  
-                       "Plan Width": 4,                                                                                   
+                       "Relation Name": "orders",  
+                       "Schema": "public",         
+                       "Alias": "o",               
+                       "Startup Cost": 0.00,       
+                       "Total Cost": 15.90,        
+                       "Plan Rows": 590,           
+                       "Plan Width": 4,            
                        "Output": ["o.orderid", "o.orderdate", "o.customerid", "o.netamount", "o.tax", "o.totalamount"]    
-                     },                                                                                                   
-                     {                                                                                                    
-                       "Node Type": "Hash",                                                                               
+                     },                            
+                     {                             
+                       "Node Type": "Hash",        
                        "Parent Relationship": "Inner",                                                                    
-                       "Startup Cost": 10.62,                                                                             
-                       "Total Cost": 10.62,                                                                               
-                       "Plan Rows": 1,                                                                                    
-                       "Plan Width": 122,                                                                                 
+                       "Startup Cost": 10.62,      
+                       "Total Cost": 10.62,        
+                       "Plan Rows": 1,             
+                       "Plan Width": 122,          
                        "Output": ["c.customerid", "c.lastname"],                                                          
-                       "Plans": [                                                                                         
-                         {                                                                                                
-                           "Node Type": "Seq Scan",                                                                       
+                       "Plans": [                  
+                         {                         
+                           "Node Type": "Seq Scan",
                            "Parent Relationship": "Outer",                                                                
                            "Relation Name": "customers",                                                                  
-                           "Schema": "public",                                                                            
-                           "Alias": "c",                                                                                  
-                           "Startup Cost": 0.00,                                                                          
-                           "Total Cost": 10.62,                                                                           
-                           "Plan Rows": 1,                                                                                
-                           "Plan Width": 122,                                                                             
+                           "Schema": "public",     
+                           "Alias": "c",           
+                           "Startup Cost": 0.00,   
+                           "Total Cost": 10.62,    
+                           "Plan Rows": 1,         
+                           "Plan Width": 122,      
                            "Output": ["c.customerid", "c.lastname"],                                                      
                            "Filter": "((c.country)::text = 'Japan'::text)"                                                
-                         }                                                                                                
-                       ]                                                                                                  
-                     }                                                                                                    
-                   ]                                                                                                      
-                 }                                                                                                        
-               ]                                                                                                          
-             },                                                                                                           
-             {                                                                                                            
-               "Node Type": "Aggregate",                                                                                  
-               "Strategy": "Plain",                                                                                       
-               "Parent Relationship": "SubPlan",                                                                          
-               "Subplan Name": "SubPlan 1",                                                                               
-               "Startup Cost": 28.84,                                                                                     
-               "Total Cost": 28.85,                                                                                       
-               "Plan Rows": 1,                                                                                            
-               "Plan Width": 0,                                                                                           
-               "Output": ["count(*)"],                                                                                    
-               "Plans": [                                                                                                 
-                 {                                                                                                        
-                   "Node Type": "Aggregate",                                                                              
-                   "Strategy": "Hashed",                                                                                  
-                   "Parent Relationship": "Outer",                                                                        
-                   "Startup Cost": 28.81,                                                                                 
-                   "Total Cost": 28.82,                                                                                   
-                   "Plan Rows": 1,                                                                                        
-                   "Plan Width": 122,                                                                                     
+                         }                         
+                       ]                           
+                     }                             
+                   ]                               
+                 }                                 
+               ]                                   
+             },                                    
+             {                                     
+               "Node Type": "Aggregate",           
+               "Strategy": "Plain",                
+               "Parent Relationship": "SubPlan",   
+               "Subplan Name": "SubPlan 1",        
+               "Startup Cost": 28.84,              
+               "Total Cost": 28.85,                
+               "Plan Rows": 1,                     
+               "Plan Width": 0,                    
+               "Output": ["count(*)"],             
+               "Plans": [                          
+                 {                                 
+                   "Node Type": "Aggregate",       
+                   "Strategy": "Hashed",           
+                   "Parent Relationship": "Outer", 
+                   "Startup Cost": 28.81,          
+                   "Total Cost": 28.82,            
+                   "Plan Rows": 1,                 
+                   "Plan Width": 122,              
                    "Output": ["c.customerid", "c.lastname", "count(*)"],                                                  
                    "Filter": "(ordercounts1.numorders < count(*))",                                                       
-                   "Plans": [                                                                                             
-                     {                                                                                                    
-                       "Node Type": "Hash Join",                                                                          
+                   "Plans": [                      
+                     {                             
+                       "Node Type": "Hash Join",   
                        "Parent Relationship": "Outer",                                                                    
-                       "Join Type": "Inner",                                                                              
-                       "Startup Cost": 10.64,                                                                             
-                       "Total Cost": 28.78,                                                                               
-                       "Plan Rows": 3,                                                                                    
-                       "Plan Width": 122,                                                                                 
+                       "Join Type": "Inner",       
+                       "Startup Cost": 10.64,      
+                       "Total Cost": 28.78,        
+                       "Plan Rows": 3,             
+                       "Plan Width": 122,          
                        "Output": ["c.customerid", "c.lastname"],                                                          
                        "Hash Cond": "(o.customerid = c.customerid)",                                                      
-                       "Plans": [                                                                                         
-                         {                                                                                                
-                           "Node Type": "Seq Scan",                                                                       
+                       "Plans": [                  
+                         {                         
+                           "Node Type": "Seq Scan",
                            "Parent Relationship": "Outer",                                                                
                            "Relation Name": "orders",                                                                     
-                           "Schema": "public",                                                                            
-                           "Alias": "o",                                                                                  
-                           "Startup Cost": 0.00,                                                                          
-                           "Total Cost": 15.90,                                                                           
-                           "Plan Rows": 590,                                                                              
-                           "Plan Width": 4,                                                                               
+                           "Schema": "public",     
+                           "Alias": "o",           
+                           "Startup Cost": 0.00,   
+                           "Total Cost": 15.90,    
+                           "Plan Rows": 590,       
+                           "Plan Width": 4,        
                            "Output": ["o.orderid", "o.orderdate", "o.customerid", "o.netamount", "o.tax", "o.totalamount"]
-                         },                                                                                               
-                         {                                                                                                
-                           "Node Type": "Hash",                                                                           
+                         },                        
+                         {                         
+                           "Node Type": "Hash",    
                            "Parent Relationship": "Inner",                                                                
-                           "Startup Cost": 10.62,                                                                         
-                           "Total Cost": 10.62,                                                                           
-                           "Plan Rows": 1,                                                                                
-                           "Plan Width": 122,                                                                             
+                           "Startup Cost": 10.62,  
+                           "Total Cost": 10.62,    
+                           "Plan Rows": 1,         
+                           "Plan Width": 122,      
                            "Output": ["c.customerid", "c.lastname"],                                                      
-                           "Plans": [                                                                                     
-                             {                                                                                            
+                           "Plans": [              
+                             {                     
                                "Node Type": "Seq Scan",                                                                   
                                "Parent Relationship": "Outer",                                                            
                                "Relation Name": "customers",                                                              
-                               "Schema": "public",                                                                        
-                               "Alias": "c",                                                                              
+                               "Schema": "public", 
+                               "Alias": "c",       
                                "Startup Cost": 0.00,                                                                      
-                               "Total Cost": 10.62,                                                                       
-                               "Plan Rows": 1,                                                                            
-                               "Plan Width": 122,                                                                         
+                               "Total Cost": 10.62,
+                               "Plan Rows": 1,     
+                               "Plan Width": 122,  
                                "Output": ["c.customerid", "c.lastname"],                                                  
                                "Filter": "((c.country)::text = 'Japan'::text)"                                            
-                             }                                                                                            
-                           ]                                                                                              
-                         }                                                                                                
-                       ]                                                                                                  
-                     }                                                                                                    
-                   ]                                                                                                      
-                 }                                                                                                        
-               ]                                                                                                          
-             }                                                                                                            
-           ]                                                                                                              
-         }                                                                                                                
-       ]                                                                                                                  
-     }                                                                                                                    
-   }                                                                                                                      
+                             }                     
+                           ]                       
+                         }                         
+                       ]                           
+                     }                             
+                   ]                               
+                 }                                 
+               ]                                   
+             }                                     
+           ]                                       
+         }                                         
+       ]                                           
+     }                                             
+   }                                               
  ]

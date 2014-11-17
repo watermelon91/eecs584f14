@@ -96,6 +96,30 @@ public class QueryProcessingUtilities {
 		return finalCol;
 	}
 	
+	public static String replaceSubplanNameWithQuery(String subplanName, String filter, String query) {
+		// TODO: not robust to string literals!!!!
+		
+		filter = filter.replace(subplanName, query);
+		return filter;
+	}
+	
+	public static JSONArray renameAttributesSimple(JSONArray attrs) {
+		JSONArray newAttrs = new JSONArray();
+		Iterator<String> it = attrs.iterator();
+		while (it.hasNext()) {		
+			String attr = it.next();
+			String[] attrParts = attr.split("\\.");
+			String newAttr = "";
+			// check alias, replace with name of child
+			if (attrParts.length == 2) {
+				newAttrs.add(attr + " as " + attrParts[0] + "_" + attrParts[1]);// + " as " + attrParts[0] + "_" + attrParts[1]);
+			} else {
+				newAttrs.add(attr);
+			}
+		}
+		return newAttrs;
+	}
+	
 	public static String combineAndConditions(String cond1, String cond2) {
 		String finalCond = "";
 		

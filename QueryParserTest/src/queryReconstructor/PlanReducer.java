@@ -24,10 +24,10 @@ public class PlanReducer {
 	
 	
 	// TODO list
-	// subquery scans
+	// subquery scans - implemented but not tested (big todo)
 	// subplan nodes
 	// aggregate naming
-	// 
+	// other garbage attribute renaming
 	
 	
 	QueryParser qParser;
@@ -79,8 +79,8 @@ public class PlanReducer {
 		case INDEX_SCAN:
 			reducedCurNode = reduceIndexScanNode(curNode);
 			break;
-		case SUBQUERY_SCAN: // TODO: do something about this.
-			//reducedCurNode = 
+		case SUBQUERY_SCAN: 
+			reducedCurNode = reduceSubqueryScanNode(curNode); 
 			break;
 		case SEQ_SCAN:
 			reducedCurNode = reduceSeqScanNode(curNode);
@@ -117,43 +117,25 @@ public class PlanReducer {
 	// don't think joins, though. just aggregates, scans, subqueries
 	
 	JSONObject reduceHashJoinNode(JSONObject curNode, String joinType) {
-		JSONObject reducedNode = new JSONObject();
-		JSONArray children = qParser.getChildrenPlanNodes(curNode);
-		
-		// NOTE: not sure if casting to JSONObject will work
-		JSONObject reducedFirstChild = reduceNode((JSONObject) children.get(0));
-		JSONObject reducedSecondChild = reduceNode((JSONObject) children.get(1));
-		
 		String joinCond = qParser.getHashCond(curNode);
-		String filter = qParser.getFilter(curNode);
-		String joinFilter = qParser.getJoinFilter(curNode);
-		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
-		
-		// even if hash joins and merge joins never have joinFilter, it will return the empty string
-		reducedNode = makeJoinNode(joinCond, joinType, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
-		
-		return reducedNode;
+		return reduceGenericJoin(curNode, joinCond, joinType);
 	}
 	
 	JSONObject reduceMergeJoinNode(JSONObject curNode, String joinType) {
-		JSONObject reducedNode = new JSONObject();
-		JSONArray children = qParser.getChildrenPlanNodes(curNode);
-		
-		JSONObject reducedFirstChild = reduceNode((JSONObject) children.get(0));
-		JSONObject reducedSecondChild = reduceNode((JSONObject) children.get(1));
-		
 		String joinCond = qParser.getMergeCond(curNode);
-		String filter = qParser.getFilter(curNode);
-		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
-		
-		reducedNode = makeJoinNode(joinCond, joinType, "", filter, reducedFirstChild, reducedSecondChild, outputAttrs);
-		
-		return reducedNode;
+		return reduceGenericJoin(curNode, joinCond, joinType);
 	}
 
 	JSONObject reduceNestedLoopJoinNode(JSONObject curNode, String joinType) {
-		JSONObject reducedNode = new JSONObject();		
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);	
+		String joinCond = "";
+		// TODO: get join conditions from children
+		// make sure an exception gets thrown somewhere so we know to come back and fix this before using.
+		return null;
+		//return reduceGenericJoin(curNode, joinCond, joinType);
+
+		/*
+		JSONObject reducedNode = new JSONObject();		
 		JSONObject reducedFirstChild = reduceNode((JSONObject) children.get(0));
 		JSONObject reducedSecondChild = reduceNode((JSONObject) children.get(1));
 		
@@ -161,14 +143,34 @@ public class PlanReducer {
 		// and also possibly joinFilter attribute if multiple conditions
 		// TODO: SHIIIIIT conditions not guaranteed to be in second child's index cond, 
 		// may be in filter, and may be in either child's filter. FUCK
+		// so, we can just check if the conditions in each child contains the alias of the other,
+		// and take the ones that do and call them join filters
+		// we'll have to remove them from the children to make sure
 		String joinFilter = qParser.getJoinFilter(curNode);
-		String joinCond = qParser.getIndexCond(reducedSecondChild);
-		String alias = qParser.getAlias(reducedSecondChild);
 		String filter = qParser.getFilter(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 				
 		// need to combine joinFilter and joinCond
 		// also all of these should handle filters
+		
+		reducedNode = makeJoinNode(joinCond, joinType, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
+		
+		return reducedNode;
+		*/
+	}
+	
+	JSONObject reduceGenericJoin(JSONObject curNode, String joinCond, String joinType) {
+		JSONObject reducedNode = new JSONObject();
+		JSONArray children = qParser.getChildrenPlanNodes(curNode);
+		
+		JSONObject reducedFirstChild = reduceNode((JSONObject) children.get(0));
+		JSONObject reducedSecondChild = reduceNode((JSONObject) children.get(1));
+		
+		String joinFilter = qParser.getJoinFilter(curNode);
+		String filter = qParser.getFilter(curNode);
+		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
+		
+		// TODO: check for subplans!
 		
 		reducedNode = makeJoinNode(joinCond, joinType, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
@@ -227,61 +229,58 @@ public class PlanReducer {
 	}
 
 	JSONObject reduceBitmapHeapScanNode(JSONObject curNode) {
-		JSONObject reducedNode = new JSONObject();
-		
-		// we know this node will have a recheck cond, which is what we want for the selection condition.
-		// we can ignore everything below it, because all of the conditions will be index conditions
-		// that are re-checked in recheckCond.
 		String indexCond = qParser.getRecheckCond(curNode);
 		String filter = qParser.getFilter(curNode);
-		String inputTable = qParser.getRelationName(curNode);
-		String alias = qParser.getAlias(curNode);
-		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
-		
-		String finalCond = QueryProcessingUtilities.combineAndConditions(indexCond, filter);
-		
-		// TODO: check for subplan
-		reducedNode = makeScanNode(null, finalCond, inputTable, alias, outputAttrs);
-		
-		return reducedNode;
+		String finalFilter = QueryProcessingUtilities.combineAndConditions(indexCond, filter);
+		return reduceGenericScan(curNode, finalFilter);
 	}
 	
 	JSONObject reduceIndexScanNode(JSONObject curNode) {
-		JSONObject reducedNode = new JSONObject();
-		
-		// may have index cond AND/OR filter
-		// won't necessarily have either
-		
-		String indexCond = qParser.getIndexCond(curNode);
 		String filter = qParser.getFilter(curNode);
-		String inputTable = qParser.getRelationName(curNode);
-		String alias = qParser.getAlias(curNode);
-		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
-		
+		String indexCond = qParser.getIndexCond(curNode);
 		String finalFilter = QueryProcessingUtilities.combineAndConditions(indexCond, filter);
-		
-		// TODO: check for subplan
-		reducedNode = makeScanNode(null, finalFilter, inputTable, alias, outputAttrs);		
-		
-		return reducedNode;
+		return reduceGenericScan(curNode, finalFilter);
+
 	}
 	
 	JSONObject reduceSeqScanNode(JSONObject curNode) {
+		String filter = qParser.getFilter(curNode);
+		return reduceGenericScan(curNode, filter);
+	}
+	
+	JSONObject reduceGenericScan(JSONObject curNode, String filter) {
 		JSONObject reducedNode = new JSONObject();
 		
 		// may or may not have anything in Filter
 		
 		// TODO: this may have a subplan node
-		
-		String filter = qParser.getFilter(curNode);
 		String inputTable = qParser.getRelationName(curNode);
 		String alias = qParser.getAlias(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
-		// TODO: check for subplan
-		reducedNode = makeScanNode(null, filter, inputTable, alias, outputAttrs);		
+		JSONArray reducedChildren = null;
+		// TODO: check for subplan and other children (if subquery scan)!
+		JSONArray children = qParser.getChildrenPlanNodes(curNode);
+		if (children != null) {
+			Iterator<JSONObject> cit = children.iterator();
+			reducedChildren = new JSONArray();
+			while (cit.hasNext()) {
+				JSONObject child = cit.next();
+				JSONObject reducedChild = reduceNode(child);
+				String subplan = qParser.getSubplanName(child);
+				
+				if (!subplan.equals("")) {
+					//filter = QueryProcessingUtilities.replaceSubplanNameWithQuery(subplan, filter, getQuery(reducedChild));
+					reducedChild.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SUBPLAN_NAME), subplan);
+				}
+				reducedChildren.add(reducedChild);
+				// TODO: check SubplanName
+			}
+		}
+		reducedNode = makeScanNode(reducedChildren, filter, inputTable, alias, outputAttrs);		
 		// may not have a condition - should check
 		
 		return reducedNode;
+		
 	}
 	
 	// TODO: groupaggregate, hashaggregate, aggregate
@@ -322,12 +321,20 @@ public class PlanReducer {
 		JSONObject child = reduceNode((JSONObject) qParser.getChildrenPlanNodes(curNode).get(0));	
 		JSONArray childColNames = QueryProcessingUtilities.getFinalColumnNames(getOutputAttributes(child));
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
+		
+		// NOTE: the subquery is a stopper for child aliases, so we don't need to include them.
+		String alias = qParser.getAlias(curNode);
 		JSONArray finalOutputAttrs = new JSONArray();
 		String filter = qParser.getFilter(curNode);
 		Iterator<String> ccnIt = childColNames.iterator();
 		Iterator<String> oaIt = outputAttrs.iterator();
 		while (ccnIt.hasNext() && oaIt.hasNext()) {
-			finalOutputAttrs.add(ccnIt.next() + " as " + oaIt.next());
+			String outputName = oaIt.next();
+			String[] ar = outputName.split("\\.");
+			if (ar.length == 2) {
+				outputName = ar[0] + "_" + ar[1];
+			}
+			finalOutputAttrs.add(ccnIt.next() + " as " + outputName);
 		}
 		
 		String tableName = getNewTableName(child);
@@ -341,8 +348,14 @@ public class PlanReducer {
 		//		we know the alias of the subquery - any subplan will refer to this alias
 		// get names of child columns here
 		// what about those that are already aliased? 
+		JSONArray children = new JSONArray();
+		children.add(children);
+		if (filterContainsSubplan(filter)) {
+			// TODO: process and add child to children array
+		}
 
-	//reducedNode = makeScanNode(child, filter, tableName, alias, finalOutputAttrs);
+		// TODO: make sure alias works right
+		reducedNode = makeScanNode(children, filter, tableName, alias, finalOutputAttrs);
 		
 		/*
 		String filter = qParser.getFilter(curNode);
@@ -360,27 +373,7 @@ public class PlanReducer {
 	// what to do if so?
 	// should probably process whole node, since normal child needs to be processed normally
 	// and other child needs special treatment
-	
-	JSONObject processSubplanIfPresent(JSONObject curNode) {
-		// check filter for subplan
-		// actually may need to check joinCond as well (but that one didn't give enough information to do anything with >.<)
-		String filter = qParser.getFilter(curNode);
-		if (filterContainsSubplan(filter)) {
-			// process subplan
-			// may want to return child nodes (haven't figured out exactly how I want to handle that)
-			// definitely need to return the query
-			
-			// looks like you can't really make any guarantees about where the attributes from the outer part appear in the subplan
-			// so it might be best to just reconstruct the query all the way
-			// or should we leave it to the query reconstructor? extract the important parts, don't replace the alias of the outer thing,
-			// and let the query constructor handle the fact that they shouldn't be made into temp tables? that could work
-			
-			// update filter (replace SubPlan # with query for subplan)
-			// return curNode with update
-		}
-		return null;
-	}
-	
+		
 	// TODO: implement
 	JSONObject reduceSubplanNode(JSONObject curNode) {
 		JSONObject reducedNode = new JSONObject();
@@ -390,7 +383,17 @@ public class PlanReducer {
 		
 		// what we need to do:
 		// check both filter and any index conditions/other stuff for aliases that correspond to parent tables
-		// 
+		// actually, do we really need to?
+		// what if we just process it normally, then leave it to the query reconstructor to handle it?
+		// everything should be normal, except 
+		JSONArray children = qParser.getChildrenPlanNodes(curNode);
+		JSONArray reducedChildren = new JSONArray();
+		
+		Iterator<JSONObject> cit = children.iterator();
+		while (cit.hasNext()) {
+			JSONObject reducedChild = reduceNode(cit.next());
+			reducedChildren.add(reducedChild);
+		}
 		
 		
 		// may or may not have anything in Filter
@@ -402,8 +405,9 @@ public class PlanReducer {
 		reducedNode = MakeScanNode(filter, inputTable, alias, outputAttrs);
 		*/		
 		// may not have a condition - should check
-		
-		return reducedNode;
+		return makeSubplanNode(children, qParser.getSubplanName(curNode), qParser.getOutputAttributes(curNode));
+
+//		return reducedNode;
 	}
 
 	
@@ -495,7 +499,7 @@ public class PlanReducer {
 		}
 		
 		JSONArray aliasSet = QueryProcessingUtilities.concatArrays(getAliasSet(reducedFirstChild), getAliasSet(reducedSecondChild));
-
+		// TODO: include original filters for display
 		reducedJoinNode.put("type", "join");
 		reducedJoinNode.put("children", children);
 		reducedJoinNode.put("filter", aliasReplacedFilter);
@@ -587,7 +591,7 @@ public class PlanReducer {
 		return reducedAggregateNode;
 	}
 	
-	JSONObject makeScanNode(JSONObject reducedChild, String filterCond, String inputTable, String alias, JSONArray outputAttrs) {
+	JSONObject makeScanNode(JSONArray reducedChildren, String filterCond, String inputTable, String alias, JSONArray outputAttrs) {
 		// scan node can have children or no children, right?
 		
 		// things required to make a scan tmp table
@@ -595,7 +599,8 @@ public class PlanReducer {
 		// e.g., if it's literally nothing more than a sequential scan, then we don't want to make a node for it
 		// maybe we should have a boolean indicating whether it should be kept as a node
 		// for now, though, make all nodes
-		JSONArray newOutputAttrs = new JSONArray();
+		JSONArray newOutputAttrs = QueryProcessingUtilities.renameAttributesSimple(outputAttrs);
+/*		JSONArray newOutputAttrs = new JSONArray();
 		Iterator<String> it = outputAttrs.iterator();
 		while (it.hasNext()) {		
 			String attr = it.next();
@@ -608,7 +613,7 @@ public class PlanReducer {
 				newOutputAttrs.add(attr);
 			}
 		}
-		
+	*/	
 		JSONObject reducedScanNode = new JSONObject();
 		JSONArray aliasSet = new JSONArray();
 		// TODO: if attributes have alias, add alias name to attribute name
@@ -619,9 +624,7 @@ public class PlanReducer {
 		reducedScanNode.put("inputTable", inputTable);
 		reducedScanNode.put("outputAttrs", newOutputAttrs);
 		reducedScanNode.put("newTableName", "tmp" + curTmp);
-		if (reducedChild != null) {
-			JSONArray reducedChildren = new JSONArray();
-			reducedChildren.add(reducedChild);
+		if (reducedChildren != null) {
 			reducedScanNode.put("children", reducedChildren);			
 		}
 		curTmp++;
@@ -629,10 +632,15 @@ public class PlanReducer {
 		return reducedScanNode;
 	}
 	
-	JSONObject makeSubplanNode(JSONObject curNode) {
+	JSONObject makeSubplanNode(JSONArray reducedChildren, String subplanName, JSONArray outputAttrs) {
 		JSONObject reducedSubplanNode = new JSONObject();
+		JSONArray newOutputAttrs = QueryProcessingUtilities.renameAttributesSimple(outputAttrs);
+
 		reducedSubplanNode.put("type", "subplan");
-		
+		reducedSubplanNode.put("children", reducedChildren);
+		reducedSubplanNode.put("subplan name", subplanName);
+		reducedSubplanNode.put("outputAttrs", newOutputAttrs);
+
 		return reducedSubplanNode;
 	}
 		// node type: if it's a join type (hash, sort merge, inl, nl), we'll make a join node
@@ -693,6 +701,24 @@ public class PlanReducer {
 		return condition;
 	}
 	
+	boolean conditionContainsAliases(String condition, JSONArray aliases) {
+		// TODO: string literals
+		boolean containsAlias = false;
+		Iterator<String> it = aliases.iterator();
+		while (it.hasNext()) {
+			// possibly add \b for word boundary
+			String alias = it.next();
+			String regex = "\\b" + alias + "\\.";
+			// so in here we should be only executing the replace all on sections of the condition that are not string literals.
+			// okay, it shouldn't be THAT bad to implement - just go through and check for unescaped single quotes, and ignore everything in between pairs.
+			// but let's get aggregates working first.
+			if (condition.contains(regex)) {
+				containsAlias = true;
+			}
+		}
+		return containsAlias;
+	}
+	
 	boolean filterContainsSubplan(String filter) {
 		//TODO implement for real - this (like everything else) doesn't handle string literals
 		if (filter.contains("SubPlan")) {
@@ -720,6 +746,7 @@ public class PlanReducer {
 		BITMAP_HEAP_SCAN,
 		BITMAP_INDEX_SCAN,
 		LIMIT,
+		SUBPLAN,
 		UNDEFINED;
 	};
 		
@@ -744,6 +771,7 @@ public class PlanReducer {
 		if (nodeType.equals("GroupAggregate")) { return NODE_TYPE.AGGREGATE; }
 		if (nodeType.equals("HashAggregate")) { return NODE_TYPE.AGGREGATE; }
 		if (nodeType.equals("Aggregate")) { return NODE_TYPE.AGGREGATE; }
+		if (nodeType.equals("SubPlan")) { return NODE_TYPE.SUBPLAN; }
 		System.out.println("undefined");
 		return NODE_TYPE.UNDEFINED;
 	}
@@ -759,7 +787,8 @@ public class PlanReducer {
 		OUTPUT_ATTRS,
 		GROUP_BY_ATTRS,
 		CHILDREN,
-		QUERY
+		QUERY, 
+		SUBPLAN_NAME
 		};
 		
 	// mapping between enum and the actual returned string for all attributes EXPLAIN can return
@@ -778,6 +807,7 @@ public class PlanReducer {
 		 map.put(REDUCED_PLAN_ATTRS.GROUP_BY_ATTRS, "groupByAttrs");
 		 map.put(REDUCED_PLAN_ATTRS.CHILDREN, "children");
 		 map.put(REDUCED_PLAN_ATTRS.QUERY, "query");
+		 map.put(REDUCED_PLAN_ATTRS.SUBPLAN_NAME, "subplan name");
 		 return Collections.unmodifiableMap(map);
 	}
 	
@@ -825,6 +855,11 @@ public class PlanReducer {
 		}
 		return rst.toString();
 	}
+	
+	public void setFilter(JSONObject currentNode, String newFilter) {
+		currentNode.remove(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.FILTER));
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.FILTER), newFilter);
+	}
 
 	public String getInputTable(JSONObject currentNode)
 	{
@@ -834,6 +869,11 @@ public class PlanReducer {
 			return EMPTY_STRING;
 		}
 		return rst.toString();
+	}
+	
+	public void setInputTable(JSONObject currentNode, String newInputTable) {
+		currentNode.remove(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.INPUT_TABLE));
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.INPUT_TABLE), newInputTable);
 	}
 	
 	public String getNewTableName(JSONObject currentNode)
@@ -846,9 +886,24 @@ public class PlanReducer {
 		return rst.toString();
 	}
 	
+	public void setNewTableName(JSONObject currentNode, String newTableName) {
+		currentNode.remove(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME));
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME), newTableName);
+	}
+	
 	public String getJoinCondition(JSONObject currentNode)
 	{
 		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.JOIN_CONDITION));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
+	public String getSubplanName(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SUBPLAN_NAME));
 		if(rst == null)
 		{
 			return EMPTY_STRING;
