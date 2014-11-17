@@ -801,7 +801,12 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 String[] row = new String[table_searchMissing.getColumnCount()];
                 for (int i = 0; i < table_searchMissing.getColumnCount(); i++){
                     table_searchMissing.getCellEditor(0, i).stopCellEditing();
-                    row[i] = table_searchMissing.getModel().getValueAt(0, i).toString(); 
+                    row[i] = "";
+                    Object temp = table_searchMissing.getModel().getValueAt(0, i);
+                    if (temp != null)
+                        row[i] = temp.toString(); 
+                    
+                    System.out.println(row[i] + " ");
                 }
                 
                 tree_findMissing = connector.updateTreeWhyNotHere(tree_sampleData, 
