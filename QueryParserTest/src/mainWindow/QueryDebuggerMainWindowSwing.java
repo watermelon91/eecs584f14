@@ -188,7 +188,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent e) {
                 // TODO Auto-generated method stub
                 if (btnDbSubmit.getText() == "Submit"){
-                    connector = new FrontEndConnector("127.0.0.1","K" , "K", "5432");
+                    connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia" , "eecs58414");
                     //connector = new FrontEndConnector("127.0.0.1","K" , textUsername.getText(), textPassword.getText());
                     String rst = connector.initializeSQLConnection();
                     if(rst.isEmpty())
@@ -304,7 +304,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 try
                                 {
                                     connector.dropAllTmpTables();
-                                    tree_sampleData = connector.debugQuery("select * from hrecords h, users u, (select user_id from users u2) as t where h.user_id = u.user_id and u.user_id = t.user_id;");
+                                    tree_sampleData = connector.debugQuery("SELECT c1.customerid, c2.customerid, o1.totalamount, o2.totalamount, o1.orderdate,  o2.orderdate FROM cust_hist c1, cust_hist c2, orders o1, orders o2 WHERE c1.customerid > c2.customerid AND c1.prod_id = c2.prod_id AND o1.orderid = c1.orderid AND o2.orderid = c2.orderid AND o1.totalamount - o2.totalamount > 500 AND o1.orderdate - o2.orderdate = 0;");
                                 } catch (Exception e)
                                 {
                                     // TODO Auto-generated catch block
@@ -607,7 +607,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
                     LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = treeObjects_sampleData.get(cell);
                     mxGeometry geo = graphComponent_sampleData.getGraph().getCellGeometry(cell);
-                    insertedVertex = graphComponent_sampleData.getGraph().insertVertex(graphComponent_sampleData.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+50, 200, 50);
+                    insertedVertex = graphComponent_sampleData.getGraph().insertVertex(graphComponent_sampleData.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+50, 200, 200);
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_ALIGN, "left", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
