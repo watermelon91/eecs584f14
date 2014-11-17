@@ -260,12 +260,22 @@ public class QueryPlanTreeNode {
 	 private String cutOffLongString(String input)
 	 {
 		 int MAX_LEN = 30;
+		 String TAB = "    ";
 		 if(input.length() <= MAX_LEN)
 		 {
 			 return input;
 		 }
 		 else
 		 {
+			 String[] multilines = input.split(",");
+			 System.out.println("Multilines: " + Arrays.asList(multilines));
+			 String multilineStr = multilines[0];
+			 for(int i = 1; i < multilines.length; i++)
+			 {
+				 multilineStr = multilineStr + "\n" + TAB + multilines[i];
+			 }
+			 System.out.println("Formatted: " + multilineStr);
+			 /*
 			 String multilineInput = "";
 			 int i = 0;
 			 for(; i < (int)Math.floor((input.length() * 1.0 / MAX_LEN)); i++)
@@ -275,9 +285,9 @@ public class QueryPlanTreeNode {
 			 if(input.length() > i * MAX_LEN)
 			 {
 				 multilineInput = multilineInput + input.substring(i * MAX_LEN, input.length());
-			 }
+			 }*/
 			 
-			 return multilineInput;
+			 return multilineStr;
 		 }
 	 }
 	
