@@ -268,13 +268,12 @@ public class QueryPlanTreeNode {
 		 else
 		 {
 			 String[] multilines = input.split(",");
-			 System.out.println("Multilines: " + Arrays.asList(multilines));
 			 String multilineStr = multilines[0];
 			 for(int i = 1; i < multilines.length; i++)
 			 {
 				 multilineStr = multilineStr + "\n" + TAB + multilines[i];
 			 }
-			 System.out.println("Formatted: " + multilineStr);
+			 
 			 /*
 			 String multilineInput = "";
 			 int i = 0;
