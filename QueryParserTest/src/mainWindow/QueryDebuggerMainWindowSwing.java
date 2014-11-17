@@ -109,7 +109,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private JTable table_searchMissing;
     private DefaultTableCellRenderer renderer;
     
-    final int gridwidth = 110, gridheight = 120;
+    final int gridwidth = 110, gridheight = 150;
     private JTextField queryFrom_sampleData;
     
     private LoggingUtilities logger;
@@ -621,6 +621,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     model_sampleData.fireTableDataChanged(); 
                     model_searchMissing.fireTableDataChanged(); 
                     
+                    //detailed node info
                     graphComponent_sampleData.getGraph().getModel().beginUpdate();
                     if (insertedVertex != null)
                         graphComponent_sampleData.getGraph().removeCells(new Object[]{insertedVertex});
@@ -628,7 +629,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = treeObjects_sampleData.get(cell);
                     mxGeometry geo = graphComponent_sampleData.getGraph().getCellGeometry(cell);
                     insertedVertex = graphComponent_sampleData.getGraph().insertVertex(graphComponent_sampleData.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+50, 200, 50);
-                    
+                    graphComponent_sampleData.getGraph().setCellStyle(mxConstants.ALIGN_LEFT, new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().getModel().endUpdate();
                    
                 } 
@@ -1290,7 +1291,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void visit(BinaryTreeNode node) {
                 QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                planTreeNode.obj = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, 50);
+                planTreeNode.obj = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr()+"\n Node table name: "+treeNode.getAbbreviatedTreeNode().getTmpTableStr(),planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, 50);
 
                 if (treeNode.getDataNode() != null) {
                     graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
