@@ -177,9 +177,11 @@ public class QueryReconstructor {
 		return query;
 	}
 	
+	/*
 	String generateQueryForSubplan(JSONObject curNode) {
 		
 	}
+	*/
 	
 	String generateQueryForJoin(JSONObject curNode) {
 		String query = "select ";

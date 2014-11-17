@@ -120,6 +120,12 @@ public class QueryProcessingUtilities {
 		return newAttrs;
 	}
 	
+	/*
+	public static void replaceAliasWithRenamedColumns(String text, JSONArray alias) {
+		
+	}
+	*/
+	
 	public static String combineAndConditions(String cond1, String cond2) {
 		String finalCond = "";
 		

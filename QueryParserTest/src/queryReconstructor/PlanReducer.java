@@ -8,7 +8,8 @@ import java.util.Iterator;
 import java.util.Map;
 import queryParser.QueryParser;
 import queryParser.QueryProcessingUtilities;
-
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -25,7 +26,7 @@ public class PlanReducer {
 	
 	// TODO list
 	// subquery scans - implemented but not tested (big todo)
-	// subplan nodes
+	// subplan nodes - kind of works a little bit
 	// aggregate naming
 	// other garbage attribute renaming
 	
@@ -33,6 +34,7 @@ public class PlanReducer {
 	QueryParser qParser;
 	public JSONObject topLevelNode;
 	static int curTmp = 0;
+	static String id = new SimpleDateFormat("MMdd_HHmmss").format(Calendar.getInstance().getTime());
 	
 	// will return:
 	// a tree of JSONObjects
@@ -507,7 +509,7 @@ public class PlanReducer {
 		reducedJoinNode.put("joinType", joinType);
 		reducedJoinNode.put("outputAttrs", newOutputAttrs);
 		reducedJoinNode.put("aliasSet", aliasSet);
-		reducedJoinNode.put("newTableName", "tmp" + curTmp);
+		reducedJoinNode.put("newTableName", "tmp" + curTmp + "_" + id);
 		curTmp++;
 				
 		return reducedJoinNode;
@@ -584,7 +586,7 @@ public class PlanReducer {
 		reducedAggregateNode.put("filter", filter);
 		reducedAggregateNode.put("outputAttrs", newOutputAttrs);
 		reducedAggregateNode.put("aliasSet", aliasSet);
-		reducedAggregateNode.put("newTableName", "tmp" + curTmp);
+		reducedAggregateNode.put("newTableName", "tmp" + curTmp + "_" + id);
 		reducedAggregateNode.put("groupByAttrs", groupByAttrs);
 		curTmp++;
 		
@@ -623,7 +625,7 @@ public class PlanReducer {
 		reducedScanNode.put("aliasSet", aliasSet);
 		reducedScanNode.put("inputTable", inputTable);
 		reducedScanNode.put("outputAttrs", newOutputAttrs);
-		reducedScanNode.put("newTableName", "tmp" + curTmp);
+		reducedScanNode.put("newTableName", "tmp" + curTmp + "_" + id);
 		if (reducedChildren != null) {
 			reducedScanNode.put("children", reducedChildren);			
 		}
