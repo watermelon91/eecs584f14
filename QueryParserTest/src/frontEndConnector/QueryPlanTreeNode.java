@@ -1,16 +1,19 @@
 package frontEndConnector;
 
 import  java.lang.Math;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class QueryPlanTreeNode {
 	private String type;
-	private String aliasSet;
-	private String filter;
-	private String inputTable;
+	private String abbrAliasSet;
+	private String abbrFilter;
+	private String abbrInputTable;
+	private String abbrNewTableName;
 	private String newTableName;
-	private String joinCondition;
-	private String outputAttrs;
+	private String abbrJoinCondition;
+	private String abbrOutputAttrs;
 	private AbbreviatedTreeNode abbrTreeNode;
 	private DataPlanTreeNode dataNode;
 	
@@ -53,40 +56,66 @@ public class QueryPlanTreeNode {
 			)
 	{
 		type = _type;
-		aliasSet = _aliasSet;
-		filter = _filter;
-		inputTable = _inputTable;
+		abbrAliasSet = _aliasSet;
+		abbrFilter = _filter;
+		abbrInputTable = _inputTable;
+		abbrNewTableName = _newTableName;
 		newTableName = _newTableName;
-		joinCondition = _joinCondition;
-		outputAttrs = _outputAttrs;
+		abbrJoinCondition = _joinCondition;
+		abbrOutputAttrs = _outputAttrs;
 		
 		// make table names readable
-		String[] inTables = inputTable.split(",");
+		// construct extra ID list
+		List<String> extraIDStrs = new ArrayList<String>();
+		String[] inTables = abbrInputTable.split(",");
 		for(int i = 0; i < inTables.length; i++)
 		{
-			inTables[i] = getAbbrTmpTable(inTables[i]);	
+			String ext = getExtraIDStrInTmpTable(inTables[i]);	
+			if(!ext.equals(""))
+			{
+				extraIDStrs.add(ext);
+			}
 		}
-		inputTable = Arrays.asList(inTables).toString();
-		newTableName = getAbbrTmpTable(newTableName);
+		String ext = getExtraIDStrInTmpTable(newTableName);
+		if(!ext.equals(""))
+		{
+			extraIDStrs.add(ext);
+		}
+		// remove extra IDs
+		abbrAliasSet = removeExtraIDStr(abbrAliasSet, extraIDStrs);
+		abbrFilter = removeExtraIDStr(abbrFilter, extraIDStrs);
+		abbrInputTable = removeExtraIDStr(abbrInputTable, extraIDStrs);
+		abbrNewTableName = removeExtraIDStr(abbrNewTableName, extraIDStrs);
+		abbrJoinCondition = removeExtraIDStr(abbrJoinCondition, extraIDStrs);
+		abbrOutputAttrs = removeExtraIDStr(abbrOutputAttrs, extraIDStrs);
 		
 		// construct abbrevated node
-		abbrTreeNode = new AbbreviatedTreeNode(constructLargeFontString(), constructSmallFontString(), newTableName);
+		abbrTreeNode = new AbbreviatedTreeNode(constructLargeFontString(), constructSmallFontString(), abbrNewTableName);
 		dataNode = null;
 		
 		System.out.println(getAbbreviatedTreeNode().getLargeFontStr());
 		System.out.println(getAbbreviatedTreeNode().getSmallFontStr());
 	}
 	
-	private String getAbbrTmpTable(String inName)
+	private String getExtraIDStrInTmpTable(String inName)
 	{
 		if(inName.contains("_"))
 		{
-			return inName.substring(0, inName.indexOf("_")-1);
+			return inName.substring(inName.indexOf("_"));
 		}
 		else
 		{
-			return inName;
+			return "";
 		}
+	}
+	
+	private String removeExtraIDStr(String inStr, List<String> extraIDs)
+	{
+		for(String extra : extraIDs)
+		{
+			inStr = inStr.replaceAll(extra, "");
+		}
+		return inStr;
 	}
 	
 	/*
@@ -97,17 +126,17 @@ public class QueryPlanTreeNode {
 	private String constructSmallFontString()
 	{
 		String str = "";
-		if(!filter.isEmpty())
+		if(!abbrFilter.isEmpty())
 		{
-			str = str + filter;
+			str = str + abbrFilter;
 		}
-		if(!joinCondition.isEmpty())
+		if(!abbrJoinCondition.isEmpty())
 		{
 			if(!str.isEmpty())
 			{
 				str = str + "; ";
 			}
-			str = str + joinCondition;
+			str = str + abbrJoinCondition;
 		}
 		
 		return str;
@@ -122,13 +151,13 @@ public class QueryPlanTreeNode {
 		}
 		str = str.toUpperCase();
 		
-		if(!inputTable.isEmpty())
+		if(!abbrInputTable.isEmpty())
 		{
 			if(!str.isEmpty())
 			{
 				str = str + " ";
 			}
-			str = str + inputTable;
+			str = str + abbrInputTable;
 		}
 		
 		return str;
@@ -141,17 +170,17 @@ public class QueryPlanTreeNode {
 	
 	public String getAliasSet()
 	{
-		return aliasSet;
+		return abbrAliasSet;
 	}
 	
 	public String getFilter()
 	{
-		return filter;
+		return abbrFilter;
 	}
 	
 	public String getInputTable()
 	{
-		return inputTable;
+		return abbrInputTable;
 	}
 	
 	public String getNewTableName()
@@ -161,12 +190,12 @@ public class QueryPlanTreeNode {
 	
 	public String getJoinCondition()
 	{
-		return joinCondition;
+		return abbrJoinCondition;
 	}
 	
 	public String getOutputAttrs()
 	{
-		return outputAttrs;
+		return abbrOutputAttrs;
 	}
 	
 	public AbbreviatedTreeNode getAbbreviatedTreeNode()
@@ -197,14 +226,14 @@ public class QueryPlanTreeNode {
 		 //final String SPLITTER = "`";
 		 
 		 //String outputAttrFormatted = outputAttrs.substring(1, outputAttrs.indexOf(',')) + ", ...";
-		 String outputAttrFormatted = outputAttrs.substring(1, outputAttrs.length()-2);
+		 String outputAttrFormatted = abbrOutputAttrs.substring(1, abbrOutputAttrs.length()-2);
 		 
 		 String nodeFormattedStr = constructString("Type", type, SPLITTER) 
-				 + constructString("Alias", aliasSet, SPLITTER) 
-				 + constructString("Filter", filter, SPLITTER)
-				 + constructString("Input", inputTable, SPLITTER)
-				 + constructString("TempTable", newTableName, SPLITTER)
-				 + constructString("JoinCond", joinCondition, SPLITTER)
+				 + constructString("Alias", abbrAliasSet, SPLITTER) 
+				 + constructString("Filter", abbrFilter, SPLITTER)
+				 + constructString("Input", abbrInputTable, SPLITTER)
+				 + constructString("TempTable", abbrNewTableName, SPLITTER)
+				 + constructString("JoinCond", abbrJoinCondition, SPLITTER)
 				 + constructString("Output", outputAttrFormatted, SPLITTER);
 
 		 return nodeFormattedStr;
