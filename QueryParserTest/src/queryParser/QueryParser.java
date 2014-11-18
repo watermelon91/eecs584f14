@@ -74,6 +74,12 @@ public class QueryParser {
 		return (JSONArray)currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.OUTPUT));
 	}
 	
+	public JSONArray getSortKey(JSONObject currentNode)
+	{
+		// return the schema of this node
+		return (JSONArray)currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SORT_KEY));	
+	}
+	
 	//--------------------------- get functions for different attributes returned by EXPLAIN ---------------------------
 	public String getAlias(JSONObject currentNode)
 	{
@@ -259,17 +265,6 @@ public class QueryParser {
 	{
 		// return the schema of this node
 		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SCHEMA));
-		if(rst == null)
-		{
-			return EMPTY_STRING;
-		}
-		return rst.toString();
-	}
-	
-	public String getSortKey(JSONObject currentNode)
-	{
-		// return the schema of this node
-		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SORT_KEY));
 		if(rst == null)
 		{
 			return EMPTY_STRING;
