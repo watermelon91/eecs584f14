@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import queryReconstructor.PlanReducer;
 
 public class QueryProcessingUtilities {
 	/*
@@ -103,6 +104,42 @@ public class QueryProcessingUtilities {
 		return filter;
 	}
 	
+	public static boolean conditionContainsAliases(String condition, JSONArray aliases) {
+		// TODO: string literals
+		boolean containsAlias = false;
+		Iterator<String> it = aliases.iterator();
+		while (it.hasNext()) {
+			// possibly add \b for word boundary
+			String alias = it.next();
+			String regex = "\\b" + alias + "\\.";
+			// so in here we should be only executing the replace all on sections of the condition that are not string literals.
+			// okay, it shouldn't be THAT bad to implement - just go through and check for unescaped single quotes, and ignore everything in between pairs.
+			// but let's get aggregates working first.
+			if (condition.contains(regex)) {
+				containsAlias = true;
+			}
+		}
+		return containsAlias;
+	}
+	
+	public static String extractConditionsContainingAlias(JSONObject reducedNode, JSONArray aliases, PlanReducer pr) {
+		String cond = "";
+		String tmp = pr.getFilter(reducedNode);
+		if (conditionContainsAliases(tmp, aliases)) {
+			cond = combineAndConditions(cond, tmp);
+			pr.setFilter(reducedNode, "");
+		}
+		return cond;
+	}
+	
+	public static boolean filterContainsSubplan(String filter) {
+		//TODO implement for real - this (like everything else) doesn't handle string literals
+		if (filter.contains("SubPlan")) {
+			return true;
+		}
+		return false;
+	}
+	
 	public static JSONArray renameAttributesSimple(JSONArray attrs) {
 		JSONArray newAttrs = new JSONArray();
 		Iterator<String> it = attrs.iterator();
@@ -125,6 +162,7 @@ public class QueryProcessingUtilities {
 		
 	}
 	*/
+	
 	
 	public static String combineAndConditions(String cond1, String cond2) {
 		String finalCond = "";

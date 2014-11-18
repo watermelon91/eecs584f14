@@ -1,0 +1,80 @@
+ [
+   {
+     "Plan": {
+       "Node Type": "Nested Loop",
+       "Join Type": "Inner",
+       "Startup Cost": 0.00,
+       "Total Cost": 3419.28,
+       "Plan Rows": 1,
+       "Plan Width": 24,
+       "Output": ["o1.orderid", "o2.orderid", "o3.orderid", "o1.orderdate", "o2.orderdate", "o3.orderdate"],
+       "Join Filter": "(date_part('month'::text, (o2.orderdate)::timestamp without time zone) = (date_part('month'::text, (o3.orderdate)::timestamp without time zone) + 1::double precision))",
+       "Plans": [
+         {
+           "Node Type": "Nested Loop",
+           "Parent Relationship": "Outer",
+           "Join Type": "Inner",
+           "Startup Cost": 0.00,
+           "Total Cost": 2279.75,
+           "Plan Rows": 1,
+           "Plan Width": 20,
+           "Output": ["o1.orderid", "o1.orderdate", "o1.prod_id", "o2.orderid", "o2.orderdate"],
+           "Join Filter": "(date_part('month'::text, (o1.orderdate)::timestamp without time zone) = (date_part('month'::text, (o2.orderdate)::timestamp without time zone) + 1::double precision))",
+           "Plans": [
+             {
+               "Node Type": "Seq Scan",
+               "Parent Relationship": "Outer",
+               "Relation Name": "orderlines",
+               "Schema": "public",
+               "Alias": "o1",
+               "Startup Cost": 0.00,
+               "Total Cost": 1139.38,
+               "Plan Rows": 6,
+               "Plan Width": 12,
+               "Output": ["o1.orderlineid", "o1.orderid", "o1.prod_id", "o1.quantity", "o1.orderdate"],
+               "Filter": "(o1.prod_id = 8032)"
+             },
+             {
+               "Node Type": "Materialize",
+               "Parent Relationship": "Inner",
+               "Startup Cost": 0.00,
+               "Total Cost": 1139.40,
+               "Plan Rows": 6,
+               "Plan Width": 12,
+               "Output": ["o2.orderid", "o2.orderdate", "o2.prod_id"],
+               "Plans": [
+                 {
+                   "Node Type": "Seq Scan",
+                   "Parent Relationship": "Outer",
+                   "Relation Name": "orderlines",
+                   "Schema": "public",
+                   "Alias": "o2",
+                   "Startup Cost": 0.00,
+                   "Total Cost": 1139.38,
+                   "Plan Rows": 6,
+                   "Plan Width": 12,
+                   "Output": ["o2.orderid", "o2.orderdate", "o2.prod_id"],
+                   "Filter": "(o2.prod_id = 8032)"
+                 }
+               ]
+             }
+           ]
+         },
+         {
+           "Node Type": "Seq Scan",
+           "Parent Relationship": "Inner",
+           "Relation Name": "orderlines",
+           "Schema": "public",
+           "Alias": "o3",
+           "Startup Cost": 0.00,
+           "Total Cost": 1139.38,
+           "Plan Rows": 6,
+           "Plan Width": 12,
+           "Output": ["o3.orderlineid", "o3.orderid", "o3.prod_id", "o3.quantity", "o3.orderdate"],
+           "Filter": "(o3.prod_id = 8032)"
+         }
+       ]
+     }
+   }
+ ]
+
