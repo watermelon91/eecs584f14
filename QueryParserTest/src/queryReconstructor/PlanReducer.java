@@ -82,7 +82,7 @@ public class PlanReducer {
 			reducedCurNode = reduceNonfunctionalNode(curNode);
 			break;
 		case SORT:
-			reducedCurNode = reduceNonfunctionalNode(curNode);
+			reducedCurNode = reduceSortNode(curNode);
 			break;
 		case MATERIALIZE:
 			reducedCurNode = reduceNonfunctionalNode(curNode);
@@ -156,6 +156,7 @@ public class PlanReducer {
 		
 		JSONArray aliasesC1 = getAliasSet(reducedFirstChild);
 		JSONArray aliasesC2 = getAliasSet(reducedSecondChild);
+
 		String joinCondFromChildren = QueryProcessingUtilities.extractConditionsContainingAlias(reducedFirstChild, aliasesC2, this);
 		joinCondFromChildren = QueryProcessingUtilities.combineAndConditions(joinCondFromChildren, QueryProcessingUtilities.extractConditionsContainingAlias(reducedSecondChild, aliasesC1, this));
 		
@@ -224,14 +225,34 @@ public class PlanReducer {
                  }
 	 */
 
-	JSONObject reduceNonfunctionalNode(JSONObject obj) {
+	JSONObject reduceNonfunctionalNode(JSONObject curNode) {
 		// sort and hash nodes don't do anything (at least in non-JSON formatted query plans)
-		JSONArray children = qParser.getChildrenPlanNodes(obj);
+		JSONArray children = qParser.getChildrenPlanNodes(curNode);
 		//TODO: may want this to take the output attributes from this node instead? probably not, but maybe
 		JSONObject reducedNode = reduceNode((JSONObject) children.get(0));
 		// maybe should get outputAttributes from this node though.
 		// could then also use it for subquery scans?
 		
+		return reducedNode;
+	}
+	
+	JSONObject reduceSortNode(JSONObject curNode) {
+		// assuming only one child
+		JSONArray children = qParser.getChildrenPlanNodes(curNode);
+		JSONObject reducedNode = reduceNode((JSONObject) children.get(0));
+		JSONArray orderBy = qParser.getSortKey(curNode);
+		System.out.println("order by " + orderBy.toJSONString());
+		JSONArray finalOrderBy = new JSONArray();
+		Iterator<String> it = orderBy.iterator();
+		while (it.hasNext()) {
+			String attr = it.next();
+			String[] tmp = attr.split("\\.");
+			if (tmp.length == 2) {
+				attr = tmp[0] + "_" + tmp[1];
+			}
+			finalOrderBy.add(attr);
+		}
+		reducedNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SORT_KEY), finalOrderBy);
 		return reducedNode;
 	}
 
@@ -335,8 +356,6 @@ public class PlanReducer {
 		while (ccnIt.hasNext() && oaIt.hasNext()) {
 			String outputName = oaIt.next();
 			String childColName = ccnIt.next();
-			System.out.println(outputName);
-			System.out.println(childColName);
 			String[] ar = outputName.split("\\.");
 			if (ar.length == 2) {
 				outputName = ar[0] + "_" + ar[1];
@@ -371,12 +390,9 @@ public class PlanReducer {
 			while (cit.hasNext()) {
 				JSONObject child = cit.next();
 				reducedChild = reduceNode(child);
-				System.out.println(qParser.getSubplanName(child));
 				if (!qParser.getSubplanName(child).equals("")) {
-					System.out.println("hi");
 					reducedChild.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SUBPLAN_NAME), qParser.getSubplanName(child));
 				}
-				System.out.println(child);
 				reducedChildren.add(reducedChild);
 			}
 		}
@@ -394,6 +410,7 @@ public class PlanReducer {
 	// and other child needs special treatment
 		
 	// TODO: implement
+	/*
 	JSONObject reduceSubplanNode(JSONObject curNode) {
 		JSONObject reducedNode = new JSONObject();
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);
@@ -408,7 +425,7 @@ public class PlanReducer {
 		
 		return makeSubplanNode(children, qParser.getSubplanName(curNode), qParser.getOutputAttributes(curNode));
 	}
-
+*/
 	
 	JSONObject reduceAggregateNode(JSONObject curNode) {
 		JSONObject reducedNode = new JSONObject();
@@ -496,14 +513,14 @@ public class PlanReducer {
 		
 		JSONArray aliasSet = QueryProcessingUtilities.concatArrays(getAliasSet(reducedFirstChild), getAliasSet(reducedSecondChild));
 		// TODO: include original filters for display
-		reducedJoinNode.put("type", "join");
-		reducedJoinNode.put("children", children);
-		reducedJoinNode.put("filter", aliasReplacedFilter);
-		reducedJoinNode.put("joinCondition", aliasReplacedFinalJoinCond);
-		reducedJoinNode.put("joinType", joinType);
-		reducedJoinNode.put("outputAttrs", newOutputAttrs);
-		reducedJoinNode.put("aliasSet", aliasSet);
-		reducedJoinNode.put("newTableName", "tmp" + curTmp + "_" + id);
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE), "join");
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN), children);
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.FILTER), aliasReplacedFilter);
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.JOIN_CONDITION), aliasReplacedFinalJoinCond);
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.JOIN_TYPE), joinType);
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS), newOutputAttrs);
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ALIAS_SET), aliasSet);
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME), "tmp" + curTmp + "_" + id);
 		curTmp++;
 				
 		return reducedJoinNode;
@@ -574,13 +591,13 @@ public class PlanReducer {
 			}
 		}
 		
-		reducedAggregateNode.put("type", "aggregate");
-		reducedAggregateNode.put("children", children);
-		reducedAggregateNode.put("filter", filter);
-		reducedAggregateNode.put("outputAttrs", newOutputAttrs);
-		reducedAggregateNode.put("aliasSet", aliasSet);
-		reducedAggregateNode.put("newTableName", "tmp" + curTmp + "_" + id);
-		reducedAggregateNode.put("groupByAttrs", groupByAttrs);
+		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE), "aggregate");
+		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN), children);
+		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.FILTER), filter);
+		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS), newOutputAttrs);
+		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ALIAS_SET), aliasSet);
+		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME), "tmp" + curTmp + "_" + id);
+		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.GROUP_BY_ATTRS), groupByAttrs);
 		curTmp++;
 		
 		return reducedAggregateNode;
@@ -613,31 +630,33 @@ public class PlanReducer {
 		JSONArray aliasSet = new JSONArray();
 		// TODO: if attributes have alias, add alias name to attribute name
 		aliasSet.add(alias);
-		reducedScanNode.put("type", "scan");
-		reducedScanNode.put("filter", filterCond);
-		reducedScanNode.put("aliasSet", aliasSet);
-		reducedScanNode.put("inputTable", inputTable);
-		reducedScanNode.put("outputAttrs", newOutputAttrs);
-		reducedScanNode.put("newTableName", "tmp" + curTmp + "_" + id);
+		reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE), "scan");
+		reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.FILTER), filterCond);
+		reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ALIAS_SET), aliasSet);
+		reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.INPUT_TABLE), inputTable);
+		reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS), newOutputAttrs);
+		reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME), "tmp" + curTmp + "_" + id);
 		if (reducedChildren != null) {
-			reducedScanNode.put("children", reducedChildren);			
+			reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN), reducedChildren);			
 		}
 		curTmp++;
 		
 		return reducedScanNode;
 	}
 	
+	/*
 	JSONObject makeSubplanNode(JSONArray reducedChildren, String subplanName, JSONArray outputAttrs) {
 		JSONObject reducedSubplanNode = new JSONObject();
 		JSONArray newOutputAttrs = QueryProcessingUtilities.renameAttributesSimple(outputAttrs);
 
-		reducedSubplanNode.put("type", "subplan");
-		reducedSubplanNode.put("children", reducedChildren);
-		reducedSubplanNode.put("subplan name", subplanName);
-		reducedSubplanNode.put("outputAttrs", newOutputAttrs);
+		reducedSubplanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE, "subplan");
+		reducedSubplanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN, reducedChildren);
+		reducedSubplanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SUBPLAN_NAME, subplanName);
+		reducedSubplanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS, newOutputAttrs);
 
 		return reducedSubplanNode;
 	}
+	*/
 		// node type: if it's a join type (hash, sort merge, inl, nl), we'll make a join node
 		// we'll look at the join conditions and stick them in the where clause
 		// may be some complications with aliasing/figuring out what relation an attribute comes from
@@ -759,7 +778,8 @@ public class PlanReducer {
 		GROUP_BY_ATTRS,
 		CHILDREN,
 		QUERY, 
-		SUBPLAN_NAME
+		SUBPLAN_NAME,
+		SORT_KEY
 		};
 		
 	// mapping between enum and the actual returned string for all attributes EXPLAIN can return
@@ -778,7 +798,8 @@ public class PlanReducer {
 		 map.put(REDUCED_PLAN_ATTRS.GROUP_BY_ATTRS, "groupByAttrs");
 		 map.put(REDUCED_PLAN_ATTRS.CHILDREN, "children");
 		 map.put(REDUCED_PLAN_ATTRS.QUERY, "query");
-		 map.put(REDUCED_PLAN_ATTRS.SUBPLAN_NAME, "subplan name");
+		 map.put(REDUCED_PLAN_ATTRS.SUBPLAN_NAME, "subplanName");
+		 map.put(REDUCED_PLAN_ATTRS.SORT_KEY, "sortKey");
 		 return Collections.unmodifiableMap(map);
 	}
 	
@@ -885,6 +906,11 @@ public class PlanReducer {
 	public JSONArray getOutputAttributes(JSONObject currentNode)
 	{
 		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS));
+	}
+	
+	public JSONArray getSortKey(JSONObject currentNode)
+	{
+		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SORT_KEY));
 	}
 	
 	public JSONArray getGroupByAttributes(JSONObject currentNode)

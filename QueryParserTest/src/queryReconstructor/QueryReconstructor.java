@@ -173,7 +173,17 @@ public class QueryReconstructor {
 			// has filter, needs where clause.
 			query = query + " where " + filter;
 		}
-
+		if (pr.getSortKey(curNode) != null) {
+			query = query + " order by ";
+			JSONArray sortKey = pr.getSortKey(curNode);
+			Iterator<String> skit = sortKey.iterator();
+			while (skit.hasNext()) {
+				query = query + " " + skit.next() + ",";
+			}
+			// remove last comma
+			query = query.substring(0, query.length() - 1);
+		}
+		
 		return query;
 	}
 	
@@ -219,6 +229,17 @@ public class QueryReconstructor {
 			query = query + " where " + filter;
 		}
 
+		if (pr.getSortKey(curNode) != null) {
+			query = query + " order by ";
+			JSONArray sortKey = pr.getSortKey(curNode);
+			Iterator<String> skit = sortKey.iterator();
+			while (skit.hasNext()) {
+				query = query + " " + it.next() + ",";
+			}
+			// remove last comma
+			query = query.substring(0, query.length() - 1);
+		}
+
 		return query;
 	}
 	
@@ -255,6 +276,17 @@ public class QueryReconstructor {
 		if (!filter.equals("")) {
 			query = query + " having " + filter;
 		}
+
+		if (pr.getSortKey(curNode) != null) {
+			query = query + " order by ";
+			JSONArray sortKey = pr.getSortKey(curNode);
+			Iterator<String> skit = sortKey.iterator();
+			while (skit.hasNext()) {
+				query = query + " " + it.next() + ",";
+			}
+			// remove last comma
+			query = query.substring(0, query.length() - 1);
+		}
 		
 		return query;
 	}
@@ -285,7 +317,7 @@ public class QueryReconstructor {
 	{
 		// input file containing the returned query plan
 	//	String inputFilePath = "/Users/watermelon/Dropbox/EECS584/Project/code/eecs584f14/TestingData/QueryPlan1_verbose.txt";
-		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan9_BuggyQuery1.txt";//QueryPlan8_BuggyQuery2.txt";//QueryPlan6_project37a.txt";//QueryPlan7_subplan.txt";//QueryPlan1_verbose.txt";//QueryPlan4_nested.txt";//QueryPlan2_aggregation.txt";//QueryPlan3_groupby.txt";//QueryPlan5_nested2.txt";//
+		String inputFilePath = "/afs/umich.edu/user/d/a/daneliza/dwtemp/F14/eecs584/eecs584f14/TestingData/QueryPlan6_project37a.txt";//QueryPlan9_BuggyQuery1.txt";//QueryPlan8_BuggyQuery2.txt";//QueryPlan7_subplan.txt";//QueryPlan1_verbose.txt";//QueryPlan4_nested.txt";//QueryPlan2_aggregation.txt";//QueryPlan3_groupby.txt";//QueryPlan5_nested2.txt";//
 		
 		// create a new query parser for this query plan
 		QueryParser qParser = new QueryParser(inputFilePath);	
