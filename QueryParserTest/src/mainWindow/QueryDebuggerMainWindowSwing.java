@@ -439,12 +439,21 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent e) {
                 if (btnSubQuerySubmit.getText() == "Submit"){
                     // submit query to connector and receive tree
+                	subQueryPane.setEditable(false);
                     btnSubQuerySubmit.setText("Edit"); 
                     btnSubQueryCancel.setEnabled(false);
                     btnExpandAll_sampleData.setText("Expand All");
                     queryFrom_sampleData.setText("Subquery");
               
-                    samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");  
+                    try {
+                    	samplePair = connector.executeTestQuery(subQueryPane.getText());
+                    	//samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");
+					} catch (SQLException e1) {
+						JOptionPane.showMessageDialog(getParent(),                                                
+                                "Input query has invalid Syntax. \n" + e1.getMessage(),
+                                "Input error",
+                                JOptionPane.ERROR_MESSAGE);
+					}  
     
                     model_sampleData.setColumnIdentifiers(samplePair.attributes);
                     model_sampleData.setRowCount(0);
@@ -456,6 +465,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     model_sampleData.fireTableDataChanged();
                     
                 } else if (btnSubQuerySubmit.getText() == "Edit") {
+                	subQueryPane.setEditable(true);
                     subQueryPane.setEnabled(true);
                     btnSubQuerySubmit.setText("Submit");
                     btnSubQueryCancel.setEnabled(true);
@@ -733,16 +743,30 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 if (btnExpandAll_sampleData.getText() == "Expand All"){
                     //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
                     if (queryFrom_sampleData.getText().equals("Subquery"))
-                        samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");  
-                    else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
+						try {
+							samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");
+						} catch (SQLException e1) {
+							JOptionPane.showMessageDialog(getParent(),                                                
+                                    "Input query has invalid Syntax. \n" + e1.getMessage(),
+                                    "Input error",
+                                    JOptionPane.ERROR_MESSAGE);
+						}
+					else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
                         samplePair = connector.getAllSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());
                     
                     btnExpandAll_sampleData.setText("Collapse sample");
                 } else {
                     //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
                     if (queryFrom_sampleData.getText().equals("Subquery"))
-                        samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");  
-                    else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
+						try {
+							samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");
+						} catch (SQLException e1) {
+							JOptionPane.showMessageDialog(getParent(),                                                
+                                    "Input query has invalid Syntax. \n" + e1.getMessage(),
+                                    "Input error",
+                                    JOptionPane.ERROR_MESSAGE);
+						}
+					else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
                         samplePair = connector.getSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());               
                     btnExpandAll_sampleData.setText("Expand All");
                 }
@@ -825,12 +849,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 } catch (SQLException e1)
                 {
                     JOptionPane.showMessageDialog(getParent(),                                                
-                                                  "Searching input is not valid. \nPlease check input data and format\n(e.g. whether you have single quotes surrounding strings).",
+                                                  "Searching input is not valid. \n" + e1.getMessage()+ "\nPlease check input data and format\n (e.g. quotes for non-numeric attributes)",
                                                   "Input error",
-                                                  JOptionPane.ERROR_MESSAGE);
-
-                    e1.printStackTrace();
-                    
+                                                  JOptionPane.ERROR_MESSAGE); 
                 }                
             }
 
