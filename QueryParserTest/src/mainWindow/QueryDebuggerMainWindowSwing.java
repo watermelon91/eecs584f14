@@ -1287,7 +1287,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             @Override
             public void windowClosing(WindowEvent e) {
                 // TODO Auto-generated method stub
-                connector.closeDBConnection();
+            	if(connector != null)
+            	{
+            		connector.closeDBConnection();
+            	}
                 System.out.println("close on exit");
             }
 
