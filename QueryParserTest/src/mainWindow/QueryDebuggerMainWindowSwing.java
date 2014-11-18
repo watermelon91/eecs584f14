@@ -1378,6 +1378,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
     private void drawPlanTree(final mxGraph graph, LinkedBinaryTreeNode<QueryPlanTreeNode> tree, final Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects){
         final Object parent = graph.getDefaultParent();
+        treeObjects.clear();
 
         graph.getModel().beginUpdate();
         graph.removeCells(graph.getChildVertices(graph.getDefaultParent()));
