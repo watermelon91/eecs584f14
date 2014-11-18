@@ -1380,6 +1380,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         final Object parent = graph.getDefaultParent();
 
         graph.getModel().beginUpdate();
+        graph.removeCells(graph.getChildVertices(graph.getDefaultParent()));
         
         final Map<BinaryTreeNode<?>, PlanTreeNode> coordinates = new HashMap<BinaryTreeNode<?>, PlanTreeNode>();
         final int maxshift = traverse(tree, 0, coordinates);
