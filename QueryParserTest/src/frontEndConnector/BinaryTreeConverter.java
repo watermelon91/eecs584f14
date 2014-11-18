@@ -20,12 +20,14 @@ public class BinaryTreeConverter {
 	private List<String> createStatements;
 	private List<String> newTableNames;
 	private static final int MAX_CHILDREN_NUM = 2;
+	private HashMap<String, String> abbToFullTmpNameMap;
 	
 	public BinaryTreeConverter(QueryReconstructor _pReconstructor)
 	{
 		pReducer = _pReconstructor.getPlanReducer();
 		createStatements = new ArrayList<String>();
 		newTableNames = new ArrayList<String>();
+		abbToFullTmpNameMap = new HashMap<String, String>();
 	}
 
 	// convert a JSONObject query plan to a tree format
@@ -51,6 +53,11 @@ public class BinaryTreeConverter {
 	public List<String> getAllTempTableNames()
 	{
 		return newTableNames;
+	}
+	
+	public HashMap<String, String> getTmpTableNameMap()
+	{
+		return abbToFullTmpNameMap;
 	}
 	
 	// recursive construct the tree
@@ -104,6 +111,7 @@ public class BinaryTreeConverter {
 		{
 			newTableNames.add(pReducer.getNewTableName(currentNode));
 		}
+		abbToFullTmpNameMap.put(node.getAbbrNewTableName(), node.getNewTableName());
 		
 		return treeNode;
 	}

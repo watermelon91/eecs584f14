@@ -1,6 +1,7 @@
 package frontEndConnector;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class FrontEndConnector {
 	private String password = "";
 	private PostgresDBConnector pdbConnector = null;
 	private List<String> tmpTableNames = null;
+	private HashMap<String, String> abbToFullTmpTableMap = new HashMap<String, String>();
 		
 	public FrontEndConnector(String _dbIP, String _dbName, String _userName, String _password)
 	{
@@ -65,6 +67,7 @@ public class FrontEndConnector {
 		LinkedBinaryTreeNode<QueryPlanTreeNode>  treeRoot =  converter.convertToTree();	
 		initializeAllTempTables(converter.getAllTempTableCreateStatements());
 		tmpTableNames = converter.getAllTempTableNames();
+		abbToFullTmpTableMap = converter.getTmpTableNameMap();
 		
 		return treeRoot;
 	}
@@ -151,7 +154,7 @@ public class FrontEndConnector {
 	 */
 	public Pair executeTestQuery(String query)
 	{
-		return executeQuerySeparateResultAddQuotes(query, 10);
+		return executeQuerySeparateResultAddQuotes(fixTableName(query), 10);
 	}
 	
 	/*
@@ -165,7 +168,19 @@ public class FrontEndConnector {
 	 */
 	public Pair executeTestQueryAll(String query)
 	{
-		return executeQuerySeparateResultAddQuotes(query, Integer.MAX_VALUE);
+		return executeQuerySeparateResultAddQuotes(fixTableName(query), Integer.MAX_VALUE);
+	}
+	
+	private String fixTableName(String inQuery)
+	{
+		for(String key : abbToFullTmpTableMap.keySet())
+		{
+			if(inQuery.contains(key))
+			{
+				inQuery = inQuery.replaceAll(key, abbToFullTmpTableMap.get(key));
+			}
+		}
+		return inQuery;
 	}
 		
 	private Pair executeQuerySeparateResultAddQuotes(String query, int LIMIT) 

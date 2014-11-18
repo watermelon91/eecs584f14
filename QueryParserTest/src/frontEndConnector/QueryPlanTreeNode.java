@@ -3,6 +3,7 @@ package frontEndConnector;
 import  java.lang.Math;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import com.sun.xml.internal.ws.util.StringUtils;
@@ -68,28 +69,15 @@ public class QueryPlanTreeNode {
 		
 		// make table names readable
 		// construct extra ID list
-		List<String> extraIDStrs = new ArrayList<String>();
-		String[] inTables = abbrInputTable.split(",");
-		for(int i = 0; i < inTables.length; i++)
-		{
-			String ext = getExtraIDStrInTmpTable(inTables[i]);	
-			if(!ext.equals(""))
-			{
-				extraIDStrs.add(ext);
-			}
-		}
-		String ext = getExtraIDStrInTmpTable(newTableName);
-		if(!ext.equals(""))
-		{
-			extraIDStrs.add(ext);
-		}
+		String tableExtraStr = getExtraIDStrInTmpTable(newTableName);
+		
 		// remove extra IDs
-		abbrAliasSet = removeExtraIDStr(abbrAliasSet, extraIDStrs);
-		abbrFilter = removeExtraIDStr(abbrFilter, extraIDStrs);
-		abbrInputTable = removeExtraIDStr(abbrInputTable, extraIDStrs);
-		abbrNewTableName = removeExtraIDStr(abbrNewTableName, extraIDStrs);
-		abbrJoinCondition = removeExtraIDStr(abbrJoinCondition, extraIDStrs);
-		abbrOutputAttrs = removeExtraIDStr(abbrOutputAttrs, extraIDStrs);
+		abbrAliasSet = removeExtraIDStr(abbrAliasSet, tableExtraStr);
+		abbrFilter = removeExtraIDStr(abbrFilter, tableExtraStr);
+		abbrInputTable = removeExtraIDStr(abbrInputTable, tableExtraStr);
+		abbrNewTableName = removeExtraIDStr(abbrNewTableName, tableExtraStr);
+		abbrJoinCondition = removeExtraIDStr(abbrJoinCondition, tableExtraStr);
+		abbrOutputAttrs = removeExtraIDStr(abbrOutputAttrs, tableExtraStr);
 		
 		// construct abbrevated node
 		abbrTreeNode = new AbbreviatedTreeNode(constructLargeFontString(), constructSmallFontString(), abbrNewTableName);
@@ -111,12 +99,11 @@ public class QueryPlanTreeNode {
 		}
 	}
 	
-	private String removeExtraIDStr(String inStr, List<String> extraIDs)
+	private String removeExtraIDStr(String inStr, String tableExtraStr)
 	{
-		for(String extra : extraIDs)
-		{
-			inStr = inStr.replaceAll(extra, "");
-		}
+		
+		inStr = inStr.replaceAll(tableExtraStr, "");
+		
 		return inStr;
 	}
 	
@@ -190,6 +177,11 @@ public class QueryPlanTreeNode {
 	public String getNewTableName()
 	{
 		return newTableName;
+	}
+	
+	public String getAbbrNewTableName()
+	{
+		return abbrNewTableName;
 	}
 	
 	public String getJoinCondition()
