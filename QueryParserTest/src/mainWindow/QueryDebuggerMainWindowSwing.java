@@ -46,8 +46,8 @@ import com.mxgraph.util.mxConstants;
 import com.mxgraph.view.mxGraph;
 import com.sun.xml.internal.ws.util.StringUtils;
 
+import databaseConnector.PostgresDBConnector.Pair;
 import frontEndConnector.FrontEndConnector;
-import frontEndConnector.FrontEndConnector.Pair;
 import frontEndConnector.QueryPlanTreeNode;
 
 public class QueryDebuggerMainWindowSwing extends JFrame{
@@ -196,7 +196,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 if (btnDbSubmit.getText() == "Submit"){
                     //connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia" , "eecs58414");
                     //connector = new FrontEndConnector("127.0.0.1","K" , textUsername.getText(), textPassword.getText());
-                    connector = new FrontEndConnector("127.0.0.1","postgres" , "K", "5432");
+                    connector = new FrontEndConnector("127.0.0.1", "postgres", "K", "5432");
 
                     String rst = connector.initializeSQLConnection();
                     if(rst.isEmpty())

@@ -13,6 +13,7 @@ import queryReconstructor.PlanReducer;
 import queryReconstructor.QueryReconstructor;
 import databaseConnector.PostgresDBConnector;
 import databaseConnector.PostgresDBConnector.InputQueryNotSELECTALL;
+import databaseConnector.PostgresDBConnector.Pair;
 import databaseConnector.PostgresDBConnector.QueryAttrNumNotMatch;
 import frontEndConnector.DataPlanConstructor.rowDataAndAttributeMismatchException;
 
@@ -24,17 +25,7 @@ public class FrontEndConnector {
 	private String password = "";
 	private PostgresDBConnector pdbConnector = null;
 	private List<String> tmpTableNames = null;
-	
-	public class Pair{
-		public String[] attributes;
-		public List<String[]> data;
 		
-		public Pair(String[] _attr, List<String[]> _data){
-			attributes = _attr;
-			data = _data;
-		}
-	}
-	
 	public FrontEndConnector(String _dbIP, String _dbName, String _userName, String _password)
 	{
 		dbIP = _dbIP;
@@ -141,31 +132,12 @@ public class FrontEndConnector {
 	 */
 	public Pair getSampleData(String tableName)
 	{
-		try {
-			return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName + " LIMIT 10", 10, tableName);
-		} catch (InputQueryNotSELECTALL e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (QueryAttrNumNotMatch e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+		return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName + " LIMIT 10", 10);
 	}
 	
 	public Pair getAllSampleData(String tableName)
 	{
-		try {
-			return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName, Integer.MAX_VALUE, tableName);
-		} catch (InputQueryNotSELECTALL e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (QueryAttrNumNotMatch e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return null;
+		return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName, Integer.MAX_VALUE);
 	}
 	
 	/*
@@ -179,7 +151,7 @@ public class FrontEndConnector {
 	 */
 	public Pair executeTestQuery(String query)
 	{
-		return executeQuerySeparateResult(query, 10);
+		return executeQuerySeparateResultAddQuotes(query, 10);
 	}
 	
 	/*
@@ -193,18 +165,14 @@ public class FrontEndConnector {
 	 */
 	public Pair executeTestQueryAll(String query)
 	{
-		return executeQuerySeparateResult(query, Integer.MAX_VALUE);
+		return executeQuerySeparateResultAddQuotes(query, Integer.MAX_VALUE);
 	}
 		
-	private Pair executeQuerySeparateResultAddQuotes(String query, int LIMIT, String tableName) throws InputQueryNotSELECTALL, QueryAttrNumNotMatch
+	private Pair executeQuerySeparateResultAddQuotes(String query, int LIMIT) 
 	{
 		try 
 		{
-			List<String[]> result = pdbConnector.executeQuerySeparateResult(query, LIMIT, tableName);
-			String[] attrs = getReturnedAttr(query);
-			
-			Pair rstPair = new Pair(attrs, result);			
-			return rstPair;
+			return pdbConnector.executeQuerySeparateResult(query, LIMIT);
 		} 
 		catch (SQLException e) 
 		{
@@ -212,40 +180,6 @@ public class FrontEndConnector {
 			e.printStackTrace();
 			return null;
 		}	
-	}
-	
-	private Pair executeQuerySeparateResult(String query, int LIMIT)
-	{
-		try {
-			return executeQuerySeparateResultAddQuotes(query, LIMIT, "");
-		} catch (InputQueryNotSELECTALL e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (QueryAttrNumNotMatch e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
-	
-	private String[] getReturnedAttr(String query)
-	{
-		String queryPlanStr = executeQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
-		QueryParser qParser = new QueryParser(queryPlanStr, true);
-		JSONArray attrs = qParser.getOutputAttributes(qParser.topLevelNode);
-		System.out.println(attrs.toJSONString());
-		
-		String[] attrStrArray = new String[attrs.size()];
-		Iterator<String> aiterator = attrs.iterator();
-		int count = 0;
-		while(aiterator.hasNext() && count < attrs.size())
-		{
-			attrStrArray[count] = aiterator.next();
-			count++;
-		}
-		
-		return attrStrArray;
 	}
 	
 	public String executeQuery(String query)

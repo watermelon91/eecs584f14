@@ -226,35 +226,24 @@ public class DataPlanConstructor {
 		System.out.println("WHERE: " + whereClause);
 		
 		List<String[]> values = null;
-		try 
+		if(!whereClause.equals(""))
 		{
-			if(!whereClause.equals(""))
+			String query = "SELECT * FROM " + node.getNewTableName() + " WHERE " + whereClause; 
+			System.out.println("Query: " + query);
+			values = pgConnector.executeQuerySeparateResult(query, Integer.MAX_VALUE).data;
+			if(values.size() == 0)
 			{
-				String query = "SELECT * FROM " + node.getNewTableName() + " WHERE " + whereClause; 
-				System.out.println("Query: " + query);
-				values = pgConnector.executeQuerySeparateResult(query, Integer.MAX_VALUE, node.getNewTableName());
-				if(values.size() == 0)
-				{
-					System.out.println("VALUES: NON-MATCHING");
-				}
-				else
-				{
-					System.out.println("VALUES: " + Arrays.asList(values.get(0)).toString());
-				}
+				System.out.println("VALUES: NON-MATCHING");
 			}
 			else
 			{
-				values = null;
+				System.out.println("VALUES: " + Arrays.asList(values.get(0)).toString());
 			}
-		} 
-		catch (InputQueryNotSELECTALL e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (QueryAttrNumNotMatch e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
+		else
+		{
+			values = null;
+		}
 		DataPlanTreeNode dataNode = null;
 		try 
 		{

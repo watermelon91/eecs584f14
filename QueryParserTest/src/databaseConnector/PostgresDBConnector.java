@@ -15,6 +15,16 @@ public class PostgresDBConnector {
 	public class InputQueryNotSELECTALL extends Exception{}
 	public class QueryAttrNumNotMatch extends Exception{}
 	
+	public class Pair{
+		public String[] attributes;
+		public List<String[]> data;
+		
+		public Pair(String[] _attr, List<String[]> _data){
+			attributes = _attr;
+			data = _data;
+		}
+	}
+	
 	/*
 	 * Example input: IP: 127.0.0.1
 	 * 				  dbName: eecs584
@@ -108,61 +118,6 @@ public class PostgresDBConnector {
 		return queryResult;
 	}
 	
-	public List<String[]> executeQuerySeparateResult(String query, int LIMIT, String tableName) throws SQLException, InputQueryNotSELECTALL, QueryAttrNumNotMatch
-	{
-		// the input query has to start with "SELECT * FROM", otherwise difficulty to track attr types
-		if(!query.startsWith("SELECT * FROM"))
-		{
-			throw new InputQueryNotSELECTALL();
-		}
-		
-		// get query result
-		List<String[]> results = executeQuerySeparateResult(query, LIMIT);
-		
-		if(results.size() == 0)
-		{
-			return results;
-		}
-		
-		// get column types of the attributes
-		List<String[]> dataTypes = null;
-		try 
-		{
-			dataTypes = executeQuerySeparateResult(" select data_type from information_schema.columns where table_name = '" + tableName + "'", Integer.MAX_VALUE);
-		} 
-		catch (SQLException e) 
-		{
-			e.printStackTrace();
-		}
-		int numColumn = results.get(0).length;
-		if(numColumn != dataTypes.size())
-		{
-			throw new QueryAttrNumNotMatch();
-		}
-		// flatten column types
-		String[] columnTypes = new String[numColumn];
-		for(int i = 0; i < dataTypes.size(); i++)
-		{
-			columnTypes[i] = dataTypes.get(i)[0];
-		}
-		
-		// add '' to non-numeric types
-		for(int i = 0; i < results.size(); i++)
-		{
-			String[] curRow = results.get(i);
-			for(int j = 0; j < curRow.length; j++)
-			{
-				if(needsQuote(columnTypes[j]))
-				{
-					curRow[j] = "'" + curRow[j] + "'";
-				}
-			}
-			results.set(i, curRow);
-		}
-		
-		return results;
-	}
-	
 	private boolean needsQuote(String attrType)
 	{
 		if(attrType.equals("bigint") ||
@@ -195,7 +150,7 @@ public class PostgresDBConnector {
 		}
 	}
 	
-	public List<String[]> executeQuerySeparateResult(String query, int LIMIT) throws SQLException
+	public Pair executeQuerySeparateResult(String query, int LIMIT) throws SQLException
 	{
 		Statement stmt = null;
 		ResultSet rst = null;
@@ -206,6 +161,14 @@ public class PostgresDBConnector {
 		
 		int numCol = metadata.getColumnCount();
 		List<String[]> queryResult = new ArrayList<String[]>(); 
+		String[] attrTypes = new String[numCol];
+		String[] attrNames = new String[numCol];
+		
+		for(int i = 1; i <= numCol; i++)
+		{
+			attrTypes[i-1] = metadata.getColumnTypeName(i);
+			attrNames[i-1] = metadata.getColumnLabel(i);
+		}
 		
 		int count = 0;
 		while(rst.next() && count < LIMIT)
@@ -214,6 +177,11 @@ public class PostgresDBConnector {
 			for(int idx = 1; idx <= numCol; idx++)
 			{
 				curRow[idx-1] = rst.getString(idx);
+
+				if(needsQuote(attrTypes[idx-1]))
+				{
+					curRow[idx-1] = "'" + curRow[idx-1] + "'";
+				}
 			}
 			queryResult.add(curRow);
 			count++;
@@ -228,7 +196,7 @@ public class PostgresDBConnector {
 			rst.close();
 		}
 		
-		return queryResult;
+		return new Pair(attrNames, queryResult);
 	}
 	
 	public String closeConnector()
