@@ -313,11 +313,24 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 {
                                     connector.dropAllTmpTables();
                                     //tree_sampleData = connector.debugQuery("SELECT c1.customerid, c2.customerid, o1.totalamount, o2.totalamount, o1.orderdate,  o2.orderdate FROM cust_hist c1, cust_hist c2, orders o1, orders o2 WHERE c1.customerid > c2.customerid AND c1.prod_id = c2.prod_id AND o1.orderid = c1.orderid AND o2.orderid = c2.orderid AND o1.totalamount - o2.totalamount > 500 AND o1.orderdate - o2.orderdate = 0;");
-                                    tree_sampleData = connector.debugQuery("select * from hrecords h, users u, (select user_id from users u2) as t where h.user_id = u.user_id and u.user_id = t.user_id;");
-                                } catch (Exception e)
+                                    if(!queryPane.getText().equals(""))
+                                    {
+                                    	tree_sampleData = connector.debugQuery(queryPane.getText());
+                                    }
+                                }
+                                catch(SQLException e1)
                                 {
-                                    // TODO Auto-generated catch block
-                                    e.printStackTrace();
+                                	JOptionPane.showMessageDialog(getParent(),                                                
+                                            "Input query invalid. \n" + e1.getMessage(),
+                                            "Input error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                                catch (Exception e)
+                                {
+                                	JOptionPane.showMessageDialog(getParent(),                                                
+                                            "Input query invalid. \n" + e.getMessage(),
+                                            "Input error",
+                                            JOptionPane.ERROR_MESSAGE);
                                 }
                                 
                                 if (tree_sampleData!= null) {
@@ -446,7 +459,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     queryFrom_sampleData.setText("Subquery");
               
                     try {
-                    	samplePair = connector.executeTestQuery(subQueryPane.getText());
+                    	if(!subQueryPane.getText().equals(""))
+                    	{
+                    		samplePair = connector.executeTestQuery(subQueryPane.getText());
+                    	}
                     	//samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");
 					} catch (SQLException e1) {
 						JOptionPane.showMessageDialog(getParent(),                                                
@@ -744,7 +760,11 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
                     if (queryFrom_sampleData.getText().equals("Subquery"))
 						try {
-							samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");
+							//samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");
+							if(!subQueryPane.getText().equals(""))
+							{
+								samplePair = connector.executeTestQueryAll(subQueryPane.getText());
+							}
 						} catch (SQLException e1) {
 							JOptionPane.showMessageDialog(getParent(),                                                
                                     "Input query has invalid Syntax. \n" + e1.getMessage(),
@@ -759,7 +779,11 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
                     if (queryFrom_sampleData.getText().equals("Subquery"))
 						try {
-							samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");
+							//samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");
+							if(!subQueryPane.getText().equals(""))
+							{
+								samplePair = connector.executeTestQuery(subQueryPane.getText());
+							}
 						} catch (SQLException e1) {
 							JOptionPane.showMessageDialog(getParent(),                                                
                                     "Input query has invalid Syntax. \n" + e1.getMessage(),

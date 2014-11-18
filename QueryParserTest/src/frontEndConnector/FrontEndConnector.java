@@ -200,22 +200,13 @@ public class FrontEndConnector {
 		return pdbConnector.executeQuerySeparateResult(query, LIMIT);	
 	}
 	
-	public String executeQuery(String query)
+	public String executeQuery(String query) throws SQLException
 	{
-		List<String> result = null;
-		try 
-		{
-			result = pdbConnector.executeQuery(query);
-			String resultStr = result.toString();
-			
-			// use substring to remove the extra pair of [] added by List.toString()
-			return resultStr.substring(1, resultStr.length()-1);
-		} 
-		catch (SQLException e) 
-		{
-			e.printStackTrace();
-			return e.getMessage();
-		}
+		List<String> result = result = pdbConnector.executeQuery(query);
+		String resultStr = result.toString();
+		
+		// use substring to remove the extra pair of [] added by List.toString()
+		return resultStr.substring(1, resultStr.length()-1);
 	}
 	
 	public String dropAllTmpTables()
