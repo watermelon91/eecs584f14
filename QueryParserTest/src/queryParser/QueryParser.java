@@ -266,6 +266,17 @@ public class QueryParser {
 		return rst.toString();
 	}
 	
+	public String getSortKey(JSONObject currentNode)
+	{
+		// return the schema of this node
+		Object rst = currentNode.get(queryPlanAttrMapping.get(QUERY_PLAN_ATTRS.SORT_KEY));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
 	public String getStartupCost(JSONObject currentNode)
 	{
 		// return the startup cost of this node
@@ -354,6 +365,7 @@ public class QueryParser {
 		RELATION_NAME,
 		SCHEMA,
 		SCAN_DIRECTION,
+		SORT_KEY,
 		STARTUP_COST,
 		STRATEGY,
 		SUBPLAN_NAME,
@@ -383,6 +395,7 @@ public class QueryParser {
 		 map.put(QUERY_PLAN_ATTRS.RELATION_NAME, "Relation Name");
 		 map.put(QUERY_PLAN_ATTRS.SCAN_DIRECTION, "Scan Direction");
 		 map.put(QUERY_PLAN_ATTRS.SCHEMA, "Schema");
+		 map.put(QUERY_PLAN_ATTRS.SORT_KEY, "Sort Key");
 		 map.put(QUERY_PLAN_ATTRS.STARTUP_COST, "Startup Cost");
 		 map.put(QUERY_PLAN_ATTRS.STRATEGY, "Strategy");
 		 map.put(QUERY_PLAN_ATTRS.SUBPLAN_NAME, "Subplan Name");
