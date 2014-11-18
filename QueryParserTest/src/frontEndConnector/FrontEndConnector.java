@@ -135,12 +135,24 @@ public class FrontEndConnector {
 	 */
 	public Pair getSampleData(String tableName)
 	{
-		return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName + " LIMIT 10", 10);
+		try {
+			return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName + " LIMIT 10", 10);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public Pair getAllSampleData(String tableName)
 	{
-		return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName, Integer.MAX_VALUE);
+		try {
+			return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName, Integer.MAX_VALUE);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	/*
@@ -152,7 +164,7 @@ public class FrontEndConnector {
 	 *         Use string.split(",") to convert it back to an array. 
 	 *         See QueryParserTest for example. 
 	 */
-	public Pair executeTestQuery(String query)
+	public Pair executeTestQuery(String query) throws SQLException
 	{
 		return executeQuerySeparateResultAddQuotes(fixTableName(query), 10);
 	}
@@ -166,7 +178,7 @@ public class FrontEndConnector {
 	 *         Use string.split(",") to convert it back to an array. 
 	 *         See QueryParserTest for example. 
 	 */
-	public Pair executeTestQueryAll(String query)
+	public Pair executeTestQueryAll(String query) throws SQLException
 	{
 		return executeQuerySeparateResultAddQuotes(fixTableName(query), Integer.MAX_VALUE);
 	}
@@ -183,18 +195,9 @@ public class FrontEndConnector {
 		return inQuery;
 	}
 		
-	private Pair executeQuerySeparateResultAddQuotes(String query, int LIMIT) 
+	private Pair executeQuerySeparateResultAddQuotes(String query, int LIMIT) throws SQLException 
 	{
-		try 
-		{
-			return pdbConnector.executeQuerySeparateResult(query, LIMIT);
-		} 
-		catch (SQLException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}	
+		return pdbConnector.executeQuerySeparateResult(query, LIMIT);	
 	}
 	
 	public String executeQuery(String query)
