@@ -43,7 +43,6 @@ public class PostgresDBConnector {
 		} 
 		catch (ClassNotFoundException e) 
 		{
-			e.printStackTrace();
 			return "postgresql driver not found";
 		}
 		
@@ -57,7 +56,6 @@ public class PostgresDBConnector {
 		}
 		catch (SQLException e) 
 		{
-			e.printStackTrace();
 			return "connection setup failed";
 		}
 		

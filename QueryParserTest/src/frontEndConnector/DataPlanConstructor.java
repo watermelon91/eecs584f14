@@ -61,7 +61,7 @@ public class DataPlanConstructor {
 		}
 	}
 	
-	public LinkedBinaryTreeNode<QueryPlanTreeNode> build() throws SQLException
+	public LinkedBinaryTreeNode<QueryPlanTreeNode> build() throws SQLException, NonMatchingAttrCountAndValueCountException, BlankAttributesException
 	{
 		if(completePlanTreeRoot != null)
 		{
@@ -99,7 +99,7 @@ public class DataPlanConstructor {
 	private void downwardInsertDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rootPlanNode,
 			List<DataPair> rootPairList
-			) throws SQLException
+			) throws SQLException, NonMatchingAttrCountAndValueCountException, BlankAttributesException
 	{
 		DataPlanTreeNode root = createDataNode(rootPlanNode, rootPairList);
 		rootPlanNode.getData().setDataNode(root);
@@ -203,7 +203,7 @@ public class DataPlanConstructor {
 	private DataPlanTreeNode createDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode,
 			List<DataPair> curPairList
-			) throws SQLException
+			) throws SQLException, NonMatchingAttrCountAndValueCountException, BlankAttributesException
 	{
 		QueryPlanTreeNode node = planNode.getData();
 		
@@ -237,20 +237,7 @@ public class DataPlanConstructor {
 			}
 			
 			DataPlanTreeNode dataNode = null;
-			try 
-			{
-				dataNode = new DataPlanTreeNode(resultPair.attributes, resultPair.data);
-			} 
-			catch (NonMatchingAttrCountAndValueCountException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-			catch (BlankAttributesException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			dataNode = new DataPlanTreeNode(resultPair.attributes, resultPair.data);
 			
 			return dataNode;
 		}

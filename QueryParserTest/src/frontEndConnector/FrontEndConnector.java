@@ -7,16 +7,21 @@ import java.util.List;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 
 import binaryTree.LinkedBinaryTreeNode;
 import queryParser.QueryParser;
+import queryParser.QueryParser.MultipleTopLevelNodeException;
 import queryReconstructor.PlanReducer;
 import queryReconstructor.QueryReconstructor;
 import databaseConnector.PostgresDBConnector;
 import databaseConnector.PostgresDBConnector.InputQueryNotSELECTALL;
 import databaseConnector.PostgresDBConnector.Pair;
 import databaseConnector.PostgresDBConnector.QueryAttrNumNotMatch;
+import frontEndConnector.BinaryTreeConverter.MoreThanTwoChildrenException;
 import frontEndConnector.DataPlanConstructor.rowDataAndAttributeMismatchException;
+import frontEndConnector.DataPlanTreeNode.BlankAttributesException;
+import frontEndConnector.DataPlanTreeNode.NonMatchingAttrCountAndValueCountException;
 
 public class FrontEndConnector {
 	
@@ -51,7 +56,7 @@ public class FrontEndConnector {
 	 * Input: a query the user wants to debug
 	 * Output: a JSONObject representing the execution plan of the query
 	 */
-	public LinkedBinaryTreeNode<QueryPlanTreeNode>  debugQuery(String query) throws Exception
+	public LinkedBinaryTreeNode<QueryPlanTreeNode>  debugQuery(String query) throws SQLException, MoreThanTwoChildrenException, ParseException, MultipleTopLevelNodeException 
 	{
 		// get the query plan in string
 		String queryPlanStr = executeQuery("EXPLAIN (VERBOSE TRUE, FORMAT JSON) " + query);
@@ -76,7 +81,7 @@ public class FrontEndConnector {
 			LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot,
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
-			)
+			) throws SQLException, NonMatchingAttrCountAndValueCountException, BlankAttributesException
 	{
 		DataPlanConstructor constructor = null;
 		try {
@@ -89,12 +94,7 @@ public class FrontEndConnector {
 		if(constructor != null)
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> root = null;
-			try {
-				root = constructor.build();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			root = constructor.build();
 			return root;
 		}
 		else
@@ -107,7 +107,7 @@ public class FrontEndConnector {
 			LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot,
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode, 
 			String[] rowData
-			) throws SQLException
+			) throws SQLException, NonMatchingAttrCountAndValueCountException, BlankAttributesException
 	{
 		DataPlanConstructor constructor = null;
 		try {
