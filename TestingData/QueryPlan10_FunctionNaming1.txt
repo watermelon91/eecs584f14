@@ -1,0 +1,52 @@
+ [
+   {
+     "Plan": {
+       "Node Type": "Nested Loop",
+       "Join Type": "Inner",
+       "Startup Cost": 0.00,
+       "Total Cost": 447.82,
+       "Plan Rows": 6533,
+       "Plan Width": 1032,
+       "Output": ["char_length((dummy.text)::text)", "char_length((dummy_1.text)::text)"],
+       "Join Filter": "(char_length((dummy.text)::text) < char_length((dummy_1.text)::text))",
+       "Plans": [
+         {
+           "Node Type": "Seq Scan",
+           "Parent Relationship": "Outer",
+           "Relation Name": "dummy",
+           "Schema": "public",
+           "Alias": "dummy",
+           "Startup Cost": 0.00,
+           "Total Cost": 11.40,
+           "Plan Rows": 140,
+           "Plan Width": 516,
+           "Output": ["dummy.id", "dummy.text"]
+         },
+         {
+           "Node Type": "Materialize",
+           "Parent Relationship": "Inner",
+           "Startup Cost": 0.00,
+           "Total Cost": 12.10,
+           "Plan Rows": 140,
+           "Plan Width": 516,
+           "Output": ["dummy_1.text"],
+           "Plans": [
+             {
+               "Node Type": "Seq Scan",
+               "Parent Relationship": "Outer",
+               "Relation Name": "dummy",
+               "Schema": "public",
+               "Alias": "dummy_1",
+               "Startup Cost": 0.00,
+               "Total Cost": 11.40,
+               "Plan Rows": 140,
+               "Plan Width": 516,
+               "Output": ["dummy_1.text"]
+             }
+           ]
+         }
+       ]
+     }
+   }
+ ]
+

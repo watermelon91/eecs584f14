@@ -1,0 +1,88 @@
+ [
+   {
+     "Plan": {
+       "Node Type": "Hash Join",
+       "Join Type": "Inner",
+       "Startup Cost": 28.75,
+       "Total Cost": 33.48,
+       "Plan Rows": 140,
+       "Plan Width": 16,
+       "Output": ["(count(d.id))", "b.c"],
+       "Hash Cond": "((count(d.id)) = b.c)",
+       "Plans": [
+         {
+           "Node Type": "Aggregate",
+           "Strategy": "Hashed",
+           "Parent Relationship": "Outer",
+           "Startup Cost": 12.10,
+           "Total Cost": 13.50,
+           "Plan Rows": 140,
+           "Plan Width": 528,
+           "Output": ["count(d.id)", "d.text"],
+           "Plans": [
+             {
+               "Node Type": "Seq Scan",
+               "Parent Relationship": "Outer",
+               "Relation Name": "dummy",
+               "Schema": "public",
+               "Alias": "d",
+               "Startup Cost": 0.00,
+               "Total Cost": 11.40,
+               "Plan Rows": 140,
+               "Plan Width": 528,
+               "Output": ["d.id", "d.text"]
+             }
+           ]
+         },
+         {
+           "Node Type": "Hash",
+           "Parent Relationship": "Inner",
+           "Startup Cost": 14.90,
+           "Total Cost": 14.90,
+           "Plan Rows": 140,
+           "Plan Width": 8,
+           "Output": ["b.c"],
+           "Plans": [
+             {
+               "Node Type": "Subquery Scan",
+               "Parent Relationship": "Outer",
+               "Alias": "b",
+               "Startup Cost": 12.10,
+               "Total Cost": 14.90,
+               "Plan Rows": 140,
+               "Plan Width": 8,
+               "Output": ["b.c"],
+               "Plans": [
+                 {
+                   "Node Type": "Aggregate",
+                   "Strategy": "Hashed",
+                   "Parent Relationship": "Subquery",
+                   "Startup Cost": 12.10,
+                   "Total Cost": 13.50,
+                   "Plan Rows": 140,
+                   "Plan Width": 516,
+                   "Output": ["count(d_1.text)", "d_1.text"],
+                   "Plans": [
+                     {
+                       "Node Type": "Seq Scan",
+                       "Parent Relationship": "Outer",
+                       "Relation Name": "dummy",
+                       "Schema": "public",
+                       "Alias": "d_1",
+                       "Startup Cost": 0.00,
+                       "Total Cost": 11.40,
+                       "Plan Rows": 140,
+                       "Plan Width": 516,
+                       "Output": ["d_1.id", "d_1.text"]
+                     }
+                   ]
+                 }
+               ]
+             }
+           ]
+         }
+       ]
+     }
+   }
+ ]
+
