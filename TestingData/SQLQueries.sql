@@ -57,3 +57,12 @@ explain (VERBOSE TRUE, FORMAT JSON) select max(h2.age), h2.avg_weight from (sele
 explain (VERBOSE TRUE, FORMAT JSON) select user_id, first_name from users t
 where t.user_id = (select user_id from users t2
 where t2.first_name = t.first_name and t.user_id = t2.user_id);
+
+-- 11
+explain (verbose true, format json)
+select d, c
+from (select count(id) d, text from dummy d group by text) a,
+(select count(name) c, text from dummy d group by text) b
+where a.d = b.c;
+
+

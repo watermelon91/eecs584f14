@@ -10,6 +10,7 @@ import queryParser.QueryParser;
 import queryParser.QueryProcessingUtilities;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -35,6 +36,12 @@ public class PlanReducer {
 	// other garbage attribute renaming
 	// make sorts at the top node work
 	// test nested loops
+	// if we do the attribute renaming, we should also eventually implement search/replace in conditions/other places references might appear
+	
+	// add error handlign to throw exceptions on unsupported plan types
+	// e.g., joins with subplans
+	// also selecting a function of the same thing multiple times 
+		//e.g., explain verbose select a, a, b from (select count(*) a from toy) t1, (select count(*) b from toy2) t2 where a < b;
 		
 	// TODO: refactor. make a node class and a reduced node class so there's no more of this mixing up methods from planReducer vs. queryReconstructor.
 	
@@ -42,6 +49,7 @@ public class PlanReducer {
 	public JSONObject topLevelNode;
 	static int curTmp = 0;
 	static String id = "";//new SimpleDateFormat("MMdd_HHmmss").format(Calendar.getInstance().getTime());
+	static Map<String, String> functionToColumnAlias = new HashMap<String, String>();
 	
 	// will return:
 	// a tree of JSONObjects
@@ -78,11 +86,11 @@ public class PlanReducer {
 			
 		// intermediate type things
 			// TODO: apparently there are ALSO materialize nodes, which should be treated the same way
-		case HASH:
-			reducedCurNode = reduceNonfunctionalNode(curNode);
-			break;
 		case SORT:
 			reducedCurNode = reduceSortNode(curNode);
+			break;
+		case HASH:
+			reducedCurNode = reduceNonfunctionalNode(curNode);
 			break;
 		case MATERIALIZE:
 			reducedCurNode = reduceNonfunctionalNode(curNode);
@@ -119,16 +127,10 @@ public class PlanReducer {
 			reducedCurNode = null;
 			break;
 		}
-		
-		// update reducedParentNode
-		
-		// return the new reduced node
-		//System.out.println(reducedCurNode.toJSONString());
 		return reducedCurNode;
 	}
 	
 	// TODO: may need to check all types of nodes for a subplan. 
-	// don't think joins, though. just aggregates, scans, subqueries
 	
 	JSONObject reduceHashJoinNode(JSONObject curNode, String joinType) {
 		String joinCond = qParser.getHashCond(curNode);
@@ -143,13 +145,6 @@ public class PlanReducer {
 	JSONObject reduceNestedLoopJoinNode(JSONObject curNode, String joinType) {
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);	
 		String joinCond = "";
-		// TODO: get join conditions from children
-		// make sure an exception gets thrown somewhere so we know to come back and fix this before using.
-		//return reduceGenericJoin(curNode, joinCond, joinType);
-		
-		// kk, todo: get alias set from each child
-		// for each child, check all conditions for aliases from other child
-		// if contains, add it to the join condition and take it out of the node's conditions
 		JSONObject reducedNode = new JSONObject();		
 		JSONObject reducedFirstChild = reduceNode((JSONObject) children.get(0));
 		JSONObject reducedSecondChild = reduceNode((JSONObject) children.get(1));
@@ -178,7 +173,7 @@ public class PlanReducer {
 		String filter = qParser.getFilter(curNode);
 		JSONArray outputAttrs = qParser.getOutputAttributes(curNode);
 		
-		// TODO: check for subplans!
+		// TODO: check for subplans! and for now throw exception!
 		
 		reducedNode = makeJoinNode(joinCond, joinType, joinFilter, filter, reducedFirstChild, reducedSecondChild, outputAttrs);
 		
@@ -226,7 +221,7 @@ public class PlanReducer {
 	 */
 
 	JSONObject reduceNonfunctionalNode(JSONObject curNode) {
-		// sort and hash nodes don't do anything (at least in non-JSON formatted query plans)
+		// hash and materialize nodes don't do anything (at least in non-JSON formatted query plans)
 		JSONArray children = qParser.getChildrenPlanNodes(curNode);
 		//TODO: may want this to take the output attributes from this node instead? probably not, but maybe
 		JSONObject reducedNode = reduceNode((JSONObject) children.get(0));
@@ -246,10 +241,13 @@ public class PlanReducer {
 		Iterator<String> it = orderBy.iterator();
 		while (it.hasNext()) {
 			String attr = it.next();
+			attr = QueryProcessingUtilities.splitOnDotAddUnderscore(attr);
+			/*
 			String[] tmp = attr.split("\\.");
 			if (tmp.length == 2) {
 				attr = tmp[0] + "_" + tmp[1];
 			}
+			*/
 			finalOrderBy.add(attr);
 		}
 		reducedNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SORT_KEY), finalOrderBy);
@@ -268,7 +266,6 @@ public class PlanReducer {
 		String indexCond = qParser.getIndexCond(curNode);
 		String finalFilter = QueryProcessingUtilities.combineAndConditions(indexCond, filter);
 		return reduceGenericScan(curNode, finalFilter);
-
 	}
 	
 	JSONObject reduceSeqScanNode(JSONObject curNode) {
@@ -356,12 +353,15 @@ public class PlanReducer {
 		while (ccnIt.hasNext() && oaIt.hasNext()) {
 			String outputName = oaIt.next();
 			String childColName = ccnIt.next();
+			
+			/*
 			String[] ar = outputName.split("\\.");
 			if (ar.length == 2) {
 				outputName = ar[0] + "_" + ar[1];
-			}
+			}*/
+			outputName = QueryProcessingUtilities.splitOnDotAddUnderscore(outputName);
 			
-			ar = childColName.split("\\.");
+			String[] ar = childColName.split("\\.");
 			if (ar.length == 2) {
 				childColName = ar[1];
 			}
@@ -470,6 +470,22 @@ public class PlanReducer {
 			// TODO: check to see if it contains a ( - if so, it shouldn't get normal treatment
 			if (attr.contains("(")) {
 				// handle functions/aggregates/previously executed aggregates (should have lookup)
+				
+				//tralala syntax error so I can find you later!
+				// two options -  
+				// TODO: could just add parentheses to the ones taht are 
+				attr = QueryProcessingUtilities.removeAllWrappingParentheses(attr);
+				if (functionToColumnAlias.containsKey(attr)) {
+					newOutputAttrs.add(functionToColumnAlias.get(attr));
+				} else {
+					// generate new name
+					String newName = QueryProcessingUtilities.generateColumnNameForFunction(attr);
+					functionToColumnAlias.put(attr, newName);
+					newOutputAttrs.add(attr + " as " + newName);
+				}
+				
+				
+				
 			} else {
 				// actually, may not always have an alias (in the case of a subquery with aliases)
 				// more specifically, may not want to do this kind of processing on it
@@ -497,11 +513,21 @@ public class PlanReducer {
 		}
 		
 		// handle join cond and join filter
+		
+		// TODO: make sure to replace function-columns with column names!!!!
+		
+		String joinCondCombined = QueryProcessingUtilities.combineAndConditions(joinCond, joinFilter);
+		String functionReplacedJoinCond = replaceFunctionColumnsWithColumnName(joinCondCombined);
+		String aliasReplacedFinalJoinCond = replaceAliasesWithTableName(replaceAliasesWithTableName(functionReplacedJoinCond, aliasC1, tmpC1), aliasC2, tmpC2);
+		
+		/*
 		String aliasReplacedJoinCond = replaceAliasesWithTableName(replaceAliasesWithTableName(joinCond, aliasC1, tmpC1), aliasC2, tmpC2);
 		String aliasReplacedJoinFilter = replaceAliasesWithTableName(replaceAliasesWithTableName(joinFilter, aliasC1, tmpC1), aliasC2, tmpC2);
-		String aliasReplacedFilter = replaceAliasesWithTableName(replaceAliasesWithTableName(filter, aliasC1, tmpC1), aliasC2, tmpC2);
+		*/
+		String aliasReplacedFilter = replaceAliasesWithTableName(replaceAliasesWithTableName(replaceFunctionColumnsWithColumnName(filter), aliasC1, tmpC1), aliasC2, tmpC2);
 		// also handle where clause
 		
+		/*
 		String aliasReplacedFinalJoinCond = "";
 		if (!aliasReplacedJoinCond.equals("") && !aliasReplacedJoinFilter.equals("")) {
 			aliasReplacedFinalJoinCond = aliasReplacedJoinCond + " and " + aliasReplacedJoinFilter;
@@ -510,6 +536,7 @@ public class PlanReducer {
 		} else {
 			aliasReplacedFinalJoinCond = aliasReplacedJoinFilter;
 		}
+		*/
 		
 		JSONArray aliasSet = QueryProcessingUtilities.concatArrays(getAliasSet(reducedFirstChild), getAliasSet(reducedSecondChild));
 		// TODO: include original filters for display
@@ -550,27 +577,43 @@ public class PlanReducer {
 					String tmp_attr = attr;
 					
 					// remove any wrapping parentheses
-					while (tmp_attr.substring(0, 1).equals("(")) {
-						tmp_attr = QueryProcessingUtilities.removeParenthesis(tmp_attr);				
-					}
-					
-					if (tmp_attr.contains("(")) {
-						// is function call
+					// functions that were executed at lower levels are wrapped in parentheses. they already have names that should be looked up
+					tmp_attr = QueryProcessingUtilities.removeAllWrappingParentheses(tmp_attr);				
+					if (functionToColumnAlias.containsKey(tmp_attr)) {
+						newOutputAttrs.add(functionToColumnAlias.get(tmp_attr));
 					} else {
-						// not function call.
+						System.out.println("unexpected unnamed column");
+						// generate new name
+						String newName = QueryProcessingUtilities.generateColumnNameForFunction(tmp_attr);
+						functionToColumnAlias.put(tmp_attr, newName);
+						newOutputAttrs.add(tmp_attr + " as " + newName);
 					}
+
 					
 				} else {
 					// first char not paren = execute the function here
 					String[] attrParts = attr.split("\\.");
-					String newAttr = "";
-					//newOutputAttrs.add(attr);
+					String tmp_attr = attr;
+					// make column alias and save for later!
+					if (functionToColumnAlias.containsKey(tmp_attr)) {
+						System.out.println("unexpected named column");
+						newOutputAttrs.add(functionToColumnAlias.get(tmp_attr));
+					} else {
+						
+						// generate new name
+						String newName = QueryProcessingUtilities.generateColumnNameForFunction(tmp_attr);
+						functionToColumnAlias.put(tmp_attr, newName);
+						newOutputAttrs.add(tmp_attr + " as " + newName);
+					}
+
+					/*
 					if (attrParts.length == 2) {
 						newOutputAttrs.add(attrParts[0] + "_" + attrParts[1]);
 					} else {
 						// this is probably a query on a single node, so we don't need aliases
 						newOutputAttrs.add(attr);
 					}
+					*/
 				}
 			} else {
 				String[] attrParts = attr.split("\\.");
@@ -611,10 +654,32 @@ public class PlanReducer {
 		// e.g., if it's literally nothing more than a sequential scan, then we don't want to make a node for it
 		// maybe we should have a boolean indicating whether it should be kept as a node
 		// for now, though, make all nodes
-		JSONArray newOutputAttrs = QueryProcessingUtilities.renameAttributesSimple(outputAttrs);
-/*		JSONArray newOutputAttrs = new JSONArray();
+		//tralalala check here too for functions/other things that need to be looked up
+		
+		JSONArray newOutputAttrs = QueryProcessingUtilities.replaceFunctionsWithColumnNames(outputAttrs, functionToColumnAlias);
+		outputAttrs = QueryProcessingUtilities.renameAttributesSimple(newOutputAttrs);
+		
+		newOutputAttrs = new JSONArray();
 		Iterator<String> it = outputAttrs.iterator();
 		while (it.hasNext()) {		
+			String tmp_attr = it.next();
+			if (tmp_attr.contains("\\(")) {
+				if (functionToColumnAlias.containsKey(tmp_attr)) {
+					System.out.println("unexpected named column");
+					newOutputAttrs.add(functionToColumnAlias.get(tmp_attr));
+				} else {
+					
+					// generate new name
+					String newName = QueryProcessingUtilities.generateColumnNameForFunction(tmp_attr);
+					functionToColumnAlias.put(tmp_attr, newName);
+					newOutputAttrs.add(tmp_attr + " as " + newName);
+				}
+			} else {
+				newOutputAttrs.add(tmp_attr);
+			}
+		}
+
+/*	
 			String attr = it.next();
 			String[] attrParts = attr.split("\\.");
 			String newAttr = "";
@@ -699,6 +764,21 @@ public class PlanReducer {
 	// For now, we'll just do a find and replace type thing
 	// this is not a final solution
 	// won't work with string literals, but we'll handle that later.
+	
+	String replaceFunctionColumnsWithColumnName(String condition) {
+		String regex;
+		
+		Iterator<String> it = functionToColumnAlias.keySet().iterator();
+		while (it.hasNext()) {
+			// possibly add \b for word boundary
+			String functionText = it.next();
+			regex = functionText;
+			// TODO: string literals
+			condition = condition.replaceAll(Pattern.quote(regex), functionToColumnAlias.get(functionText));
+		}
+		return condition;
+	}
+	
 	String replaceAliasesWithTableName(String condition, JSONArray aliases, String tablename) {
 		String regex;
 		
