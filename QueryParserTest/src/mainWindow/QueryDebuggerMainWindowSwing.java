@@ -90,6 +90,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private DefaultTableModel model_findMissing;
     private DefaultTableModel model_searchMissing;
     
+    private JTable table_sampleData;
     private JTable table_searchMissing;
     private DefaultTableCellRenderer renderer;
     
@@ -107,6 +108,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private JTextField queryFrom_trackTuple;
     private JTextField queryFrom_findMissing;
 
+    private JTabbedPane tabbedPane;
     /**
      * Launch the application.
      */
@@ -317,23 +319,31 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         @Override
                         public void mouseClicked(MouseEvent arg0) {
                             if (btnQuerySubmit.getText() == "Submit"){
+                                logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");
+
                                 // submit query to connector and receive tree
                                 queryPane.setEnabled(false);
                                 btnQuerySubmit.setText("Edit"); 
                                 btnQueryCancel.setEnabled(false);
+                                tabbedPane.setEnabledAt(1, false);
+                                tabbedPane.setEnabledAt(2, false);
+                                tabbedPane.setSelectedIndex(0);
                                 
                                 try
                                 {
                                     logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");    
 
                                     connector.dropAllTmpTables();
+                                    deletePlanTree(graph_sampleData, model_sampleData, treeObjects_sampleData);
                                     //tree_sampleData = connector.debugQuery("SELECT c1.customerid, c2.customerid, o1.totalamount, o2.totalamount, o1.orderdate,  o2.orderdate FROM cust_hist c1, cust_hist c2, orders o1, orders o2 WHERE c1.customerid > c2.customerid AND c1.prod_id = c2.prod_id AND o1.orderid = c1.orderid AND o2.orderid = c2.orderid AND o1.totalamount - o2.totalamount > 500 AND o1.orderdate - o2.orderdate = 0;");
                                     tree_sampleData = connector.debugQuery(queryPane.getText());
                                      
-                                    if (tree_sampleData!= null) {
-                                        drawPlanTree(graph_sampleData, tree_sampleData, treeObjects_sampleData);                                       
-                                    }
+                                    drawPlanTree(graph_sampleData, tree_sampleData, treeObjects_sampleData);                                       
                                 } catch (MoreThanTwoChildrenException e) {
+                                    queryPane.setEnabled(true);
+                                    btnQuerySubmit.setText("Submit");
+                                    btnQueryCancel.setEnabled(true);    
+                                    
                                 	JOptionPane.showMessageDialog(window,                                                
                                             "The input query has more than two children in query plan, \n"
                                             + "which is not supported by the debugger yet.",
@@ -343,15 +353,16 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 								}
                                 catch (Exception e)
                                 {
+                                    queryPane.setEnabled(true);
+                                    btnQuerySubmit.setText("Submit");
+                                    btnQueryCancel.setEnabled(true);    
                                 	JOptionPane.showMessageDialog(window,                                                
-                                            "The input query is not supported by the debugger yet.",
+                                            "The input query is not supported by the debugger yet."+e.getMessage(),
                                             "Unsupported Query",
                                             JOptionPane.ERROR_MESSAGE);
                                 	logger.log(LOG_TYPES.UNSUPPORTED_QUERY, e.getMessage() + "\n" + e.getStackTrace().toString());
                                 }
                                 
-                                logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");
-
                             } else if (btnQuerySubmit.getText() == "Edit") {
                                 queryPane.setEnabled(true);
                                 btnQuerySubmit.setText("Submit");
@@ -466,11 +477,16 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent e) {
                 if (btnSubQuerySubmit.getText() == "Submit"){
                     // submit query to connector and receive tree
-                	subQueryPane.setEditable(false);
+                	subQueryPane.setEnabled(false);
                     btnSubQuerySubmit.setText("Edit"); 
                     btnSubQueryCancel.setEnabled(false);
                     btnExpandAll_sampleData.setText("Expand All");
                     queryFrom_sampleData.setText("Subquery");
+                    table_sampleData.setRowSelectionAllowed(false);
+                    table_searchMissing.setEnabled(false);
+                    tabbedPane.setEnabledAt(1, false);
+                    tabbedPane.setEnabledAt(2, false);
+
               
                     try {
                     	if(!subQueryPane.getText().equals(""))
@@ -496,7 +512,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 					}  
                     
                 } else if (btnSubQuerySubmit.getText() == "Edit") {
-                	subQueryPane.setEditable(true);
                     subQueryPane.setEnabled(true);
                     btnSubQuerySubmit.setText("Submit");
                     btnSubQueryCancel.setEnabled(true);
@@ -597,7 +612,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         panel_2.setLayout(gl_panel_2);
                 
         //Tabbed Pane
-        final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         
         // Sample Data Tab
         JPanel tabSampleData = new JPanel();
@@ -633,6 +648,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 if (treeObjects_sampleData.containsKey(cell)){
                     btnExpandAll_sampleData.setText("Expand All");
                     queryFrom_sampleData.setText("Plan Tree Node");
+                    table_sampleData.setRowSelectionAllowed(true);
+                    table_searchMissing.setEnabled(true);
                     
                     QueryPlanTreeNode node = treeObjects_sampleData.get(cell).getData();
                     samplePair = connector.getSampleData(node.getNewTableName());
@@ -719,25 +736,30 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
               }
             };
             
-        final JTable table_sampleData = new JTable(model_sampleData);
+        table_sampleData = new JTable(model_sampleData);
         table_sampleData.setFocusable(false);
         table_sampleData.addMouseListener(new MouseListener(){
 
             @Override
             public void mouseClicked(MouseEvent e) {
                 // Double Click to track tuple
-                if (e.getClickCount() == 2){
-                    tabbedPane.setSelectedIndex(1);
-
+                if (e.getClickCount() == 2 && table_sampleData.getRowSelectionAllowed()){
                     String[] row = new String[table_sampleData.getColumnCount()];
                     for (int i = 0; i < table_sampleData.getColumnCount(); i++)
                         row[i] = table_sampleData.getModel().getValueAt(table_sampleData.getSelectedRow(), i).toString();           
                     
                     try {
+                        deletePlanTree(graph_trackTuple, model_trackTuple, treeObjects_trackTuple); 
+
 						tree_trackTuple = connector.updateTreeWhyIsHere(tree_sampleData, 
 						                                                treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
 						                                                row);
 						drawPlanTree(graph_trackTuple, tree_trackTuple, treeObjects_trackTuple); 
+	                    
+                        tabbedPane.setEnabledAt(1, true);
+                        tabbedPane.setEnabledAt(2, false);
+						tabbedPane.setSelectedIndex(1);
+
 					} catch (Exception e1) {
 						JOptionPane.showMessageDialog(getParent(),                                                
                                 "This operation is not supported for the input query yet. \n",
@@ -786,19 +808,17 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 samplePair = null;
                 if (btnExpandAll_sampleData.getText() == "Expand All"){
                     //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
-                    if (queryFrom_sampleData.getText().equals("Subquery"))
+                    if (queryFrom_sampleData.getText().equals("Subquery")){             
 						try {
 							//samplePair = connector.executeTestQueryAll("select * from tmp0 order by h_user_id");
-							if(!subQueryPane.getText().equals(""))
-							{
-								samplePair = connector.executeTestQueryAll(subQueryPane.getText());
-							}
+						    samplePair = connector.executeTestQueryAll(subQueryPane.getText());
 						} catch (SQLException e1) {
 							JOptionPane.showMessageDialog(window,                                                
                                     "Input query has invalid Syntax. \n" + e1.getMessage(),
                                     "Input error",
                                     JOptionPane.ERROR_MESSAGE);
 						}
+                    }
 					else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
 					{
                         samplePair = connector.getAllSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());
@@ -807,7 +827,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     btnExpandAll_sampleData.setText("Collapse sample");
                 } else {
                     //TODO samplePair = connector.executeTestQuery(subQueryPane.getText());  
-                    if (queryFrom_sampleData.getText().equals("Subquery"))
+                    if (queryFrom_sampleData.getText().equals("Subquery")){                        
 						try {
 							//samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");
 							if(!subQueryPane.getText().equals(""))
@@ -820,10 +840,12 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                     "Input error",
                                     JOptionPane.ERROR_MESSAGE);
 						}
+                    }
 					else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
 					{
                         samplePair = connector.getSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());
 					}
+                    
                     btnExpandAll_sampleData.setText("Expand All");
                 }
 
@@ -896,11 +918,15 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 
                 try
                 {
+                    deletePlanTree(graph_findMissing, model_findMissing, treeObjects_findMissing);
+
                     tree_findMissing = connector.updateTreeWhyNotHere(tree_sampleData, 
                                                                     treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
                                                                     row);
                     drawPlanTree(graph_findMissing, tree_findMissing, treeObjects_findMissing);
                     
+                    tabbedPane.setEnabledAt(1, false);
+                    tabbedPane.setEnabledAt(2, true);
                     tabbedPane.setSelectedIndex(2);
                 } catch (SQLException e1)
                 {
@@ -1037,7 +1063,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graphComponent_trackTuple.setConnectable(false);
         graphComponent_trackTuple.getViewport().setBackground(panel_trackTuplePlanTree.getBackground());
         graphComponent_trackTuple.getGraphControl().addMouseListener(new MouseListener(){
-
+            private Object insertedVertex = null;
+            private Object insertedEdge = null;
             @Override
             public void mouseClicked(MouseEvent e) {
                 // TODO Auto-generated method stub
@@ -1059,6 +1086,28 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     } 
                     
                     model_trackTuple.fireTableDataChanged();
+                    
+                    //detailed node info
+                    graphComponent_trackTuple.getGraph().getModel().beginUpdate();
+                    if (insertedVertex != null)
+                        graphComponent_trackTuple.getGraph().removeCells(new Object[]{insertedVertex, insertedEdge});
+
+                    LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = treeObjects_trackTuple.get(cell);
+                    mxGeometry geo = graphComponent_trackTuple.getGraph().getCellGeometry(cell);
+                    insertedVertex = graphComponent_trackTuple.getGraph().insertVertex(graphComponent_trackTuple.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+geo.getHeight(), 200, 200);
+                    graphComponent_trackTuple.getGraph().setCellStyles(mxConstants.STYLE_ALIGN, "left", new Object[]{insertedVertex});
+                    graphComponent_trackTuple.getGraph().setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{insertedVertex});
+                    graphComponent_trackTuple.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
+                    graphComponent_trackTuple.getGraph().setCellStyles(mxConstants.STYLE_RESIZABLE, "false", new Object[]{insertedVertex});
+
+                    graphComponent_trackTuple.getGraph().updateCellSize(insertedVertex);
+                    graphComponent_trackTuple.refresh();
+                    insertedEdge = graphComponent_trackTuple.getGraph().insertEdge(graphComponent_trackTuple.getGraph().getDefaultParent(), "detailed Info", null, cell, insertedVertex);
+                    graphComponent_trackTuple.getGraph().setCellStyles(mxConstants.STYLE_STARTARROW, mxConstants.ARROW_DIAMOND, new Object[]{insertedEdge});
+                    graphComponent_trackTuple.getGraph().setCellStyles(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_DIAMOND, new Object[]{insertedEdge});
+                    graphComponent_trackTuple.getGraph().setCellStyles(mxConstants.STYLE_STROKECOLOR, "orange", new Object[]{insertedEdge});
+
+                    graphComponent_trackTuple.getGraph().getModel().endUpdate();
                 } 
                 
             }
@@ -1187,6 +1236,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graphComponent_findMissing.setConnectable(false);
         graphComponent_findMissing.getViewport().setBackground(panel_findMissingPlanTree.getBackground());
         graphComponent_findMissing.getGraphControl().addMouseListener(new MouseListener(){
+            private Object insertedVertex = null;
+            private Object insertedEdge = null;
 
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -1210,6 +1261,28 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     } 
                     
                     model_findMissing.fireTableDataChanged();
+                    
+                    //detailed node info
+                    graphComponent_findMissing.getGraph().getModel().beginUpdate();
+                    if (insertedVertex != null)
+                        graphComponent_findMissing.getGraph().removeCells(new Object[]{insertedVertex, insertedEdge});
+
+                    LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = treeObjects_findMissing.get(cell);
+                    mxGeometry geo = graphComponent_findMissing.getGraph().getCellGeometry(cell);
+                    insertedVertex = graphComponent_findMissing.getGraph().insertVertex(graphComponent_findMissing.getGraph().getDefaultParent(), null, treeNode.getData().toString(),geo.getX(), geo.getY()+geo.getHeight(), 200, 200);
+                    graphComponent_findMissing.getGraph().setCellStyles(mxConstants.STYLE_ALIGN, "left", new Object[]{insertedVertex});
+                    graphComponent_findMissing.getGraph().setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{insertedVertex});
+                    graphComponent_findMissing.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
+                    graphComponent_findMissing.getGraph().setCellStyles(mxConstants.STYLE_RESIZABLE, "false", new Object[]{insertedVertex});
+
+                    graphComponent_findMissing.getGraph().updateCellSize(insertedVertex);
+                    graphComponent_findMissing.refresh();
+                    insertedEdge = graphComponent_findMissing.getGraph().insertEdge(graphComponent_findMissing.getGraph().getDefaultParent(), "detailed Info", null, cell, insertedVertex);
+                    graphComponent_findMissing.getGraph().setCellStyles(mxConstants.STYLE_STARTARROW, mxConstants.ARROW_DIAMOND, new Object[]{insertedEdge});
+                    graphComponent_findMissing.getGraph().setCellStyles(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_DIAMOND, new Object[]{insertedEdge});
+                    graphComponent_findMissing.getGraph().setCellStyles(mxConstants.STYLE_STROKECOLOR, "orange", new Object[]{insertedEdge});
+
+                    graphComponent_findMissing.getGraph().getModel().endUpdate();
                 } 
                 
             }
@@ -1416,51 +1489,63 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     
     private void drawPlanTree(final mxGraph graph, LinkedBinaryTreeNode<QueryPlanTreeNode> tree, final Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects){
         final Object parent = graph.getDefaultParent();
+
+        if (tree != null) {      
+            graph.getModel().beginUpdate();
+
+            final Map<BinaryTreeNode<?>, PlanTreeNode> coordinates = new HashMap<BinaryTreeNode<?>, PlanTreeNode>();
+            final int maxshift = traverse(tree, 0, coordinates);
+    
+            tree.traversePreorder(new BinaryTreeNode.Visitor() {
+                public void visit(BinaryTreeNode node) {
+                    QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
+                    PlanTreeNode planTreeNode = coordinates.get(node);
+                    String label = treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr();  
+                    
+                    Object newTableName = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getTmpTableStr(), planTreeNode.point.x-maxshift, planTreeNode.point.y-16, 30, 12);
+                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "white", new Object[]{newTableName});
+    
+    
+                    planTreeNode.obj = graph.insertVertex(parent, null, label, planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, label.split("\n").length*16);
+                    graph.setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{planTreeNode.obj, newTableName});
+                    graph.setCellStyles(mxConstants.STYLE_RESIZABLE, "false", new Object[]{planTreeNode.obj, newTableName});
+                    graph.setCellStyles(mxConstants.STYLE_MOVABLE, "false", new Object[]{planTreeNode.obj, newTableName});
+    
+                    graph.updateCellSize(planTreeNode.obj);
+                    graph.updateCellSize(newTableName);
+    
+                    graph.moveCells(new Object[]{planTreeNode.obj, newTableName}, 100-graph.getCellGeometry(planTreeNode.obj).getWidth()/2, 0);
+                    
+                    if (treeNode.getDataNode() != null) {
+                        graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
+                    }
+                    
+                    treeObjects.put(planTreeNode.obj,  (LinkedBinaryTreeNode<QueryPlanTreeNode>) node);
+                    
+                    if (node.getParent() != null) {
+                        PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
+                        Object edge = graph.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
+                        graph.setCellStyles(mxConstants.STYLE_OPACITY, "40", new Object[]{edge});
+    
+                    }
+                }
+            });      
+            
+            graph.getModel().endUpdate();
+
+        }
+        
+    }
+    
+    private void deletePlanTree(mxGraph graph, DefaultTableModel model, final Map<Object, LinkedBinaryTreeNode<QueryPlanTreeNode>> treeObjects){
         treeObjects.clear();
+        
+        model.setRowCount(0);
+        model.setColumnIdentifiers(new Vector());
 
         graph.getModel().beginUpdate();
         graph.removeCells(graph.getChildVertices(graph.getDefaultParent()));
-        
-        final Map<BinaryTreeNode<?>, PlanTreeNode> coordinates = new HashMap<BinaryTreeNode<?>, PlanTreeNode>();
-        final int maxshift = traverse(tree, 0, coordinates);
-
-        tree.traversePreorder(new BinaryTreeNode.Visitor() {
-            public void visit(BinaryTreeNode node) {
-                QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
-                PlanTreeNode planTreeNode = coordinates.get(node);
-                String label = treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr();  
-                
-                Object newTableName = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getTmpTableStr(), planTreeNode.point.x-maxshift, planTreeNode.point.y-16, 30, 16);
-                graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "white", new Object[]{newTableName});
-
-
-                planTreeNode.obj = graph.insertVertex(parent, null, label, planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, label.split("\n").length*16);
-                graph.setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{planTreeNode.obj, newTableName});
-                graph.setCellStyles(mxConstants.STYLE_RESIZABLE, "false", new Object[]{planTreeNode.obj, newTableName});
-                graph.setCellStyles(mxConstants.STYLE_MOVABLE, "false", new Object[]{planTreeNode.obj, newTableName});
-
-                graph.updateCellSize(planTreeNode.obj);
-                graph.updateCellSize(newTableName);
-
-                graph.moveCells(new Object[]{planTreeNode.obj, newTableName}, 100-graph.getCellGeometry(planTreeNode.obj).getWidth()/2, 0);
-                
-                if (treeNode.getDataNode() != null) {
-                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
-                }
-                
-                treeObjects.put(planTreeNode.obj,  (LinkedBinaryTreeNode<QueryPlanTreeNode>) node);
-                
-                if (node.getParent() != null) {
-                    PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
-                    Object edge = graph.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
-                    graph.setCellStyles(mxConstants.STYLE_OPACITY, "40", new Object[]{edge});
-
-                }
-            }
-        });      
-        
         graph.getModel().endUpdate();
     }
-    
 
 }
