@@ -51,6 +51,7 @@ import frontEndConnector.FrontEndConnector;
 import frontEndConnector.QueryPlanTreeNode;
 
 public class QueryDebuggerMainWindowSwing extends JFrame{
+    private QueryDebuggerMainWindowSwing window;
     private JTextField textUsername;
     private JPasswordField textPassword;
     private JButton btnDbSubmit;
@@ -132,7 +133,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
            
             initialize();
             
-            
+            window = this;
+           
         }
 
     /**
@@ -313,25 +315,30 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 {
                                     connector.dropAllTmpTables();
                                     //tree_sampleData = connector.debugQuery("SELECT c1.customerid, c2.customerid, o1.totalamount, o2.totalamount, o1.orderdate,  o2.orderdate FROM cust_hist c1, cust_hist c2, orders o1, orders o2 WHERE c1.customerid > c2.customerid AND c1.prod_id = c2.prod_id AND o1.orderid = c1.orderid AND o2.orderid = c2.orderid AND o1.totalamount - o2.totalamount > 500 AND o1.orderdate - o2.orderdate = 0;");
-                                    if(!queryPane.getText().equals(""))
-                                    {
-                                    	tree_sampleData = connector.debugQuery(queryPane.getText());
-                                    }
+                                    tree_sampleData = connector.debugQuery(queryPane.getText());
+                                 
                                 }
                                 catch(SQLException e1)
                                 {
-                                	JOptionPane.showMessageDialog(getParent(),                                                
+
+                                	JOptionPane.showMessageDialog(window,                                                
                                             "Input query invalid. \n" + e1.getMessage(),
                                             "Input error",
                                             JOptionPane.ERROR_MESSAGE);
+                                	
                                 }
                                 catch (Exception e)
                                 {
-                                	JOptionPane.showMessageDialog(getParent(),                                                
+                                	JOptionPane.showMessageDialog(window,                                                
                                             "Input query invalid. \n" + e.getMessage(),
                                             "Input error",
                                             JOptionPane.ERROR_MESSAGE);
+                                	
+                                    getParent().setFocusable(false);
+
                                 }
+                                
+                                //getParent().setFocusable(true);
                                 
                                 if (tree_sampleData!= null) {
                                     drawPlanTree(graph_sampleData, tree_sampleData, treeObjects_sampleData);
@@ -465,7 +472,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     	}
                     	//samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");
 					} catch (SQLException e1) {
-						JOptionPane.showMessageDialog(getParent(),                                                
+						JOptionPane.showMessageDialog(window,                                                
                                 "Input query has invalid Syntax. \n" + e1.getMessage(),
                                 "Input error",
                                 JOptionPane.ERROR_MESSAGE);
@@ -766,7 +773,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 								samplePair = connector.executeTestQueryAll(subQueryPane.getText());
 							}
 						} catch (SQLException e1) {
-							JOptionPane.showMessageDialog(getParent(),                                                
+							JOptionPane.showMessageDialog(window,                                                
                                     "Input query has invalid Syntax. \n" + e1.getMessage(),
                                     "Input error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -785,7 +792,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 								samplePair = connector.executeTestQuery(subQueryPane.getText());
 							}
 						} catch (SQLException e1) {
-							JOptionPane.showMessageDialog(getParent(),                                                
+							JOptionPane.showMessageDialog(window,                                                
                                     "Input query has invalid Syntax. \n" + e1.getMessage(),
                                     "Input error",
                                     JOptionPane.ERROR_MESSAGE);
@@ -872,7 +879,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     tabbedPane.setSelectedIndex(2);
                 } catch (SQLException e1)
                 {
-                    JOptionPane.showMessageDialog(getParent(),                                                
+                    JOptionPane.showMessageDialog(window,                                                
                                                   "Searching input is not valid. \n" + e1.getMessage()+ "\nPlease check input data and format\n (e.g. quotes for non-numeric attributes)",
                                                   "Input error",
                                                   JOptionPane.ERROR_MESSAGE); 
