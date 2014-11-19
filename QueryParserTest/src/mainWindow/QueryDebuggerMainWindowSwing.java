@@ -1395,7 +1395,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     int traverse(BinaryTreeNode root, int x, Map<BinaryTreeNode<?>, PlanTreeNode> coordinates){
         if (root == null) return x;
         
-        coordinates.put(root, new PlanTreeNode(new Point(x, gridheight * root.depth()), null));
+        coordinates.put(root, new PlanTreeNode(new Point(x, gridheight * root.depth()+16), null));
 
         int maxDepth;
         if (root.getRight() == null){
