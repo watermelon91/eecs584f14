@@ -625,6 +625,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         graphComponent_sampleData.getViewport().setBackground(panel_sampleDataPlanTree.getBackground());
         graphComponent_sampleData.getGraphControl().addMouseListener(new MouseListener(){
             private Object insertedVertex = null;
+            private Object insertedEdge = null;
 
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -653,7 +654,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     //detailed node info
                     graphComponent_sampleData.getGraph().getModel().beginUpdate();
                     if (insertedVertex != null)
-                        graphComponent_sampleData.getGraph().removeCells(new Object[]{insertedVertex});
+                        graphComponent_sampleData.getGraph().removeCells(new Object[]{insertedVertex, insertedEdge});
 
                     LinkedBinaryTreeNode<QueryPlanTreeNode> treeNode = treeObjects_sampleData.get(cell);
                     mxGeometry geo = graphComponent_sampleData.getGraph().getCellGeometry(cell);
@@ -661,9 +662,15 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_ALIGN, "left", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{insertedVertex});
                     graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
-                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_OPACITY, "1", new Object[]{insertedVertex});
+                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_RESIZABLE, "false", new Object[]{insertedVertex});
+
                     graphComponent_sampleData.getGraph().updateCellSize(insertedVertex);
                     graphComponent_sampleData.refresh();
+                    insertedEdge = graphComponent_sampleData.getGraph().insertEdge(graphComponent_sampleData.getGraph().getDefaultParent(), "detailed Info", null, cell, insertedVertex);
+                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_STARTARROW, mxConstants.ARROW_DIAMOND, new Object[]{insertedEdge});
+                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_DIAMOND, new Object[]{insertedEdge});
+                    graphComponent_sampleData.getGraph().setCellStyles(mxConstants.STYLE_STROKECOLOR, "orange", new Object[]{insertedEdge});
+
                     graphComponent_sampleData.getGraph().getModel().endUpdate();
                    
                 } 
@@ -1421,20 +1428,33 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void visit(BinaryTreeNode node) {
                 QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                String label = treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr();   
-                if (treeNode.getAbbreviatedTreeNode().getTmpTableStr() != null) {
-                    Object newTableName = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getTmpTableStr(), planTreeNode.point.x-maxshift, planTreeNode.point.y-16, 30, 16);
-                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "white", new Object[]{newTableName});
-                }
+                String label = treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr();  
+                
+                Object newTableName = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getTmpTableStr(), planTreeNode.point.x-maxshift, planTreeNode.point.y-16, 30, 16);
+                graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "white", new Object[]{newTableName});
+
+
                 planTreeNode.obj = graph.insertVertex(parent, null, label, planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, label.split("\n").length*16);
+                graph.setCellStyles(mxConstants.STYLE_AUTOSIZE, "true", new Object[]{planTreeNode.obj, newTableName});
+                graph.setCellStyles(mxConstants.STYLE_RESIZABLE, "false", new Object[]{planTreeNode.obj, newTableName});
+                graph.setCellStyles(mxConstants.STYLE_MOVABLE, "false", new Object[]{planTreeNode.obj, newTableName});
+
+                graph.updateCellSize(planTreeNode.obj);
+                graph.updateCellSize(newTableName);
+
+                graph.moveCells(new Object[]{planTreeNode.obj, newTableName}, 100-graph.getCellGeometry(planTreeNode.obj).getWidth()/2, 0);
                 
                 if (treeNode.getDataNode() != null) {
                     graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
                 }
+                
                 treeObjects.put(planTreeNode.obj,  (LinkedBinaryTreeNode<QueryPlanTreeNode>) node);
+                
                 if (node.getParent() != null) {
                     PlanTreeNode parentPlanTreeNode = coordinates.get(node.getParent());
-                    graph.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
+                    Object edge = graph.insertEdge(parent, null, "", planTreeNode.obj, parentPlanTreeNode.obj);
+                    graph.setCellStyles(mxConstants.STYLE_OPACITY, "40", new Object[]{edge});
+
                 }
             }
         });      
