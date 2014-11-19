@@ -44,21 +44,13 @@ public class QueryParser {
 	}
 	
 	// constructor for read-in query plan from string
-	public QueryParser(String queryPlanJsonString, Boolean dummy)
+	public QueryParser(String queryPlanJsonString, Boolean dummy) throws ParseException, MultipleTopLevelNodeException
 	{
-		try {
-			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(queryPlanJsonString);
-	 
-			JSONArray topLevelArray = (JSONArray) obj; 	// top level object "{}" enclosed in top level "[]"
-			initializeTopLevelNode(topLevelArray);
-			
-		}catch (ParseException e) {
-			e.printStackTrace();
-		} catch (MultipleTopLevelNodeException e) {
-			e.printStackTrace();
-			return;
-		}
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parse(queryPlanJsonString);
+ 
+		JSONArray topLevelArray = (JSONArray) obj; 	// top level object "{}" enclosed in top level "[]"
+		initializeTopLevelNode(topLevelArray);
 	}
 	
 	// get functions for all children plan
@@ -401,6 +393,6 @@ public class QueryParser {
 
 	// exception class
 	@SuppressWarnings("serial")
-	private class MultipleTopLevelNodeException extends Exception{}
+	public class MultipleTopLevelNodeException extends Exception{}
 	
 }

@@ -22,6 +22,8 @@ public class BinaryTreeConverter {
 	private static final int MAX_CHILDREN_NUM = 2;
 	private HashMap<String, String> abbToFullTmpNameMap;
 	
+	public class MoreThanTwoChildrenException extends Exception{};
+	
 	public BinaryTreeConverter(QueryReconstructor _pReconstructor)
 	{
 		pReducer = _pReconstructor.getPlanReducer();
@@ -31,7 +33,7 @@ public class BinaryTreeConverter {
 	}
 
 	// convert a JSONObject query plan to a tree format
-	public LinkedBinaryTreeNode<QueryPlanTreeNode> convertToTree() throws Exception
+	public LinkedBinaryTreeNode<QueryPlanTreeNode> convertToTree() throws MoreThanTwoChildrenException 
 	{
 		if( pReducer.topLevelNode == null)
 		{
@@ -61,7 +63,7 @@ public class BinaryTreeConverter {
 	}
 	
 	// recursive construct the tree
-	private LinkedBinaryTreeNode<QueryPlanTreeNode> constructTree(JSONObject qRoot) throws Exception
+	private LinkedBinaryTreeNode<QueryPlanTreeNode> constructTree(JSONObject qRoot) throws MoreThanTwoChildrenException 
 	{	
 		LinkedBinaryTreeNode<QueryPlanTreeNode> root = createBinaryTreeNode(qRoot);
 		
@@ -117,7 +119,7 @@ public class BinaryTreeConverter {
 	}
 	
 	// get all children of the current node
-	private JSONObject[] getAllChildren(JSONObject currentNode) throws Exception
+	private JSONObject[] getAllChildren(JSONObject currentNode) throws MoreThanTwoChildrenException 
 	{
 		JSONArray childrenNodes = pReducer.getChildren(currentNode);		
 		JSONObject[] result = new JSONObject[MAX_CHILDREN_NUM];
@@ -137,7 +139,7 @@ public class BinaryTreeConverter {
 		{
 			if(totalChildrenFound >= 2)
 			{
-				throw new Exception("Query Plan has more than two children"); 
+				throw new MoreThanTwoChildrenException(); 
 			}
 			
 			JSONObject curChild = citerator.next();	

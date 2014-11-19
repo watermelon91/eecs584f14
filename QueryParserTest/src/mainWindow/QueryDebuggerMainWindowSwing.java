@@ -37,6 +37,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
+import mainWindow.LoggingUtilities.LOG_TYPES;
 import binaryTree.BinaryTreeNode;
 import binaryTree.LinkedBinaryTreeNode;
 
@@ -47,6 +48,9 @@ import com.mxgraph.view.mxGraph;
 import com.sun.xml.internal.ws.util.StringUtils;
 
 import databaseConnector.PostgresDBConnector.Pair;
+import frontEndConnector.BinaryTreeConverter.MoreThanTwoChildrenException;
+import frontEndConnector.DataPlanTreeNode.BlankAttributesException;
+import frontEndConnector.DataPlanTreeNode.NonMatchingAttrCountAndValueCountException;
 import frontEndConnector.FrontEndConnector;
 import frontEndConnector.QueryPlanTreeNode;
 
@@ -200,8 +204,16 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
                     String rst = connector.initializeSQLConnection();
                     if(rst.isEmpty())
+                    {
                         System.out.println("postgres connection established");
-                    else System.out.println("postgres connection failed");
+                    }
+                    else 
+                    {
+                    	JOptionPane.showMessageDialog(getParent(),                                                
+                                "Connection to db failed with message: \n" + rst,
+                                "SQL connection failed",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
                     
                     textUsername.setEnabled(false);
                     textPassword.setEnabled(false);
@@ -316,6 +328,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                     if(!queryPane.getText().equals(""))
                                     {
                                     	tree_sampleData = connector.debugQuery(queryPane.getText());
+
+                                        if (tree_sampleData!= null) {
+                                            drawPlanTree(graph_sampleData, tree_sampleData, treeObjects_sampleData);
+                                        }
                                     }
                                 }
                                 catch(SQLException e1)
@@ -324,20 +340,24 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                             "Input query invalid. \n" + e1.getMessage(),
                                             "Input error",
                                             JOptionPane.ERROR_MESSAGE);
-                                }
+                                } catch (MoreThanTwoChildrenException e) {
+                                	JOptionPane.showMessageDialog(getParent(),                                                
+                                            "The input query has moe than two children in query plan, \n"
+                                            + "which is not supported by the debugger yet.",
+                                            "Unsupported Query",
+                                            JOptionPane.ERROR_MESSAGE);
+                                	logger.log(LOG_TYPES.UNSUPPORTED_QUERY, e.getStackTrace().toString());
+								}
                                 catch (Exception e)
                                 {
                                 	JOptionPane.showMessageDialog(getParent(),                                                
-                                            "Input query invalid. \n" + e.getMessage(),
-                                            "Input error",
+                                            "The input query is not supported by the debugger yet.",
+                                            "Unsupported Query",
                                             JOptionPane.ERROR_MESSAGE);
+                                	logger.log(LOG_TYPES.UNSUPPORTED_QUERY, e.getMessage() + "\n" + e.getStackTrace().toString());
                                 }
                                 
-                                if (tree_sampleData!= null) {
-                                    drawPlanTree(graph_sampleData, tree_sampleData, treeObjects_sampleData);
-                                    
-                                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");
-                                }
+                                logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");
                             } else if (btnQuerySubmit.getText() == "Edit") {
                                 queryPane.setEnabled(true);
                                 btnQuerySubmit.setText("Submit");
@@ -462,7 +482,17 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     	if(!subQueryPane.getText().equals(""))
                     	{
                     		samplePair = connector.executeTestQuery(subQueryPane.getText());
+                    		
+                    		 model_sampleData.setColumnIdentifiers(samplePair.attributes);
+                             model_sampleData.setRowCount(0);
+                             
+                             for (String[] row: samplePair.data){
+                                 model_sampleData.addRow(row);
+                             }                              
+             
+                             model_sampleData.fireTableDataChanged();
                     	}
+
                     	//samplePair = connector.executeTestQuery("select * from tmp0 order by h_user_id");
 					} catch (SQLException e1) {
 						JOptionPane.showMessageDialog(getParent(),                                                
@@ -470,15 +500,6 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 "Input error",
                                 JOptionPane.ERROR_MESSAGE);
 					}  
-    
-                    model_sampleData.setColumnIdentifiers(samplePair.attributes);
-                    model_sampleData.setRowCount(0);
-                    
-                    for (String[] row: samplePair.data){
-                        model_sampleData.addRow(row);
-                    }                              
-    
-                    model_sampleData.fireTableDataChanged();
                     
                 } else if (btnSubQuerySubmit.getText() == "Edit") {
                 	subQueryPane.setEditable(true);
@@ -711,12 +732,18 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     for (int i = 0; i < table_sampleData.getColumnCount(); i++)
                         row[i] = table_sampleData.getModel().getValueAt(table_sampleData.getSelectedRow(), i).toString();           
                     
-                    tree_trackTuple = connector.updateTreeWhyIsHere(tree_sampleData, 
-                                                                    treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
-                                                                    row);
-                    
-                    drawPlanTree(graph_trackTuple, tree_trackTuple, treeObjects_trackTuple);                    
-                    
+                    try {
+						tree_trackTuple = connector.updateTreeWhyIsHere(tree_sampleData, 
+						                                                treeObjects_sampleData.get(graph_sampleData.getSelectionCell()), 
+						                                                row);
+						drawPlanTree(graph_trackTuple, tree_trackTuple, treeObjects_trackTuple); 
+					} catch (Exception e1) {
+						JOptionPane.showMessageDialog(getParent(),                                                
+                                "This operation is not supported for the input query yet. \n",
+                                "Unsupported operation",
+                                JOptionPane.ERROR_MESSAGE);
+						logger.log(LOG_TYPES.UNSUPPORTED_QUERY, e1.getMessage() + "\n" + e1.getStackTrace().toString());
+					}
                 }
                 
             }
@@ -772,7 +799,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                     JOptionPane.ERROR_MESSAGE);
 						}
 					else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
+					{
                         samplePair = connector.getAllSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());
+					}
                     
                     btnExpandAll_sampleData.setText("Collapse sample");
                 } else {
@@ -791,7 +820,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                     JOptionPane.ERROR_MESSAGE);
 						}
 					else if (queryFrom_sampleData.getText().equals("Plan Tree Node"))
-                        samplePair = connector.getSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());               
+					{
+                        samplePair = connector.getSampleData(treeObjects_sampleData.get(graph_sampleData.getSelectionCell()).getData().getNewTableName());
+					}
                     btnExpandAll_sampleData.setText("Expand All");
                 }
 
@@ -876,7 +907,13 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                                   "Searching input is not valid. \n" + e1.getMessage()+ "\nPlease check input data and format\n (e.g. quotes for non-numeric attributes)",
                                                   "Input error",
                                                   JOptionPane.ERROR_MESSAGE); 
-                }                
+                } catch (Exception e1) {
+                	JOptionPane.showMessageDialog(getParent(),                                                
+                            "This operation is not supported for the input query yet. \n",
+                            "Unsupported operation",
+                            JOptionPane.ERROR_MESSAGE);
+                	logger.log(LOG_TYPES.UNSUPPORTED_QUERY, e1.getMessage() + "\n" + e1.getStackTrace().toString());
+				}                
             }
 
             @Override
