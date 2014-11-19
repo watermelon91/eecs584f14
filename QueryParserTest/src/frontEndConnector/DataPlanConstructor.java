@@ -7,8 +7,7 @@ import java.util.List;
 
 import queryParser.QueryProcessingUtilities;
 import databaseConnector.PostgresDBConnector;
-import databaseConnector.PostgresDBConnector.InputQueryNotSELECTALL;
-import databaseConnector.PostgresDBConnector.QueryAttrNumNotMatch;
+import databaseConnector.PostgresDBConnector.Pair;
 import frontEndConnector.DataPlanTreeNode.BlankAttributesException;
 import frontEndConnector.DataPlanTreeNode.NonMatchingAttrCountAndValueCountException;
 import binaryTree.LinkedBinaryTreeNode;
@@ -16,15 +15,15 @@ import binaryTree.LinkedBinaryTreeNode;
 public class DataPlanConstructor {
 	private LinkedBinaryTreeNode<QueryPlanTreeNode> completePlanTreeRoot;
 	private LinkedBinaryTreeNode<QueryPlanTreeNode> selectedPlanNode;
-	private List<Pair> selectedNodePairList;
+	private List<DataPair> selectedNodePairList;
 	private PostgresDBConnector pgConnector;
 	
-	private class Pair{
+	private class DataPair{
 		public String aliasAttr;
 		public String val;
 		public String originalAttr;
 		
-		public Pair(String _aliasAttr, String _val, String _originalAttr)
+		public DataPair(String _aliasAttr, String _val, String _originalAttr)
 		{
 			aliasAttr = _aliasAttr;
 			val = _val;
@@ -54,7 +53,7 @@ public class DataPlanConstructor {
 		}
 
 		// build original attr-value pair list
-		selectedNodePairList = new ArrayList<Pair>();
+		selectedNodePairList = new ArrayList<DataPair>();
 		for(int i = 0; i < _rowData.length; i++)
 		{
 			_selectedNodeAttributes[i] = QueryProcessingUtilities.removeQuotes(_selectedNodeAttributes[i]);
@@ -99,7 +98,7 @@ public class DataPlanConstructor {
 	
 	private void downwardInsertDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rootPlanNode,
-			List<Pair> rootPairList
+			List<DataPair> rootPairList
 			) throws SQLException
 	{
 		DataPlanTreeNode root = createDataNode(rootPlanNode, rootPairList);
@@ -108,7 +107,7 @@ public class DataPlanConstructor {
 		if(rootPlanNode.getLeft() != null)
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> leftNode = (LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getLeft();
-			List<Pair> leftPairList = updateAttrNames(leftNode, rootPairList);
+			List<DataPair> leftPairList = updateAttrNames(leftNode, rootPairList);
 			downwardInsertDataNode(
 					leftNode,
 					leftPairList
@@ -117,7 +116,7 @@ public class DataPlanConstructor {
 		if(rootPlanNode.getRight() != null)
 		{
 			LinkedBinaryTreeNode<QueryPlanTreeNode> rightNode = (LinkedBinaryTreeNode<QueryPlanTreeNode>) rootPlanNode.getRight();
-			List<Pair> rightPairList = updateAttrNames(rightNode, rootPairList);
+			List<DataPair> rightPairList = updateAttrNames(rightNode, rootPairList);
 			downwardInsertDataNode(
 					rightNode,
 					rightPairList
@@ -125,9 +124,9 @@ public class DataPlanConstructor {
 		}
 	}
 	
-	private List<Pair> updateAttrNames(
+	private List<DataPair> updateAttrNames(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode,
-			List<Pair> rootPairList
+			List<DataPair> rootPairList
 			)
 	{
 		String attributeStr = QueryProcessingUtilities.removeSquareParenthesis(planNode.getData().getOutputAttrs());
@@ -136,10 +135,10 @@ public class DataPlanConstructor {
 		System.out.println(Arrays.asList(curNodeAttributes).toString());
 		
 		// find the attributes in the node that also exist in this node 
-		List<Pair> newPairList = new ArrayList<Pair>();
+		List<DataPair> newPairList = new ArrayList<DataPair>();
 		for(int i = 0; i < rootPairList.size(); i++)
 		{
-			Pair curRootPair = rootPairList.get(i);
+			DataPair curRootPair = rootPairList.get(i);
 			System.out.println("Original: " + curRootPair.originalAttr + "; Alias : " + curRootPair.aliasAttr);
 			String oldAttr = curRootPair.originalAttr;
 			if(oldAttr.contains("."))
@@ -171,7 +170,7 @@ public class DataPlanConstructor {
 		return "";
 	}
 	
-	private Pair createPair(String originalAttr, String val)
+	private DataPair createPair(String originalAttr, String val)
 	{
 		String shortOriginalAttr = "";
 		String aliasAttr = "";
@@ -187,7 +186,7 @@ public class DataPlanConstructor {
 		}
 
 		//System.out.println("CREATED: original " + shortOriginalAttr + "; alias " + aliasAttr);
-		return new Pair(aliasAttr, val, shortOriginalAttr);
+		return new DataPair(aliasAttr, val, shortOriginalAttr);
 	}
 	
 	private String removeAlias(String inAttr)
@@ -203,64 +202,60 @@ public class DataPlanConstructor {
 	// create a new LinkedBinaryTreeNode
 	private DataPlanTreeNode createDataNode(
 			LinkedBinaryTreeNode<QueryPlanTreeNode> planNode,
-			List<Pair> curPairList
+			List<DataPair> curPairList
 			) throws SQLException
 	{
 		QueryPlanTreeNode node = planNode.getData();
 		
-		String[] curAttributes = new String[curPairList.size()];
 		String whereClause = "";
 		for(int i = 0; i < curPairList.size(); i++)
 		{
-			Pair curPair = curPairList.get(i);
+			DataPair curPair = curPairList.get(i);
 			if(!curPair.val.equals(""))
 			{
 				if(!whereClause.equals(""))
 				{
 					whereClause = whereClause + " AND ";
 				}
-				whereClause = whereClause + curPairList.get(i).aliasAttr + " = " + QueryProcessingUtilities.removeQuotes(curPair.val) + " ";
+				whereClause = whereClause + curPair.aliasAttr + " = " + QueryProcessingUtilities.removeQuotes(curPair.val) + " ";
 			}
-			curAttributes[i] = curPairList.get(i).aliasAttr;
 		}
 		System.out.println("WHERE: " + whereClause);
 		
-		List<String[]> values = null;
 		if(!whereClause.equals(""))
 		{
 			String query = "SELECT * FROM " + node.getNewTableName() + " WHERE " + whereClause; 
 			System.out.println("Query: " + query);
-			values = pgConnector.executeQuerySeparateResult(query, Integer.MAX_VALUE).data;
-			if(values.size() == 0)
+			Pair resultPair = pgConnector.executeQuerySeparateResult(query, Integer.MAX_VALUE);
+			if(resultPair.data.size() == 0)
 			{
 				System.out.println("VALUES: NON-MATCHING");
 			}
 			else
 			{
-				System.out.println("VALUES: " + Arrays.asList(values.get(0)).toString());
+				System.out.println("VALUES row 1: " + Arrays.asList(resultPair.data.get(0)).toString());
 			}
+			
+			DataPlanTreeNode dataNode = null;
+			try 
+			{
+				dataNode = new DataPlanTreeNode(resultPair.attributes, resultPair.data);
+			} 
+			catch (NonMatchingAttrCountAndValueCountException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			catch (BlankAttributesException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return dataNode;
 		}
-		else
-		{
-			values = null;
-		}
-		DataPlanTreeNode dataNode = null;
-		try 
-		{
-			dataNode = new DataPlanTreeNode(curAttributes, values);
-		} 
-		catch (NonMatchingAttrCountAndValueCountException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		catch (BlankAttributesException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return dataNode;
+
+		return null;
 	}
 	
 	

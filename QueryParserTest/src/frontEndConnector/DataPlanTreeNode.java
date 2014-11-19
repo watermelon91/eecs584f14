@@ -1,5 +1,6 @@
 package frontEndConnector;
 
+import java.util.Arrays;
 import java.util.List;
 
 import queryParser.QueryProcessingUtilities;
@@ -28,6 +29,8 @@ public class DataPlanTreeNode {
 		{
 			if((_values.size() > 0) && (_attrs.length != _values.get(0).length))
 			{
+				System.out.println(Arrays.asList(_values.get(0)));
+				System.out.println(Arrays.asList(_attrs));
 				throw new NonMatchingAttrCountAndValueCountException();
 			}
 			
