@@ -1421,9 +1421,13 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void visit(BinaryTreeNode node) {
                 QueryPlanTreeNode treeNode = (QueryPlanTreeNode) node.getData();
                 PlanTreeNode planTreeNode = coordinates.get(node);
-                String label = treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr()+"\n Node table name: "+treeNode.getAbbreviatedTreeNode().getTmpTableStr();               
-                planTreeNode.obj = graph.insertVertex(parent, null, label, planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, label.split("\n").length*15);
-
+                String label = treeNode.getAbbreviatedTreeNode().getLargeFontStr()+"\n"+treeNode.getAbbreviatedTreeNode().getSmallFontStr();   
+                if (treeNode.getAbbreviatedTreeNode().getTmpTableStr() != null) {
+                    Object newTableName = graph.insertVertex(parent, null, treeNode.getAbbreviatedTreeNode().getTmpTableStr(), planTreeNode.point.x-maxshift, planTreeNode.point.y-16, 30, 16);
+                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "white", new Object[]{newTableName});
+                }
+                planTreeNode.obj = graph.insertVertex(parent, null, label, planTreeNode.point.x-maxshift, planTreeNode.point.y, 200, label.split("\n").length*16);
+                
                 if (treeNode.getDataNode() != null) {
                     graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "yellow", new Object[]{planTreeNode.obj});
                 }
