@@ -19,7 +19,7 @@ import javax.mail.internet.*;
 public class LoggingUtilities {
 	
 	enum LOG_TYPES {START, END, INPUT_SOLUTION, /*these are for the survey window only*/
-		BUTTON_CLICK, TEXT_ENTER, QUERY_PLAN_NODE_CLICK, UNSUPPORTED_QUERY, OTHER};/*these are for the debugger window only*/
+		BUTTON_CLICK, TEXT_ENTER, QUERY_PLAN_NODE_CLICK, UNSUPPORTED_QUERY, FOCUS_OUT, FOCUS_IN, OTHER};/*these are for the debugger window only*/
 
 	public LoggingUtilities ()
 	{
@@ -85,6 +85,18 @@ public class LoggingUtilities {
 			case UNSUPPORTED_QUERY:
 			{
 				logContent = "UNSUPPORTED_QUERY";
+				break;
+			}
+			
+			case FOCUS_OUT:
+			{
+				logContent = "FOCUS_OUT";
+				break;
+			}
+			
+			case FOCUS_IN:
+			{
+				logContent = "FOCUS_IN";
 				break;
 			}
 			

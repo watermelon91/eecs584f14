@@ -18,7 +18,7 @@ import javax.mail.internet.*;
 
 public class LoggingUtilities {
 	
-	enum LOG_TYPES {QUERY_DB, INPUT_SOLUTION, START, END,  OTHER};
+	enum LOG_TYPES {QUERY_DB, INPUT_SOLUTION, START, END, FOCUS_OUT, FOCUS_IN, OTHER};
 
 	public LoggingUtilities ()
 	{
@@ -66,6 +66,18 @@ public class LoggingUtilities {
 			case END:
 			{
 				logContent = "END ";
+				break;
+			}
+			
+			case FOCUS_OUT:
+			{
+				logContent = "FOCUS_OUT";
+				break;
+			}
+			
+			case FOCUS_IN:
+			{
+				logContent = "FOCUS_IN";
 				break;
 			}
 
