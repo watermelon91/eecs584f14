@@ -31,17 +31,18 @@ public class PlanReducer {
 		// looks like it's working okay
 		// definitely could create some of the temp tables instead of jamming them all into
 	// materialize node should be like sort and hash nodes - does nothing functionally
-	// TODO list
 	// aggregate naming
 	// other garbage attribute renaming
 	// make sorts at the top node work
 	// test nested loops
+	// TODO list
 	// if we do the attribute renaming, we should also eventually implement search/replace in conditions/other places references might appear
+	// return original filter for display
 	
-	// add error handlign to throw exceptions on unsupported plan types
+	// add error handling to throw exceptions on unsupported plan types
 	// e.g., joins with subplans
 	// also selecting a function of the same thing multiple times 
-		//e.g., explain verbose select a, a, b from (select count(*) a from toy) t1, (select count(*) b from toy2) t2 where a < b;
+		// e.g., explain verbose select a, a, b from (select count(*) a from toy) t1, (select count(*) b from toy2) t2 where a < b;
 		
 	// TODO: refactor. make a node class and a reduced node class so there's no more of this mixing up methods from planReducer vs. queryReconstructor.
 	
@@ -548,6 +549,8 @@ public class PlanReducer {
 		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS), newOutputAttrs);
 		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ALIAS_SET), aliasSet);
 		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME), "tmp" + curTmp + "_" + id);
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ORIGINAL_JOIN_COND), QueryProcessingUtilities.removeCasts(joinCondCombined));
+		reducedJoinNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ORIGINAL_FILTER), QueryProcessingUtilities.removeCasts(filter));
 		curTmp++;
 				
 		return reducedJoinNode;
@@ -637,10 +640,12 @@ public class PlanReducer {
 		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE), "aggregate");
 		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN), children);
 		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.FILTER), filter);
+		// TODO: alias replace filter?
 		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS), newOutputAttrs);
 		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ALIAS_SET), aliasSet);
 		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME), "tmp" + curTmp + "_" + id);
 		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.GROUP_BY_ATTRS), groupByAttrs);
+		reducedAggregateNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ORIGINAL_FILTER), QueryProcessingUtilities.removeCasts(filter));
 		curTmp++;
 		
 		return reducedAggregateNode;
@@ -704,24 +709,12 @@ public class PlanReducer {
 		if (reducedChildren != null) {
 			reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN), reducedChildren);			
 		}
+		reducedScanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ORIGINAL_FILTER), QueryProcessingUtilities.removeCasts(filterCond));
 		curTmp++;
 		
 		return reducedScanNode;
 	}
 	
-	/*
-	JSONObject makeSubplanNode(JSONArray reducedChildren, String subplanName, JSONArray outputAttrs) {
-		JSONObject reducedSubplanNode = new JSONObject();
-		JSONArray newOutputAttrs = QueryProcessingUtilities.renameAttributesSimple(outputAttrs);
-
-		reducedSubplanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE, "subplan");
-		reducedSubplanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.CHILDREN, reducedChildren);
-		reducedSubplanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SUBPLAN_NAME, subplanName);
-		reducedSubplanNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.OUTPUT_ATTRS, newOutputAttrs);
-
-		return reducedSubplanNode;
-	}
-	*/
 		// node type: if it's a join type (hash, sort merge, inl, nl), we'll make a join node
 		// we'll look at the join conditions and stick them in the where clause
 		// may be some complications with aliasing/figuring out what relation an attribute comes from
@@ -787,6 +780,7 @@ public class PlanReducer {
 			// possibly add \b for word boundary
 			String alias = it.next();
 			regex = "\\b" + alias + "\\.";
+			// TODO string literals
 			// so in here we should be only executing the replace all on sections of the condition that are not string literals.
 			// okay, it shouldn't be THAT bad to implement - just go through and check for unescaped single quotes, and ignore everything in between pairs.
 			// but let's get aggregates working first.
@@ -859,7 +853,9 @@ public class PlanReducer {
 		CHILDREN,
 		QUERY, 
 		SUBPLAN_NAME,
-		SORT_KEY
+		SORT_KEY,
+		ORIGINAL_FILTER,
+		ORIGINAL_JOIN_COND
 		};
 		
 	// mapping between enum and the actual returned string for all attributes EXPLAIN can return
@@ -880,6 +876,8 @@ public class PlanReducer {
 		 map.put(REDUCED_PLAN_ATTRS.QUERY, "query");
 		 map.put(REDUCED_PLAN_ATTRS.SUBPLAN_NAME, "subplanName");
 		 map.put(REDUCED_PLAN_ATTRS.SORT_KEY, "sortKey");
+		 map.put(REDUCED_PLAN_ATTRS.ORIGINAL_FILTER, "originalFilter");
+		 map.put(REDUCED_PLAN_ATTRS.ORIGINAL_JOIN_COND, "originalJoinCond");
 		 return Collections.unmodifiableMap(map);
 	}
 	
@@ -893,6 +891,11 @@ public class PlanReducer {
 		return rst.toString();
 	}
 	
+	public void setType(JSONObject currentNode, String str)
+	{
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.TYPE), str);
+	}
+	
 	public String getJoinType(JSONObject currentNode)
 	{
 		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.JOIN_TYPE));
@@ -902,6 +905,32 @@ public class PlanReducer {
 		}
 		return rst.toString();
 	}
+	
+	public void setJoinType(JSONObject currentNode, String str)
+	{
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.JOIN_TYPE), str);
+	}
+	
+	public String getOriginalJoinCond(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ORIGINAL_JOIN_COND));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
+	public String getOriginalFilter(JSONObject currentNode)
+	{
+		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ORIGINAL_FILTER));
+		if(rst == null)
+		{
+			return EMPTY_STRING;
+		}
+		return rst.toString();
+	}
+	
 
 	public String getQuery(JSONObject currentNode)
 	{
@@ -912,10 +941,20 @@ public class PlanReducer {
 		}
 		return rst.toString();
 	}
-
+	
+	public void setQuery(JSONObject currentNode, String str)
+	{
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.QUERY), str);
+	}
+	
 	public JSONArray getAliasSet(JSONObject currentNode)
 	{
 		return (JSONArray)currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ALIAS_SET));
+	}
+
+	public void setAliasSet(JSONObject currentNode, JSONArray ar)
+	{
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.ALIAS_SET), ar);
 	}
 	
 	public String getFilter(JSONObject currentNode)
@@ -929,7 +968,6 @@ public class PlanReducer {
 	}
 	
 	public void setFilter(JSONObject currentNode, String newFilter) {
-		currentNode.remove(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.FILTER));
 		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.FILTER), newFilter);
 	}
 
@@ -944,7 +982,6 @@ public class PlanReducer {
 	}
 	
 	public void setInputTable(JSONObject currentNode, String newInputTable) {
-		currentNode.remove(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.INPUT_TABLE));
 		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.INPUT_TABLE), newInputTable);
 	}
 	
@@ -959,7 +996,6 @@ public class PlanReducer {
 	}
 	
 	public void setNewTableName(JSONObject currentNode, String newTableName) {
-		currentNode.remove(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME));
 		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.NEW_TABLE_NAME), newTableName);
 	}
 	
@@ -973,6 +1009,11 @@ public class PlanReducer {
 		return rst.toString();
 	}
 	
+	public void setJoinCondition(JSONObject currentNode, String str)
+	{
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.JOIN_CONDITION), str);
+	}
+	
 	public String getSubplanName(JSONObject currentNode)
 	{
 		Object rst = currentNode.get(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SUBPLAN_NAME));
@@ -981,6 +1022,11 @@ public class PlanReducer {
 			return EMPTY_STRING;
 		}
 		return rst.toString();
+	}
+	
+	public void setSubplanName(JSONObject currentNode, String str)
+	{
+		currentNode.put(reducedPlanAttrMapping.get(REDUCED_PLAN_ATTRS.SUBPLAN_NAME), str);
 	}
 
 	public JSONArray getOutputAttributes(JSONObject currentNode)

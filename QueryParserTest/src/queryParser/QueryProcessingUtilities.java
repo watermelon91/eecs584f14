@@ -139,6 +139,10 @@ public class QueryProcessingUtilities {
 		}
 	}
 	
+	public static String removeCasts(String str) {
+		return str.replaceAll("::text", "").replaceAll("::timestamp without time zone", "").replaceAll("::double precision", "");
+	}
+	
 	public static String removeQuotes(String inStr)
 	{
 		if((inStr.length() >= 2) && inStr.charAt(0) == '"' && inStr.charAt(inStr.length()-1) == '"')
