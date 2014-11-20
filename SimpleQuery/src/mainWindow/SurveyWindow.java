@@ -72,6 +72,8 @@ public class SurveyWindow extends JFrame {
 			buggyQueryTextArea.setLineWrap(true);
 			solutionQueryTextArea.setEnabled(true);
 			solutionQueryTextArea.setEditable(true);
+			solutionQueryTextArea.setWrapStyleWord(true);
+			solutionQueryTextArea.setLineWrap(true);
 			
 			buggyQueryTextArea.setText(buggyQueries[pageCount]);
 			descTextArea.setText(expectedResult[pageCount]);

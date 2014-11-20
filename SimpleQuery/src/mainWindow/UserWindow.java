@@ -25,7 +25,7 @@ import frontEndConnector.FrontEndConnector;
  */
 public class UserWindow extends JFrame {
 	
-	private FrontEndConnector connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia", "eecs58414");
+	private FrontEndConnector connector = new FrontEndConnector("eecs484.eecs.umich.edu", "tweedle_dee", "tweedle_dee", "tweedle_dum");
 	private DefaultTableModel tableModel = new DefaultTableModel();
 	LoggingUtilities logger = null;
 
