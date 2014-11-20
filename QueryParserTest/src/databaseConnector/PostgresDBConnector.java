@@ -201,7 +201,10 @@ public class PostgresDBConnector {
 	{
 		try 
 		{
-			connection.close();
+			if(connection != null)
+			{
+				connection.close();
+			}
 			return "";
 		}
 		catch (SQLException e) 

@@ -104,6 +104,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
     private JButton btnExpandAll_sampleData;
     private JButton btnExpandAll_trackTuple;
     private JButton btnExpandAll_findMissing;
+    
+    private JButton btnCancelSearchForMissing;
+    private JButton btnSearchForMissing;
 
     private JTextField queryFrom_trackTuple;
     private JTextField queryFrom_findMissing;
@@ -196,6 +199,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         });
         
         btnDbSubmit = new JButton("Submit");
+        
         btnDbSubmit.addMouseListener(new MouseListener(){
 
             @Override
@@ -210,6 +214,23 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     if(rst.isEmpty())
                     {
                         System.out.println("postgres connection established");
+                        
+                        // successful login -- enable all other buttons
+                        btnQuerySubmit.setEnabled(true);
+                        btnQueryCancel.setEnabled(true);
+                        btnSubQuerySubmit.setEnabled(true);
+                        btnSubQueryCancel.setEnabled(true);
+                        btnExpandAll_sampleData.setEnabled(true);
+                        btnExpandAll_trackTuple.setEnabled(true);
+                        btnExpandAll_findMissing.setEnabled(true);
+                        btnCancelSearchForMissing.setEnabled(true);
+                        btnSearchForMissing.setEnabled(true);
+                        
+                        textUsername.setEnabled(false);
+                        textPassword.setEnabled(false);
+                        btnDbCancel.setEnabled(false);
+                        btnDbSubmit.setText("Disconnect");
+                        btnDbSubmit.setSize(30, btnDbSubmit.getHeight());
                     }
                     else 
                     {
@@ -218,13 +239,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 "SQL connection failed",
                                 JOptionPane.ERROR_MESSAGE);
                     }
-                    
-                    textUsername.setEnabled(false);
-                    textPassword.setEnabled(false);
-                    btnDbCancel.setEnabled(false);
-                    btnDbSubmit.setText("Disconnect");
-                    btnDbSubmit.setSize(30, btnDbSubmit.getHeight());
-                    
+
                     logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "log in submit");
                 } else if (btnDbSubmit.getText() == "Disconnect") {
                     connector.closeDBConnection();
@@ -266,6 +281,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         textUsername = new JTextField();         
         textPassword = new JPasswordField();
+        
+        textUsername.setText("default");
+        textPassword.setText("default"); 
 
         GroupLayout gl_panel = new GroupLayout(panel);
         gl_panel.setHorizontalGroup(
@@ -314,6 +332,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     JScrollPane queryscrollPane = new JScrollPane(queryPane);
                     
                     btnQuerySubmit = new JButton("Submit");
+                    btnQuerySubmit.setEnabled(false); // disable until log in
+                    
                     btnQuerySubmit.addMouseListener(new MouseListener(){
     
                         @Override
@@ -339,7 +359,20 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                     tree_sampleData = connector.debugQuery(queryPane.getText());
                                      
                                     drawPlanTree(graph_sampleData, tree_sampleData, treeObjects_sampleData);                                       
-                                } catch (MoreThanTwoChildrenException e) {
+                                }
+                                catch(SQLException e)
+                                {
+                                	 queryPane.setEnabled(true);
+                                     btnQuerySubmit.setText("Submit");
+                                     btnQueryCancel.setEnabled(true);    
+                                     
+                                 	JOptionPane.showMessageDialog(window,                                                
+                                             "Input query has syntax error: \n" + e.getMessage(),
+                                             "Unsupported Query",
+                                             JOptionPane.ERROR_MESSAGE);
+                                 	logger.log(LOG_TYPES.UNSUPPORTED_QUERY, e.getStackTrace().toString());
+                                }
+                                catch (MoreThanTwoChildrenException e) {
                                     queryPane.setEnabled(true);
                                     btnQuerySubmit.setText("Submit");
                                     btnQueryCancel.setEnabled(true);    
@@ -395,6 +428,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     });
                     
                     btnQueryCancel = new JButton("Cancel");
+                    btnQueryCancel.setEnabled(false);
                     btnQueryCancel.addMouseListener(new MouseListener(){
     
                         @Override
@@ -471,6 +505,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         subQueryPane = new JTextPane();
         
         btnSubQuerySubmit = new JButton("Submit");
+        btnSubQuerySubmit.setEnabled(false);
         btnSubQuerySubmit.addMouseListener(new MouseListener(){
     
             @Override
@@ -545,6 +580,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         });
         
         btnSubQueryCancel = new JButton("Cancel");
+        btnSubQueryCancel.setEnabled(false);
         btnSubQueryCancel.addMouseListener(new MouseListener(){
 
             @Override
@@ -800,6 +836,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         
         btnExpandAll_sampleData = new JButton("Expand All");
+        btnExpandAll_sampleData.setEnabled(false);
         btnExpandAll_sampleData.addMouseListener(new MouseListener(){
 
             @Override
@@ -899,9 +936,10 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         JLabel lblSearchForMissing = new JLabel("Search for missing tuple in the node selected:");
         
-        JButton btnCancelSearchForMissing = new JButton("Cancel");
-        
-        JButton btnSearchForMissing = new JButton("Search");
+        btnCancelSearchForMissing = new JButton("Cancel");
+        btnCancelSearchForMissing.setEnabled(false);
+        btnSearchForMissing = new JButton("Search");
+        btnSearchForMissing.setEnabled(false);
         btnSearchForMissing.addMouseListener(new MouseListener(){
 
             @Override
@@ -1158,6 +1196,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         JScrollPane pane_trackTuple = new JScrollPane((Component) table_trackTuple, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);      
        
         btnExpandAll_trackTuple = new JButton("Expand All");
+        btnExpandAll_trackTuple.setEnabled(false);
         GroupLayout gl_panel_trackTupleTable = new GroupLayout(panel_trackTupleTable);
         gl_panel_trackTupleTable.setHorizontalGroup(
             gl_panel_trackTupleTable.createParallelGroup(Alignment.TRAILING)
@@ -1319,6 +1358,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         panel_findMissingTable.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Record Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
         btnExpandAll_findMissing = new JButton("Expand All");
+        btnExpandAll_findMissing.setEnabled(false);
         
         JLabel lblQueryFor_findMissing = new JLabel("Tracking Down:");
         
