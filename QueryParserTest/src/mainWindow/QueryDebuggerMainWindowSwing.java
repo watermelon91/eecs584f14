@@ -7,9 +7,12 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Point;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -154,6 +157,23 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         setBounds(100, 100, 1278, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
+        addWindowFocusListener(new WindowFocusListener(){
+			@Override
+			public void windowGainedFocus(WindowEvent e) {
+				// TODO Auto-generated method stub
+				logger.log(LOG_TYPES.FOCUS_IN_TOOL, "focus gained");
+				System.out.println("focus gained");
+			}
+
+			@Override
+			public void windowLostFocus(WindowEvent e) {
+				// TODO Auto-generated method stub
+				logger.log(LOG_TYPES.FOCUS_OUT_TOOL, "focus lost");
+				System.out.println("focus lost");
+			}
+        	
+        });
+        
         // DB Login
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null), "Database Log In", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -206,9 +226,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             public void mouseClicked(MouseEvent e) {
                 // TODO Auto-generated method stub
                 if (btnDbSubmit.getText() == "Submit"){
-                    //connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia" , "eecs58414");
+                    connector = new FrontEndConnector("yijiadanajie.cta5xgwtrfyv.us-west-2.rds.amazonaws.com", "mydb", "yijia" , "eecs58414");
                     //connector = new FrontEndConnector("127.0.0.1","K" , textUsername.getText(), textPassword.getText());
-                    connector = new FrontEndConnector("127.0.0.1", "postgres", "K", "5432");
+                    //connector = new FrontEndConnector("127.0.0.1", "postgres", "K", "5432");
 
                     String rst = connector.initializeSQLConnection();
                     if(rst.isEmpty())

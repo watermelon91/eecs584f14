@@ -18,7 +18,7 @@ import javax.mail.internet.*;
 
 public class LoggingUtilities {
 	
-	enum LOG_TYPES {QUERY_DB, INPUT_SOLUTION, START, END, FOCUS_OUT, FOCUS_IN, OTHER};
+	enum LOG_TYPES {QUERY_DB, INPUT_SOLUTION, START, END, FOCUS_OUT_TOOL, FOCUS_IN_TOOL, FOCUS_OUT_SOL, FOCUS_IN_SOL, OTHER};
 
 	public LoggingUtilities ()
 	{
@@ -69,15 +69,27 @@ public class LoggingUtilities {
 				break;
 			}
 			
-			case FOCUS_OUT:
+			case FOCUS_OUT_TOOL:
 			{
-				logContent = "FOCUS_OUT";
+				logContent = "FOCUS_OUT_TOOL";
 				break;
 			}
 			
-			case FOCUS_IN:
+			case FOCUS_IN_TOOL:
 			{
-				logContent = "FOCUS_IN";
+				logContent = "FOCUS_IN_TOOL";
+				break;
+			}
+			
+			case FOCUS_OUT_SOL:
+			{
+				logContent = "FOCUS_OUT_SOL";
+				break;
+			}
+			
+			case FOCUS_IN_SOL:
+			{
+				logContent = "FOCUS_IN_SOL";
 				break;
 			}
 

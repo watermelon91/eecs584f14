@@ -43,6 +43,23 @@ public class SurveyWindow extends JFrame {
 	
 	private void myInit()
 	{
+		addWindowFocusListener(new WindowFocusListener(){
+			@Override
+			public void windowGainedFocus(WindowEvent e) {
+				// TODO Auto-generated method stub
+				logger.log(LOG_TYPES.FOCUS_IN_SOL, "focus gained");
+				System.out.println("focus gained");
+			}
+
+			@Override
+			public void windowLostFocus(WindowEvent e) {
+				// TODO Auto-generated method stub
+				logger.log(LOG_TYPES.FOCUS_OUT_SOL, "focus lost");
+				System.out.println("focus lost");
+			}
+        	
+        });
+		
 		descTextArea.setText(
 				"INSTRUCTIONS: \n"
 				+ "1. click Start button below to start\n"

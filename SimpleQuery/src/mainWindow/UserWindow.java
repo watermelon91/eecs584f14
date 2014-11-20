@@ -34,6 +34,23 @@ public class UserWindow extends JFrame {
 		initComponents();
 		
 		// my init
+		addWindowFocusListener(new WindowFocusListener(){
+			@Override
+			public void windowGainedFocus(WindowEvent e) {
+				// TODO Auto-generated method stub
+				logger.log(LOG_TYPES.FOCUS_IN_TOOL, "focus gained");
+				System.out.println("focus gained");
+			}
+
+			@Override
+			public void windowLostFocus(WindowEvent e) {
+				// TODO Auto-generated method stub
+				logger.log(LOG_TYPES.FOCUS_OUT_TOOL, "focus lost");
+				System.out.println("focus lost");
+			}
+        	
+        });
+		
 		executionFeedbackPane.setText(
 				"Use the top left box to send queries to the database. \n"
 				+ "The query results will be displayed on the right side.");

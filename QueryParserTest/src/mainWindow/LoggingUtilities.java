@@ -19,7 +19,8 @@ import javax.mail.internet.*;
 public class LoggingUtilities {
 	
 	enum LOG_TYPES {START, END, INPUT_SOLUTION, /*these are for the survey window only*/
-		BUTTON_CLICK, TEXT_ENTER, QUERY_PLAN_NODE_CLICK, UNSUPPORTED_QUERY, FOCUS_OUT, FOCUS_IN, OTHER};/*these are for the debugger window only*/
+		BUTTON_CLICK, TEXT_ENTER, QUERY_PLAN_NODE_CLICK, UNSUPPORTED_QUERY, 
+		FOCUS_OUT_TOOL, FOCUS_IN_TOOL, FOCUS_OUT_SOL, FOCUS_IN_SOL, OTHER}; /*these are for the debugger window only*/
 
 	public LoggingUtilities ()
 	{
@@ -88,15 +89,27 @@ public class LoggingUtilities {
 				break;
 			}
 			
-			case FOCUS_OUT:
+			case FOCUS_OUT_TOOL:
 			{
-				logContent = "FOCUS_OUT";
+				logContent = "FOCUS_OUT_TOOL";
 				break;
 			}
 			
-			case FOCUS_IN:
+			case FOCUS_IN_TOOL:
 			{
-				logContent = "FOCUS_IN";
+				logContent = "FOCUS_IN_TOOL";
+				break;
+			}
+			
+			case FOCUS_OUT_SOL:
+			{
+				logContent = "FOCUS_OUT_SOL";
+				break;
+			}
+			
+			case FOCUS_IN_SOL:
+			{
+				logContent = "FOCUS_IN_SOL";
 				break;
 			}
 			
