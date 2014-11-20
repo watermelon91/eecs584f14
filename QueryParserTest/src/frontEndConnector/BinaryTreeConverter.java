@@ -96,10 +96,12 @@ public class BinaryTreeConverter {
 		QueryPlanTreeNode node = new QueryPlanTreeNode(
 				pReducer.getType(currentNode),
 				pReducer.getAliasSet(currentNode).toString(),
-				pReducer.getFilter(currentNode),
+				//pReducer.getFilter(currentNode),
+				pReducer.getOriginalFilter(currentNode), // shortened form
 				pReducer.getInputTable(currentNode),
 				pReducer.getNewTableName(currentNode),
-				pReducer.getJoinCondition(currentNode),
+				//pReducer.getJoinCondition(currentNode),
+				pReducer.getOriginalJoinCond(currentNode), // shortened form
 				pReducer.getOutputAttributes(currentNode).toString()
 				);
 		

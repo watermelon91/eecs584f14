@@ -117,7 +117,7 @@ public class QueryPlanTreeNode {
 		String str = "";
 		if(!abbrFilter.isEmpty())
 		{
-			str = str + abbrFilter;
+			str = str + cutOffLongString(abbrFilter, "=");
 		}
 		if(!abbrJoinCondition.isEmpty())
 		{
@@ -125,7 +125,7 @@ public class QueryPlanTreeNode {
 			{
 				str = str + "; ";
 			}
-			str = str + abbrJoinCondition;
+			str = str + cutOffLongString(abbrJoinCondition, "=");
 		}
 		
 		str = cutOffLongString(str.toLowerCase(), "and");
