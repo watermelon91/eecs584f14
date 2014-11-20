@@ -24,18 +24,19 @@ public class SurveyWindow extends JFrame {
 	private UserWindow mainWindow = null;
 	private LoggingUtilities logger = new LoggingUtilities();
 	private String[] buggyQueries = new String[] {
-			"SELECT o1.orderid, o2.orderid, o3.orderid, o1.orderdate, o2.orderdate, o3.orderdate \nFROM orderlines o1, orderlines o2, orderlines o3 \nWHERE o1.prod_id = o2.prod_id AND o1.prod_id = o3.prod_id AND date_part('month', o1.orderdate) = date_part('month', o2.orderdate) + 1 AND date_part('month', o1.orderdate) = date_part('month', o3.orderdate) + 1 AND o1.prod_id = 8032;", 
+			"SELECT o1.orderid, o2.orderid, o3.orderid \nFROM orderlines o1, orderlines o2, orderlines o3 \nWHERE o1.prod_id = o2.prod_id AND o1.prod_id = o3.prod_id AND date_part('month', o1.orderdate) = date_part('month', o2.orderdate) + 1 AND date_part('month', o1.orderdate) = date_part('month', o3.orderdate) + 1 AND o1.prod_id = 8032;", 
 			"SELECT c.customerid, c.prod_id, o.orderdate \nFROM cust_hist c, orderlines o \nWHERE c.customerid = 5090 and c.prod_id = 5450 and o.orderid = c.prod_id;", 
 			"SELECT c1.customerid, c2.customerid, o1.totalamount, o2.totalamount, o1.orderdate,  o2.orderdate \nFROM cust_hist c1, cust_hist c2, orders o1, orders o2 \nWHERE c1.customerid > c2.customerid AND c1.prod_id = c2.prod_id AND o1.orderid = c1.orderid AND o2.orderid = c2.orderid AND o1.totalamount - o2.totalamount > 500 AND o1.orderdate - o2.orderdate = 0;"};
 	private String[] expectedResult = new String[] {
-			"Validate whether the query below is correct or incorrect. \n\nExpected behavior: find all orders for the product with prod_id = 8032 that were placed in three consecutive months. (e.g. if order 500 was placed in Jan, 547 was placed in Feb, 578 was placed in Mar, you should find (500, 574, 578) in the returned result).", 
-			"Expected output: \ncustomerid | prod_id | orderdate \n"
+			"The query below has a bug in it which caused it to return a different set of order_ids than expected. \n\nExpected behavior: find all orders for the product with prod_id = 8032 that were placed in three consecutive months. (e.g. if order 500 was placed in Jan, 547 was placed in Feb, 578 was placed in Mar, you should find (500, 574, 578) in the returned result).", 
+			"The query below has a bug in it which caused it to return a different set of output than expected. \n"
+			+ "Expected output: \ncustomerid | prod_id | orderdate \n"
 			+ "5090 |    5450 | 2009-03-10\n "
 			+ "5090 |    5450 | 2009-09-18\n"
 			+ "5090 |    5450 | 2009-09-13\n"
 			+ "5090 |    5450 | 2009-12-17\n",
-			"A manager is looking at whether there exists a pair of customers that placed orders on the same day for the same product, but their order total amount differed by 500. The query below returns no result, so please help to validate whether it is true that there's no such pair of customers exist, or it's a caused by a bug in the query"};
-	
+			"A manager is looking at whether there exists a pair of customers that placed orders on the same day for the same product, but their order total amount differed by 500. The query below returns no result, so please help to validate whether it is true that there's no such pair of customers exist, or it's a caused by a bug in the query."};
+		
 	public SurveyWindow() {
 		super();
 		initComponents();
