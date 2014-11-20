@@ -281,6 +281,9 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
         
         textUsername = new JTextField();         
         textPassword = new JPasswordField();
+        
+        textUsername.setText("default");
+        textPassword.setText("default"); 
 
         GroupLayout gl_panel = new GroupLayout(panel);
         gl_panel.setHorizontalGroup(
