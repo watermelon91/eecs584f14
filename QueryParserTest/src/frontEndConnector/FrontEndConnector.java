@@ -136,7 +136,7 @@ public class FrontEndConnector {
 	public Pair getSampleData(String tableName)
 	{
 		try {
-			return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName + " LIMIT 10", 10);
+			return executeQuerySeparateResultAddQuotes("SELECT * FROM " + tableName + " LIMIT 20", 20);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -166,7 +166,7 @@ public class FrontEndConnector {
 	 */
 	public Pair executeTestQuery(String query) throws SQLException
 	{
-		return executeQuerySeparateResultAddQuotes(fixTableName(query), 10);
+		return executeQuerySeparateResultAddQuotes(fixTableName(query), 20);
 	}
 	
 	/*
@@ -197,7 +197,24 @@ public class FrontEndConnector {
 		
 	private Pair executeQuerySeparateResultAddQuotes(String query, int LIMIT) throws SQLException 
 	{
-		return pdbConnector.executeQuerySeparateResult(query, LIMIT);	
+		Pair result = pdbConnector.executeQuerySeparateResult(query, LIMIT);
+		if((LIMIT != Integer.MAX_VALUE) && (result.data != null) && (result.data.size() > 0))
+		{
+			int numCol = result.data.get(0).length;
+			result.data.add(makeExtraDataReminderString(numCol));
+		}
+		
+		return result;
+	}
+	
+	private String[] makeExtraDataReminderString(int colNum)
+	{
+		String[] rst = new String[colNum];
+		for(int i = 0; i < colNum; i++)
+		{
+			rst[i] = "...";
+		}
+		return rst;
 	}
 	
 	public String executeQuery(String query) throws SQLException
