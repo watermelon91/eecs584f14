@@ -96,7 +96,7 @@ public class LoggingUtilities {
 		}
 		
 		logContent = logContent + ", " + getCurrentTimestampShort() + "";
-		logContent = logContent + ", " + log + "";
+		logContent = logContent + ", \"" + log + "\"";
 		writer.println(logContent);
 	}
 	
