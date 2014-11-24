@@ -15,6 +15,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -371,7 +372,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 
                                 try
                                 {
-                                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, queryPane.getText());    
+                                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "BUGGY QUERY: " + queryPane.getText());    
 
                                     connector.dropAllTmpTables();
                                     deletePlanTree(graph_sampleData, model_sampleData, treeObjects_sampleData);
@@ -531,6 +532,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (btnSubQuerySubmit.getText() == "Submit"){
+                	logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "submit subquery");
+                	
                     // submit query to connector and receive tree
                 	subQueryPane.setEnabled(false);
                     btnSubQuerySubmit.setText("Edit"); 
@@ -546,6 +549,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     try {
                     	if(!subQueryPane.getText().equals(""))
                     	{
+                    		logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "SUBQUERY: " + subQueryPane.getText());
                     		samplePair = connector.executeTestQuery(subQueryPane.getText());
                     		
                     		 model_sampleData.setColumnIdentifiers(samplePair.attributes);
@@ -564,6 +568,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 "Input query has invalid Syntax. \n" + e1.getMessage(),
                                 "Input error",
                                 JOptionPane.ERROR_MESSAGE);
+						logger.log(LOG_TYPES.UNSUPPORTED_QUERY, e1.getMessage() + "\n" + e1.getStackTrace().toString());
 					}  
                     
                 } else if (btnSubQuerySubmit.getText() == "Edit") {
@@ -708,6 +713,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     table_searchMissing.setEnabled(true);
                     
                     QueryPlanTreeNode node = treeObjects_sampleData.get(cell).getData();
+                    logger.log(LOG_TYPES.QUERY_PLAN_NODE_CLICK, "SAMPLE DATA: " + node.getNewTableName());
                     samplePair = connector.getSampleData(node.getNewTableName());
                     
                     model_sampleData.setColumnIdentifiers(samplePair.attributes);
@@ -815,6 +821,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                         tabbedPane.setEnabledAt(1, true);
                         tabbedPane.setEnabledAt(2, false);
 						tabbedPane.setSelectedIndex(1);
+						
+						logger.log(LOG_TYPES.BUTTON_CLICK, "WHY QUERY: " + Arrays.asList(row).toString());
 
 					} catch (Exception e1) {
 						JOptionPane.showMessageDialog(getParent(),                                                
@@ -964,6 +972,8 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
 
             @Override
             public void mouseClicked(MouseEvent e) {               
+            	logger.log(LOG_TYPES.BUTTON_CLICK, "find missing");
+            	
                 String[] row = new String[table_searchMissing.getColumnCount()];
                 for (int i = 0; i < table_searchMissing.getColumnCount(); i++){
                     table_searchMissing.getCellEditor(0, i).stopCellEditing();
@@ -976,6 +986,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                 
                 try
                 {
+                	logger.log(LOG_TYPES.BUTTON_CLICK, "WHY NOT: " + Arrays.asList(row).toString());
                     deletePlanTree(graph_findMissing, model_findMissing, treeObjects_findMissing);
 
                     tree_findMissing = connector.updateTreeWhyNotHere(tree_sampleData, 
@@ -992,6 +1003,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                                   "Searching input is not valid. \n" + e1.getMessage()+ "\nPlease check input data and format\n (e.g. quotes for non-numeric attributes)",
                                                   "Input error",
                                                   JOptionPane.ERROR_MESSAGE); 
+                    logger.log(LOG_TYPES.UNSUPPORTED_QUERY, e1.getMessage() + "\n" + e1.getStackTrace().toString());
                 } catch (Exception e1) {
                 	JOptionPane.showMessageDialog(getParent(),                                                
                             "This operation is not supported for the input query yet. \n",
@@ -1132,6 +1144,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     queryFrom_trackTuple.setText("Plan Tree Node");
                     
                     QueryPlanTreeNode node = treeObjects_trackTuple.get(cell).getData();
+                    logger.log(LOG_TYPES.QUERY_PLAN_NODE_CLICK, "TRACK TUPLE: " + node.getNewTableName());
                     
                     model_trackTuple.setRowCount(0);
                     model_trackTuple.setColumnIdentifiers(new Vector());
@@ -1307,6 +1320,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                     queryFrom_findMissing.setText("Plan Tree Node");
                     
                     QueryPlanTreeNode node = treeObjects_findMissing.get(cell).getData();
+                    logger.log(LOG_TYPES.QUERY_PLAN_NODE_CLICK, "FIND MISSING: " + node.getNewTableName());
                     
                     model_findMissing.setRowCount(0);
                     model_findMissing.setColumnIdentifiers(new Vector());
