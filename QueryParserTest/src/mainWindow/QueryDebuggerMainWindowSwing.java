@@ -371,7 +371,7 @@ public class QueryDebuggerMainWindowSwing extends JFrame{
                                 
                                 try
                                 {
-                                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, "query submit");    
+                                    logger.log(LoggingUtilities.LOG_TYPES.BUTTON_CLICK, queryPane.getText());    
 
                                     connector.dropAllTmpTables();
                                     deletePlanTree(graph_sampleData, model_sampleData, treeObjects_sampleData);
